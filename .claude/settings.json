@@ -1,0 +1,49 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "command": "echo '[Hook] File modified. Run lint/typecheck if project has configured linter.'",
+        "timeout": 30000,
+        "description": "ファイル変更後にlint・型チェックのリマインダーを表示"
+      },
+      {
+        "matcher": "Bash",
+        "command": "echo '[Hook] Command executed. Verify no secrets were exposed in output.'",
+        "timeout": 10000,
+        "description": "Bash実行後にシークレット露出チェックのリマインダー"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "echo '[Quality Gate] Session ending. Checklist: 1) All tests pass? 2) No lint errors? 3) No security issues? 4) Changes committed?'",
+        "timeout": 10000,
+        "description": "セッション終了時に品質ゲートチェックリストを表示"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git push*)",
+        "command": "echo '[Safety] Pushing to remote. Verify: 1) Correct branch? 2) All tests pass? 3) No secrets in commits?'",
+        "timeout": 10000,
+        "description": "git push前の安全確認リマインダー"
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env*)",
+      "Read(./secrets/**)",
+      "Write(./package-lock.json)",
+      "Bash(rm -rf *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | bash)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(npm publish*)",
+      "Write(./migrations/**)",
+      "Bash(docker *)"
+    ]
+  }
+}
