@@ -87,11 +87,14 @@
     .cal-pill { font-size: 0.63rem; padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; display: block; border-left: 2px solid transparent; }
     .cal-pill:hover { opacity: 0.8; }
     .cal-more { font-size: 0.63rem; color: var(--text-light); padding: 1px 4px; display: block; }
-    .cal-cell:not(.other-month) { cursor: pointer; }
-    .cal-cell:not(.other-month):hover { background: #f0fafb; }
+    .cal-cell:not(.other-month):not(.is-past) { cursor: pointer; }
+    .cal-cell:not(.other-month):not(.is-past):hover { background: #f0fafb; }
+    .cal-cell.is-past { opacity: 0.45; cursor: default; }
     .cal-cell.is-holiday { background: #f0f0f0 !important; }
     .cal-cell.is-holiday:hover { background: #e8e8e8 !important; }
     .cal-holiday-label { display: flex; align-items: center; justify-content: center; height: 54px; color: #999; font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; }
+    .cal-event-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 54px; color: #f57c00; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; gap: 3px; }
+    .cal-cell.has-event { background: rgba(255,152,0,0.06) !important; }
     .cal-shuku-tag { display: inline-flex; align-items: center; justify-content: center; background: #e53935; color: #fff; font-size: 0.58rem; font-weight: 700; width: 15px; height: 15px; border-radius: 3px; margin-left: 3px; vertical-align: middle; flex-shrink: 0; }
     .cal-cell.is-jpholiday .cal-date { color: #e53935; }
     /* CAL MODAL */
@@ -102,6 +105,14 @@
     .cal-slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 20px; }
     .cal-slot-btn { padding: 7px 4px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.78rem; cursor: pointer; background: #fff; color: var(--text-light); text-align: center; transition: all 0.15s; }
     .cal-slot-btn.active { background: rgba(0,188,212,0.12); border-color: var(--primary); color: var(--primary-dark); font-weight: 600; }
+    /* PILL EDIT POPOVER */
+    .pill-edit-popover { position: fixed; z-index: 600; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.16); padding: 12px 14px; min-width: 200px; display: none; }
+    .pill-edit-popover.open { display: block; }
+    .pill-edit-label { font-size: 0.75rem; color: var(--text-light); margin-bottom: 7px; }
+    .pill-edit-label strong { color: var(--primary-dark); }
+    .pill-edit-row { display: flex; gap: 6px; align-items: center; }
+    .pill-edit-save { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+    .pill-edit-save:hover { background: var(--primary-dark); }
     .cal-modal-footer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .btn-holiday { background: none; border: 1px solid var(--border); color: var(--text-light); padding: 7px 14px; border-radius: 6px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
     .btn-holiday:hover { border-color: #e53935; color: #e53935; }
@@ -480,7 +491,10 @@
         <button class="cal-nav-btn" onclick="calPrev()"><i class="fas fa-chevron-left"></i></button>
         <div class="cal-month-title" id="cal-month-title"></div>
         <button class="cal-nav-btn" onclick="calNext()"><i class="fas fa-chevron-right"></i></button>
-        <button class="btn-p" style="margin-left:auto;"><i class="fas fa-plus"></i> クラス追加</button>
+        <label style="margin-left:auto;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.84rem;color:var(--text-light);user-select:none;">
+          <input type="checkbox" id="cal-public-toggle" onchange="calPublicState[calMonthKey()]=this.checked" style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);" />
+          会員に公開
+        </label>
       </div>
       <div class="cal-wrap">
         <div class="cal-day-headers">
@@ -793,12 +807,24 @@
 <div class="cal-modal-overlay" id="cal-modal-overlay" onclick="closeCalModal()">
   <div class="cal-modal" onclick="event.stopPropagation()">
     <div class="cal-modal-title" id="cal-modal-title"></div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:5px;"><i class="fas fa-star" style="margin-right:4px;color:#f57c00;"></i>全体イベント（入力するとこの日の予定として表示）</div>
+      <input id="cal-day-note" class="form-ctrl" type="text" placeholder="例：バーベキュー、合宿、特別練習…" style="margin:0;" />
+    </div>
     <div class="cal-slots-grid" id="cal-time-slots"></div>
     <div class="cal-modal-footer">
       <button class="btn-p" onclick="saveCalModal()"><i class="fas fa-save"></i> 保存</button>
       <button class="btn-holiday" id="cal-modal-holiday-btn" onclick="toggleHolidayFromModal()"><i class="fas fa-moon"></i> お休みにする</button>
       <button class="btn-o" style="margin-left:auto;" onclick="closeCalModal()">閉じる</button>
     </div>
+  </div>
+</div>
+
+<div class="pill-edit-popover" id="pill-edit-popover">
+  <div class="pill-edit-label"><i class="fas fa-pencil-alt" style="margin-right:4px;"></i><strong id="pill-edit-time"></strong> のクラス名</div>
+  <div class="pill-edit-row">
+    <input id="pill-edit-input" class="form-ctrl" type="text" placeholder="練習" style="margin:0;flex:1;" />
+    <button class="pill-edit-save" onclick="savePillEdit()"><i class="fas fa-check"></i></button>
   </div>
 </div>
 
@@ -1250,6 +1276,7 @@ const weeklyClasses = {
 };
 
 let calYear, calMonth;
+const calPublicState = {}; // { "2026-03": true, "2026-04": false, ... } 未設定=非公開
 const holidays = new Set();
 
 // 日本の祝日 (2025〜2026)
@@ -1263,8 +1290,10 @@ const jpHolidays = new Set([
   '2026-07-20','2026-08-11','2026-09-21','2026-09-23','2026-10-12',
   '2026-11-03','2026-11-23',
 ]);
-const scheduleData = {};   // { "YYYY-MM-DD": ["09:00","10:00",...] }
+const scheduleData = {};   // { "YYYY-MM-DD": {"09:00":"練習", ...} }
+const dayNotes = {};       // { "YYYY-MM-DD": "バーベキュー" }
 let calModalDate = null;
+let slotClassNames = {}; // { "09:00": "練習", "21:00": "スパーリング" }
 
 function openCalModal(dateStr) {
   calModalDate = dateStr;
@@ -1283,14 +1312,25 @@ function openCalModal(dateStr) {
   const startH = parseInt((startSel?.value || '9時').replace('時', ''));
   const endH   = parseInt((endSel?.value   || '21時').replace('時', ''));
 
-  // 既存データがあればそれを使用、なければ全スロット選択済み
+  // 既存データ（オブジェクト形式）を読み込む。なければ全スロット選択・デフォルト「練習」
+  slotClassNames = {};
   let activeTimes;
-  if (scheduleData[dateStr] !== undefined) {
-    activeTimes = new Set(scheduleData[dateStr]);
+  const existing = scheduleData[dateStr];
+  if (existing !== undefined) {
+    if (Array.isArray(existing)) {
+      // 旧形式（配列）からの移行
+      existing.forEach(t => { slotClassNames[t] = '練習'; });
+      activeTimes = new Set(existing);
+    } else {
+      slotClassNames = Object.assign({}, existing);
+      activeTimes = new Set(Object.keys(existing));
+    }
   } else {
-    const allSlots = [];
-    for (let h = startH; h < endH; h++) allSlots.push(`${String(h).padStart(2,'0')}:00`);
-    activeTimes = new Set(allSlots);
+    for (let h = startH; h < endH; h++) {
+      const t = `${String(h).padStart(2,'0')}:00`;
+      slotClassNames[t] = '練習';
+    }
+    activeTimes = new Set(Object.keys(slotClassNames));
   }
 
   const grid = document.getElementById('cal-time-slots');
@@ -1299,6 +1339,7 @@ function openCalModal(dateStr) {
     const time = `${String(h).padStart(2,'0')}:00`;
     const btn = document.createElement('button');
     btn.className = 'cal-slot-btn' + (activeTimes.has(time) ? ' active' : '');
+    btn.dataset.time = time;
     btn.textContent = time;
     btn.onclick = () => btn.classList.toggle('active');
     grid.appendChild(btn);
@@ -1314,14 +1355,23 @@ function openCalModal(dateStr) {
     hBtn.classList.remove('is-on');
   }
 
+  document.getElementById('cal-day-note').value = dayNotes[dateStr] || '';
   document.getElementById('cal-modal-overlay').classList.add('open');
 }
 
+
 function saveCalModal() {
   if (!calModalDate) return;
-  const active = Array.from(document.querySelectorAll('#cal-time-slots .cal-slot-btn.active'))
-                      .map(b => b.textContent);
-  scheduleData[calModalDate] = active;
+  // アクティブなスロットのみ保存（オブジェクト形式）
+  const result = {};
+  document.querySelectorAll('#cal-time-slots .cal-slot-btn.active').forEach(b => {
+    const t = b.dataset.time;
+    result[t] = slotClassNames[t] || '練習';
+  });
+  scheduleData[calModalDate] = result;
+  const note = document.getElementById('cal-day-note').value.trim();
+  if (note) dayNotes[calModalDate] = note;
+  else delete dayNotes[calModalDate];
   closeCalModal();
 }
 
@@ -1345,11 +1395,90 @@ function closeCalModal() {
   renderCalendar();
 }
 
+// ── PILL INLINE EDIT ────────────────────────────────────
+let pillEditDate = null;
+let pillEditTime = null;
+
+function ensureScheduleObj(dateStr) {
+  const existing = scheduleData[dateStr];
+  if (existing !== undefined && !Array.isArray(existing)) return;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  const isWkend = (dow === 0 || dow === 6);
+  const isJpH   = jpHolidays.has(dateStr);
+  const pfx = isJpH ? 'bi-holiday' : isWkend ? 'bi-weekend' : 'bi-weekday';
+  const sH = parseInt((document.getElementById(`${pfx}-start`)?.value || '9時').replace('時',''));
+  const eH = parseInt((document.getElementById(`${pfx}-end`)?.value   || '21時').replace('時',''));
+  const obj = {};
+  if (Array.isArray(existing)) {
+    existing.forEach(t => { obj[t] = '練習'; });
+  } else {
+    for (let h = sH; h < eH; h++) { const t = `${String(h).padStart(2,'0')}:00`; obj[t] = '練習'; }
+  }
+  scheduleData[dateStr] = obj;
+}
+
+function openPillEdit(event, dateStr, time, currentName) {
+  event.stopPropagation();
+  pillEditDate = dateStr;
+  pillEditTime = time;
+  document.getElementById('pill-edit-time').textContent = time;
+  const input = document.getElementById('pill-edit-input');
+  input.value = currentName;
+  const popover = document.getElementById('pill-edit-popover');
+  popover.classList.add('open');
+  const rect = event.target.getBoundingClientRect();
+  let top  = rect.bottom + 4;
+  let left = rect.left;
+  if (left + 220 > window.innerWidth)  left = window.innerWidth - 224;
+  if (top  + 80  > window.innerHeight) top  = rect.top - 84;
+  popover.style.top  = top  + 'px';
+  popover.style.left = left + 'px';
+  input.focus();
+  input.select();
+}
+
+function savePillEdit() {
+  if (!pillEditDate || !pillEditTime) return;
+  const val = document.getElementById('pill-edit-input').value.trim() || '練習';
+  ensureScheduleObj(pillEditDate);
+  scheduleData[pillEditDate][pillEditTime] = val;
+  closePillEdit();
+  renderCalendar();
+}
+
+function closePillEdit() {
+  document.getElementById('pill-edit-popover').classList.remove('open');
+  pillEditDate = null;
+  pillEditTime = null;
+}
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('pill-edit-popover').classList.contains('open')) return;
+  if (e.key === 'Enter')  savePillEdit();
+  if (e.key === 'Escape') closePillEdit();
+});
+document.addEventListener('click', e => {
+  const p = document.getElementById('pill-edit-popover');
+  if (p.classList.contains('open') && !p.contains(e.target)) closePillEdit();
+});
+// ── /PILL INLINE EDIT ───────────────────────────────────
+
+function calMonthKey() {
+  return `${calYear}-${String(calMonth + 1).padStart(2,'0')}`;
+}
+
 function renderCalendar() {
   const now   = new Date();
   const first = new Date(calYear, calMonth, 1);
   const last  = new Date(calYear, calMonth + 1, 0);
   document.getElementById('cal-month-title').textContent = `${calYear}年${calMonth + 1}月`;
+  // チェックボックスを現在の月の状態に同期
+  const isPastMonth = calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth());
+  const toggleLabel = document.getElementById('cal-public-toggle')?.closest('label');
+  if (toggleLabel) toggleLabel.style.display = isPastMonth ? 'none' : '';
+  const toggle = document.getElementById('cal-public-toggle');
+  if (toggle) toggle.checked = calPublicState[calMonthKey()] === true;
 
   let html = '';
   const startDow = first.getDay();
@@ -1383,38 +1512,53 @@ function buildCalCell(date, otherMonth, isToday) {
   const isHoliday  = !otherMonth && holidays.has(dateStr);
   const isJpHoliday = !otherMonth && jpHolidays.has(dateStr);
 
+  const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+  const isPast = !otherMonth && date < todayDate;
+
   let cls = 'cal-cell';
   if (otherMonth)   cls += ' other-month';
   if (isToday)      cls += ' is-today';
+  if (isPast)       cls += ' is-past';
   if (dow === 0)    cls += ' is-sun';
   if (dow === 6)    cls += ' is-sat';
   if (isHoliday)    cls += ' is-holiday';
   if (isJpHoliday)  cls += ' is-jpholiday';
 
-  const onclick = otherMonth ? '' : `onclick="openCalModal('${dateStr}')"`;
+  const onclick = (!otherMonth && !isPast) ? `onclick="openCalModal('${dateStr}')"` : '';
   const shukuTag = isJpHoliday ? '<span class="cal-shuku-tag">祝</span>' : '';
+
+  const dayNote = !otherMonth ? (dayNotes[dateStr] || '') : '';
+  if (dayNote) cls += ' has-event';
 
   let body = '';
   if (isHoliday) {
     body = '<div class="cal-holiday-label"><i class="fas fa-moon" style="margin-right:4px;"></i>お休み</div>';
+  } else if (dayNote) {
+    body = `<div class="cal-event-label"><i class="fas fa-star" style="font-size:0.7rem;opacity:0.7;"></i>${dayNote}</div>`;
   } else if (!otherMonth) {
-    let times;
-    if (scheduleData[dateStr] !== undefined) {
-      times = scheduleData[dateStr];
+    let entries; // [{ time, name }]
+    const existing = scheduleData[dateStr];
+    if (existing !== undefined) {
+      if (Array.isArray(existing)) {
+        entries = existing.map(t => ({ time: t, name: '練習' }));
+      } else {
+        entries = Object.entries(existing).map(([t, n]) => ({ time: t, name: n }))
+                        .sort((a, b) => a.time.localeCompare(b.time));
+      }
     } else {
-      // モーダルと同じく営業時間の全スロットをデフォルトとする
       const isWkend = (dow === 0 || dow === 6);
       const isJpH   = jpHolidays.has(dateStr);
       const pfx     = isJpH ? 'bi-holiday' : isWkend ? 'bi-weekend' : 'bi-weekday';
       const sH = parseInt((document.getElementById(`${pfx}-start`)?.value || '9時').replace('時',''));
       const eH = parseInt((document.getElementById(`${pfx}-end`)?.value   || '21時').replace('時',''));
-      times = [];
-      for (let h = sH; h < eH; h++) times.push(`${String(h).padStart(2,'0')}:00`);
+      entries = [];
+      for (let h = sH; h < eH; h++) entries.push({ time: `${String(h).padStart(2,'0')}:00`, name: '練習' });
     }
-    times.slice(0, 3).forEach(t => {
-      body += `<span class="cal-pill cls-default">${t} 練習</span>`;
+    entries.forEach(({ time, name }) => {
+      const safeName = name.replace(/'/g, "\\'");
+      const pillClick = isPast ? '' : `onclick="openPillEdit(event,'${dateStr}','${time}','${safeName}')" style="cursor:pointer;" title="クリックでクラス名を編集"`;
+      body += `<span class="cal-pill cls-default" ${pillClick}>${time} ${name}</span>`;
     });
-    if (times.length > 3) body += `<span class="cal-more">+${times.length - 3}件</span>`;
   }
 
   return `<div class="${cls}" ${onclick}><div class="cal-date" style="display:flex;align-items:center;">${date.getDate()}${shukuTag}</div>${body}</div>`;
