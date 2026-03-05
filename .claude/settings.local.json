@@ -9,7 +9,17 @@
       "Bash(git init)",
       "Bash(git config user.email \"kobayashiyujiro123@users.noreply.github.com\")",
       "Bash(git config user.name \"kobayashiyujiro123\")",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git checkout -b feat/gym-schedule-ui-improvements)",
+      "Bash(git push -u origin feat/gym-schedule-ui-improvements)",
+      "Bash(gh pr:*)",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe'' pr create --title ''feat: gym-schedule UI improvements'' --body ''## Summary:*)",
+      "Bash(/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"/tmp/replace_gym.ps1\")",
+      "Bash(git add gym-schedule.html)",
+      "Bash(git commit:*)",
+      "Bash(git push origin feat/gym-schedule-ui-improvements)",
+      "Bash(start \"\" \"C:\\\\Users\\\\kobay\\\\Downloads\\\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\\\gym-schedule.html\")",
+      "Bash(git add gym-schedule.html .claude/settings.local.json)"
     ]
   }
 }

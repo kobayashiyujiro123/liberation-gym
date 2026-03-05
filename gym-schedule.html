@@ -140,6 +140,10 @@
 
     /* SEARCH */
     .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .res-coach-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 4px; }
+    .res-coach-tab { padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; color: var(--text-light); font-size: 0.82rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+    .res-coach-tab:hover { border-color: var(--primary); color: var(--primary-dark); }
+    .res-coach-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
     .search-wrap { position: relative; flex: 1; min-width: 180px; }
     .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 0.83rem; }
     .search-inp { width: 100%; padding: 9px 14px 9px 34px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.84rem; color: var(--text); outline: none; background: var(--card-bg); }
@@ -524,6 +528,7 @@
         <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="res-search" placeholder="会員名・コーチ名で検索..." oninput="renderReservations()" /></div>
         <button class="btn-p"><i class="fas fa-plus"></i> 予約追加</button>
       </div>
+      <div class="res-coach-tabs" id="res-coach-tabs"></div>
       <div id="res-timeline"></div>
     </div>
 
@@ -766,11 +771,6 @@
             <div class="coach-detail-val" id="cd-joined"></div>
           </div>
         </div>
-        <!-- 自己紹介 -->
-        <div class="form-card" style="margin-top:20px;">
-          <div class="coach-detail-label" style="margin-bottom:10px;"><i class="fas fa-user"></i> 自己紹介</div>
-          <p id="cd-bio" style="font-size:0.88rem;line-height:1.8;color:var(--text);"></p>
-        </div>
       </div>
     </div>
 
@@ -781,18 +781,17 @@
       </div>
       <div class="form-card" style="max-width:700px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div class="form-group"><label class="form-label">コーチID</label><input class="form-ctrl" id="ce-id" readonly style="background:#f8f9fa;" /></div>
+          <div class="form-group"><label class="form-label">コーチID</label><input class="form-ctrl" id="ce-id" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
           <div class="form-group"><label class="form-label">ステータス</label>
             <select class="form-ctrl" id="ce-status">
               <option>在籍中</option><option>休暇中</option><option>退職</option>
             </select>
           </div>
-          <div class="form-group"><label class="form-label">氏名</label><input class="form-ctrl" id="ce-name" /></div>
-          <div class="form-group"><label class="form-label">担当会員数</label><input class="form-ctrl" id="ce-classes" type="number" /></div>
-          <div class="form-group"><label class="form-label">メールアドレス</label><input class="form-ctrl" id="ce-email" type="email" /></div>
-          <div class="form-group"><label class="form-label">電話番号</label><input class="form-ctrl" id="ce-tel" /></div>
+          <div class="form-group"><label class="form-label">氏名</label><input class="form-ctrl" id="ce-name" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
+          <div class="form-group"><label class="form-label">担当会員数</label><input class="form-ctrl" id="ce-classes" type="number" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
+          <div class="form-group"><label class="form-label">メールアドレス</label><input class="form-ctrl" id="ce-email" type="email" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
+          <div class="form-group"><label class="form-label">電話番号</label><input class="form-ctrl" id="ce-tel" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
         </div>
-        <div class="form-group"><label class="form-label">自己紹介</label><textarea class="form-ctrl" id="ce-bio" rows="4"></textarea></div>
         <div class="form-actions">
           <button class="btn-p" onclick="saveCoachEdit()"><i class="fas fa-save"></i> 保存する</button>
           <button class="btn-o" onclick="openCoachDetail(currentCoachId)">キャンセル</button>
@@ -900,6 +899,7 @@ const _savedResDate = sessionStorage.getItem('resSelectedDate');
 let resSelectedDate = (resDates.includes(_savedResDate) ? _savedResDate : resDates[0]);
 let resPage = 1;
 const RES_PER_PAGE = 5;
+let resCoachFilter = ''; // '' = 全て、コーチ名 = フィルター中
 
 function buildDayTabs() {
   const base = new Date();
@@ -928,12 +928,31 @@ function selectResDay(dateKey) {
   renderReservations();
 }
 
+function initResCoachTabs() {
+  const wrap = document.getElementById('res-coach-tabs');
+  if (!wrap) return;
+  const tabs = ['全て', ...COACHES];
+  wrap.innerHTML = tabs.map(name =>
+    `<button class="res-coach-tab${name === '全て' ? ' active' : ''}" onclick="setResCoachFilter('${name}')">${name === '全て' ? '<i class="fas fa-users" style="margin-right:5px;"></i>' : '<i class="fas fa-user" style="margin-right:5px;"></i>'}${name}</button>`
+  ).join('');
+}
+
+function setResCoachFilter(name) {
+  resCoachFilter = name === '全て' ? '' : name;
+  document.querySelectorAll('.res-coach-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent.trim() === name);
+  });
+  renderReservations();
+}
+
 function renderReservations() {
   const q = (document.getElementById('res-search')?.value || '').toLowerCase();
   const all = resData[resSelectedDate] || [];
-  const filtered = all.filter(r =>
-    r.name.includes(q) || r.cls.toLowerCase().includes(q) || r.coach.includes(q)
-  );
+  const filtered = all.filter(r => {
+    const matchQ = r.name.includes(q) || r.cls.toLowerCase().includes(q) || r.coach.includes(q);
+    const matchCoach = !resCoachFilter || r.coach === resCoachFilter;
+    return matchQ && matchCoach;
+  });
 
   // カウント更新
   const dateIdx = resDates.indexOf(resSelectedDate);
@@ -967,7 +986,7 @@ function renderReservations() {
       const avStyle = isCancel ? '' : isMale ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"' : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
       const cardStyle = isCancel ? '' : isMale ? 'style="border-left-color:#1565c0;"' : isFemale ? 'style="border-left-color:#ba68c8;"' : '';
       return `
-        <div class="${cardClass}" ${cardStyle}>
+        <div class="${cardClass}" ${cardStyle} id="res-card-${r.id}">
           <div class="res-card-avatar" ${avStyle}>${r.name.slice(0,2)}</div>
           <div class="res-card-body">
             <div class="res-card-name">${r.name}</div>
@@ -977,8 +996,7 @@ function renderReservations() {
             </div>
           </div>
           <div class="res-card-actions">
-            <button class="act-btn" style="font-size:0.72rem;padding:3px 8px;">編集</button>
-            <button class="act-btn del" style="font-size:0.72rem;padding:3px 8px;">削除</button>
+            <button class="act-btn" id="res-edit-btn-${r.id}" style="font-size:0.72rem;padding:3px 8px;" onclick="toggleResEdit('${r.id}')">編集</button>
           </div>
         </div>`;
     }).join('');
@@ -995,7 +1013,59 @@ function renderReservations() {
   }).join('');
 }
 
+function toggleResEdit(id) {
+  const btn = document.getElementById(`res-edit-btn-${id}`);
+  const card = document.getElementById(`res-card-${id}`);
+  if (!btn || !card) return;
+
+  const isEditing = btn.dataset.editing === '1';
+
+  if (isEditing) {
+    // パネルを閉じる
+    btn.dataset.editing = '0';
+    const extra = card.querySelector('.res-edit-panel');
+    if (extra) extra.remove();
+    card.style.flexWrap = '';
+  } else {
+    // 編集パネルを開く（ボタン自体は変えない）
+    btn.dataset.editing = '1';
+    const panel = document.createElement('div');
+    panel.className = 'res-edit-panel';
+    panel.style.cssText = 'width:100%;padding:10px 14px 10px;border-top:1px solid var(--border);margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;';
+    panel.innerHTML = `
+      <span style="font-size:0.78rem;color:var(--text-light);">ステータス変更：</span>
+      <select style="font-size:0.78rem;padding:4px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <option>確定</option><option>キャンセル</option>
+      </select>
+      <button onclick="saveResEdit('${id}')" style="font-size:0.78rem;padding:4px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;">保存</button>
+      <button onclick="toggleResEdit('${id}')" style="font-size:0.78rem;padding:4px 12px;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-light);">閉じる</button>
+    `;
+    card.style.flexWrap = 'wrap';
+    card.appendChild(panel);
+  }
+}
+
+function saveResEdit(id) {
+  const card = document.getElementById(`res-card-${id}`);
+  const select = card?.querySelector('.res-edit-panel select');
+  if (!select) return;
+  const newStatus = select.value;
+
+  // resData から対象レコードを検索して更新
+  const badgeMap = { '確定': 'badge-s', 'キャンセル': 'badge-d' };
+  for (const key of Object.keys(resData)) {
+    const r = resData[key].find(x => x.id === id);
+    if (r) {
+      r.status = newStatus;
+      r.badge  = badgeMap[newStatus] || r.badge;
+      break;
+    }
+  }
+  renderReservations();
+}
+
 buildDayTabs();
+initResCoachTabs();
 renderReservations();
 
 // ===== MEMBER PAGINATION =====
@@ -1668,8 +1738,8 @@ function renderBirthdays() {
 
 // ===== COACH LOGIC =====
 const allCoaches = [
-  { id:'C001', name:'トミッキー', specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#4caf50,#1b5e20)', bio:'' },
-  { id:'C002', name:'鈴木さん',   specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#2196f3,#0d47a1)', bio:'' },
+  { id:'C001', name:'トミッキー', specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#4caf50,#1b5e20)'},
+  { id:'C002', name:'鈴木さん',   specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#2196f3,#0d47a1)'},
 ];
 
 let currentCoachId = null;
@@ -1729,7 +1799,6 @@ function openCoachDetail(id) {
   document.getElementById('cd-email').textContent = c.email;
   document.getElementById('cd-tel').textContent = c.tel;
   document.getElementById('cd-joined').textContent = c.joined;
-  document.getElementById('cd-bio').textContent = c.bio;
 
   // topbar title
   document.getElementById('heading').textContent = c.name + ' — 詳細';
@@ -1749,7 +1818,6 @@ function openCoachEdit(id) {
   document.getElementById('ce-classes').value  = c.classes;
   document.getElementById('ce-email').value    = c.email;
   document.getElementById('ce-tel').value      = c.tel;
-  document.getElementById('ce-bio').value      = c.bio;
   document.getElementById('ce-status').value   = c.status;
 
   document.getElementById('heading').textContent = c.name + ' — 編集';
@@ -1762,13 +1830,8 @@ function openCoachEdit(id) {
 function saveCoachEdit() {
   const c = allCoaches.find(c => c.id === currentCoachId);
   if (!c) return;
-  c.name      = document.getElementById('ce-name').value;
-  c.classes   = parseInt(document.getElementById('ce-classes').value) || c.classes;
-  c.email     = document.getElementById('ce-email').value;
-  c.tel       = document.getElementById('ce-tel').value;
-  c.bio       = document.getElementById('ce-bio').value;
-  c.status    = document.getElementById('ce-status').value;
-  c.badge     = c.status === '在籍中' ? 'badge-s' : c.status === '休暇中' ? 'badge-w' : 'badge-d';
+  c.status = document.getElementById('ce-status').value;
+  c.badge  = c.status === '在籍中' ? 'badge-s' : c.status === '休暇中' ? 'badge-w' : 'badge-d';
 
   // 保存後は詳細ページへ
   openCoachDetail(currentCoachId);
