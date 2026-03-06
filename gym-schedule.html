@@ -1430,6 +1430,20 @@ function openCalModal(dateStr) {
 }
 
 
+function saveScheduleToStorage() {
+  try {
+    localStorage.setItem('gym_scheduleData', JSON.stringify(scheduleData));
+    localStorage.setItem('gym_dayNotes', JSON.stringify(dayNotes));
+    localStorage.setItem('gym_holidays', JSON.stringify([...holidays]));
+    const bi = {};
+    ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) bi[id] = el.value;
+    });
+    localStorage.setItem('gym_businessHours', JSON.stringify(bi));
+  } catch(e) {}
+}
+
 function saveCalModal() {
   if (!calModalDate) return;
   // アクティブなスロットのみ保存（オブジェクト形式）
@@ -1443,6 +1457,7 @@ function saveCalModal() {
   if (note) dayNotes[calModalDate] = note;
   else delete dayNotes[calModalDate];
   closeCalModal();
+  saveScheduleToStorage();
 }
 
 function toggleHolidayFromModal() {
@@ -1457,6 +1472,7 @@ function toggleHolidayFromModal() {
     hBtn.innerHTML = '<i class="fas fa-moon"></i> お休み解除';
     hBtn.classList.add('is-on');
   }
+  saveScheduleToStorage();
 }
 
 function closeCalModal() {
@@ -1515,6 +1531,7 @@ function savePillEdit() {
   scheduleData[pillEditDate][pillEditTime] = val;
   closePillEdit();
   renderCalendar();
+  saveScheduleToStorage();
 }
 
 function closePillEdit() {
@@ -1909,6 +1926,7 @@ renderNotices();
 const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach'];
 
 function saveBasicInfo() {
+  saveScheduleToStorage();
   const btn = document.querySelector('#view-basicinfo .btn-p');
   btn.innerHTML = '<i class="fas fa-check"></i> 保存しました';
   btn.style.background = 'var(--success)';
@@ -1924,7 +1942,7 @@ function restoreFromHash() {
   }
 }
 window.addEventListener('hashchange', restoreFromHash);
-setTimeout(restoreFromHash, 0);
+setTimeout(() => { restoreFromHash(); }, 0);
 </script>
 </body>
 </html>
