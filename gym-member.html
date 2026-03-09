@@ -114,6 +114,27 @@
     .info-stat-lbl { font-size: 0.7rem; background: var(--primary); color: #fff; padding: 3px 8px; border-radius: 4px; margin-bottom: 6px; display: inline-block; }
     .info-stat-val { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); }
 
+    /* Notice section */
+    .notice-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; overflow: hidden; }
+    .notice-card-hd { background: var(--primary-dark); color: #fff; font-size: 0.82rem; font-weight: 700; padding: 10px 18px; display: flex; align-items: center; gap: 7px; letter-spacing: 0.5px; }
+    .notice-list { padding: 4px 0; }
+    .notice-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .notice-item:last-child { border-bottom: none; }
+    .notice-date { font-size: 0.72rem; color: var(--text-light); white-space: nowrap; padding-top: 2px; min-width: 80px; }
+    .notice-text { font-size: 0.84rem; color: var(--text); line-height: 1.6; }
+    .notice-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 3px; padding: 1px 5px; margin-right: 5px; vertical-align: middle; }
+
+    /* Usage summary card (edit page top) */
+    .usage-summary-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
+    .usage-summary-title { background: var(--primary-dark); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 10px 18px; letter-spacing: 0.5px; }
+    .usage-summary-stats { display: flex; }
+    .usage-summary-stat { flex: 1; text-align: center; padding: 18px 8px; border-right: 1px solid var(--border); }
+    .usage-summary-stat:last-child { border-right: none; }
+    .usage-summary-lbl { font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; font-weight: 700; }
+    .usage-summary-note { font-size: 0.62rem; color: var(--text-light); margin-top: 4px; font-weight: 400; }
+    .usage-summary-val { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); line-height: 1; }
+    .usage-summary-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 2px; }
+
     /* Edit form */
     .edit-form { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); max-width: 600px; }
     .edit-row { margin-bottom: 16px; }
@@ -209,22 +230,33 @@
     .wk-slot-name { font-size: 0.66rem; color: var(--text-light); }
     .wk-holiday { padding: 14px 6px; text-align: center; color: #aaa; font-size: 0.74rem; }
     .wk-event { padding: 10px 6px; text-align: center; color: #f57c00; font-size: 0.78rem; font-weight: 700; }
+    .week-col-hd.is-jpholiday:not(.is-today) { background: #fff5f5; }
+    .week-col-hd.is-jpholiday:not(.is-today) .wk-dow { color: #e53935; }
+    .week-col-hd.is-jpholiday:not(.is-today) .wk-date-num { color: #e53935; opacity: 1; }
+    .wk-shuku { display: inline-block; background: #e53935; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; vertical-align: middle; line-height: 1.5; }
+    .week-col-hd.is-today .wk-shuku { background: rgba(255,255,255,0.35); }
 
     /* BOOKING MODAL */
     .bk-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 600; display: none; align-items: center; justify-content: center; }
     .bk-overlay.open { display: flex; }
-    .bk-modal { background: #fff; border-radius: 14px; padding: 26px 28px; min-width: 300px; max-width: 380px; width: 92%; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-    .bk-modal-title { font-family: 'Oswald', sans-serif; font-size: 1.12rem; font-weight: 500; margin-bottom: 4px; }
-    .bk-modal-sub { font-size: 0.8rem; color: var(--text-light); margin-bottom: 18px; }
+    .bk-modal { background: #fff; border-radius: 18px; padding: 28px 28px 24px; min-width: 300px; max-width: 360px; width: 92%; box-shadow: 0 12px 40px rgba(0,0,0,0.22); }
+    .bk-modal-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+    .bk-modal-sub { font-size: 0.85rem; color: var(--text-light); margin-bottom: 22px; }
     .bk-field { margin-bottom: 14px; }
     .bk-label { font-size: 0.8rem; font-weight: 600; margin-bottom: 5px; display: block; }
     .bk-select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; background: #fff; outline: none; cursor: pointer; }
     .bk-select:focus { border-color: var(--primary); }
-    .bk-btns { display: flex; gap: 10px; margin-top: 20px; }
-    .bk-btn-ok  { flex:1; padding: 11px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+    .bk-btns { display: flex; gap: 10px; }
+    .bk-btn-ok  { flex:1; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
     .bk-btn-ok:hover { background: var(--primary-dark); }
-    .bk-btn-cl  { flex:1; padding: 11px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; cursor: pointer; }
+    .bk-btn-cl  { flex:1; padding: 12px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; }
     .bk-btn-cl:hover { background: var(--bg); }
+
+    /* WEEK TABS */
+    .week-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .week-tab { padding: 8px 22px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-light); transition: all 0.15s; }
+    .week-tab:hover { border-color: var(--primary-light); color: var(--primary); }
+    .week-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     @media (max-width: 600px) { .week-grid { grid-template-columns: repeat(3,1fr); } }
   </style>
@@ -252,7 +284,7 @@
     <button class="btn-primary" onclick="doLogin()">ログイン</button>
     <a class="auth-link" onclick="goTo('page-pw-reset1')">パスワードを忘れた方はこちら</a>
     <div class="auth-divider" style="margin-top:20px;"><span>他のアカウントでログイン</span></div>
-    <button class="btn-google" style="margin-top:12px;" onclick="doLogin()">
+    <button class="btn-google" style="margin-top:12px;" onclick="doGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
       Googleでログイン
     </button>
@@ -274,7 +306,7 @@
     </div>
     <button class="btn-primary" onclick="sendVerification()">メールアドレスで登録する</button>
     <div class="auth-divider"><span>アカウント連携</span></div>
-    <button class="btn-google" onclick="goTo('page-reg3')">
+    <button class="btn-google" onclick="doGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
       Googleアカウントで登録する
     </button>
@@ -434,12 +466,12 @@
         <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>予約状況
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
-      <div class="nav-item" id="nav-pw"   onclick="showApp('pw')">
-        <span class="nav-icon"><i class="fas fa-lock"></i></span>パスワード変更
+      <div class="nav-item" id="nav-info" onclick="showApp('info')">
+        <span class="nav-icon"><i class="fas fa-user-edit"></i></span>ユーザ情報
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
-      <div class="nav-item" id="nav-info" onclick="showApp('info')">
-        <span class="nav-icon"><i class="fas fa-user-edit"></i></span>ユーザ情報変更
+      <div class="nav-item" id="nav-pw"   onclick="showApp('pw')">
+        <span class="nav-icon"><i class="fas fa-lock"></i></span>パスワード変更
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
       <div class="nav-item nav-logout" onclick="doLogout()">
@@ -461,6 +493,24 @@
 
       <!-- トップページ -->
       <div class="page active" id="app-top">
+        <!-- お知らせ -->
+        <div class="notice-card">
+          <div class="notice-card-hd"><i class="fas fa-bell"></i> お知らせ</div>
+          <div class="notice-list" id="notice-list">
+            <div class="notice-item">
+              <div class="notice-date">2026.03.05</div>
+              <div class="notice-text"><span class="notice-badge">NEW</span>3月の祝日（3月20日）は通常通り営業いたします。</div>
+            </div>
+            <div class="notice-item">
+              <div class="notice-date">2026.02.20</div>
+              <div class="notice-text">スケジュール変更のお知らせ：4月より一部クラスの時間が変更になります。詳細はスタッフまでお問い合わせください。</div>
+            </div>
+            <div class="notice-item">
+              <div class="notice-date">2026.02.01</div>
+              <div class="notice-text">設備メンテナンスのため、2月28日（土）17:00〜19:00はシャワー室をご利用いただけません。</div>
+            </div>
+          </div>
+        </div>
         <div class="top-cards">
           <div class="top-card" onclick="showApp('schedule')">
             <div class="top-card-icon"><i class="fas fa-calendar-week"></i></div>
@@ -472,15 +522,15 @@
             <div class="top-card-label">予約状況</div>
             <div class="top-card-desc">予約の確認・キャンセル</div>
           </div>
+          <div class="top-card" onclick="showApp('info')">
+            <div class="top-card-icon"><i class="fas fa-user-edit"></i></div>
+            <div class="top-card-label">ユーザ情報</div>
+            <div class="top-card-desc">プロフィールの確認・編集</div>
+          </div>
           <div class="top-card" onclick="showApp('pw')">
             <div class="top-card-icon"><i class="fas fa-lock"></i></div>
             <div class="top-card-label">パスワード変更</div>
             <div class="top-card-desc">ログインパスワードの変更</div>
-          </div>
-          <div class="top-card" onclick="showApp('info')">
-            <div class="top-card-icon"><i class="fas fa-user-edit"></i></div>
-            <div class="top-card-label">ユーザ情報変更</div>
-            <div class="top-card-desc">プロフィールの確認・編集</div>
           </div>
         </div>
       </div>
@@ -488,7 +538,12 @@
       <!-- スケジュール予約 -->
       <div class="page" id="app-schedule">
         <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
-        <div class="week-section-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> 今週のスケジュール</div>
+        <div class="week-tabs">
+          <button class="week-tab active" id="tab-this-week" onclick="switchWeekTab(0)">今週</button>
+          <button class="week-tab" id="tab-next-week" onclick="switchWeekTab(7)">来週</button>
+          <button class="week-tab" id="tab-week-after" onclick="switchWeekTab(14)">再来週</button>
+        </div>
+        <div class="week-section-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> <span id="week-label">今週のスケジュール</span></div>
         <div class="week-grid" id="member-week-grid"></div>
       </div>
 
@@ -502,6 +557,24 @@
       <!-- ユーザ情報（表示） -->
       <div class="page" id="app-info">
         <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
+        <div class="usage-summary-card">
+          <div class="usage-summary-title"><i class="fas fa-chart-bar"></i>&nbsp; 利用実績</div>
+          <div class="usage-summary-stats">
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今までの利用回数</div>
+              <div class="usage-summary-val"><span id="info-total-visits">0</span><span class="usage-summary-unit">回</span></div>
+              <div class="usage-summary-note" id="info-start-note"></div>
+            </div>
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今年の利用回数</div>
+              <div class="usage-summary-val"><span id="info-year-visits">0</span><span class="usage-summary-unit">回</span></div>
+            </div>
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今月の利用回数</div>
+              <div class="usage-summary-val"><span id="info-month-visits">0</span><span class="usage-summary-unit">回</span></div>
+            </div>
+          </div>
+        </div>
         <div class="info-table" id="info-table"></div>
         <div style="margin-top:20px;">
           <button class="btn-action" onclick="showApp('info-edit')">変更する</button>
@@ -511,6 +584,24 @@
       <!-- ユーザ情報（編集） -->
       <div class="page" id="app-info-edit">
         <div class="breadcrumb" onclick="showApp('info')"><i class="fas fa-chevron-left"></i> ユーザ情報に戻る</div>
+        <div class="usage-summary-card">
+          <div class="usage-summary-title"><i class="fas fa-chart-bar"></i>&nbsp; 利用実績</div>
+          <div class="usage-summary-stats">
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今までの利用回数</div>
+              <div class="usage-summary-val"><span id="edit-total-visits">0</span><span class="usage-summary-unit">回</span></div>
+              <div class="usage-summary-note" id="edit-start-note"></div>
+            </div>
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今年の利用回数</div>
+              <div class="usage-summary-val"><span id="edit-year-visits">0</span><span class="usage-summary-unit">回</span></div>
+            </div>
+            <div class="usage-summary-stat">
+              <div class="usage-summary-lbl">今月の利用回数</div>
+              <div class="usage-summary-val"><span id="edit-month-visits">0</span><span class="usage-summary-unit">回</span></div>
+            </div>
+          </div>
+        </div>
         <div class="edit-form">
           <div class="edit-row">
             <label class="edit-label">氏名</label>
@@ -522,15 +613,20 @@
           </div>
           <div class="edit-row">
             <label class="edit-label">生年月日</label>
-            <div class="select-row">
-              <select class="edit-select" id="e-year" style="flex:2;"></select><span class="date-unit">年</span>
-              <select class="edit-select" id="e-month" style="flex:1;"></select><span class="date-unit">月</span>
-              <select class="edit-select" id="e-day" style="flex:1;"></select><span class="date-unit">日</span>
-            </div>
+            <div id="e-birth-display" style="font-size:0.9rem;color:var(--text-light);padding:4px 0;"></div>
           </div>
           <div class="edit-row">
             <label class="edit-label">スタイル</label>
-            <select class="edit-select" id="e-style"><option>オーソドックス</option><option>サウスポー</option></select>
+            <select class="edit-select" id="e-style"><option>オーソドックス</option><option>サウスポー</option><option>スイッチ</option></select>
+          </div>
+          <div class="edit-row">
+            <label class="edit-label">戦績</label>
+            <div class="select-row" style="flex-wrap:wrap;gap:8px;">
+              <select class="edit-select" id="e-fights" style="width:72px;"></select><span class="date-unit">戦</span>
+              <select class="edit-select" id="e-wins"   style="width:72px;"></select><span class="date-unit">勝</span>
+              <select class="edit-select" id="e-losses" style="width:72px;"></select><span class="date-unit">敗</span>
+              <select class="edit-select" id="e-draws"  style="width:72px;"></select><span class="date-unit">分</span>
+            </div>
           </div>
           <div class="edit-row">
             <label class="edit-label">通常体重 (kg)</label>
@@ -596,6 +692,21 @@
   </div>
 </div>
 
+<!-- Booking Success Modal -->
+<div class="bk-overlay" id="bk-success-overlay" onclick="closeBkSuccess()">
+  <div class="bk-modal" onclick="event.stopPropagation()" style="text-align:center;">
+    <div style="font-size:2.2rem;color:var(--success);margin-bottom:10px;"><i class="fas fa-check-circle"></i></div>
+    <div class="bk-modal-title" style="margin-bottom:8px;">予約を受け付けました</div>
+    <div class="bk-modal-sub" id="bk-success-detail" style="margin-bottom:6px;"></div>
+    <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:22px;">
+      予約状況は<span onclick="closeBkSuccess();showApp('res');" style="color:var(--primary);text-decoration:underline;cursor:pointer;">予約状況確認画面</span>でご確認ください。
+    </div>
+    <div class="bk-btns">
+      <button class="bk-btn-ok" onclick="closeBkSuccess()">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- Cancel Modal -->
 <div class="modal-overlay" id="cancel-modal">
   <div class="modal">
@@ -609,25 +720,12 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
 // ===== DATA =====
 const WD = ['日','月','火','水','木','金','土'];
-
-let user = {
-  name:'山田 太郎', email:'yamada@example.com',
-  gender:'男', birthYear:1990, birthMonth:12, birthDay:31,
-  style:'オーソドックス', weight:70, targetWeight:65,
-  wins:1, losses:1, draws:1,
-  totalVisits:100, yearVisits:50, monthVisits:10,
-  startDate:'2020年04月01日'
-};
-
-const reservations = [
-  { id:'r1', date:'2025-01-15', time:'10:00〜11:00', coach:'トミッキー', status:'確定' },
-  { id:'r2', date:'2025-01-22', time:'14:00〜15:00', coach:'鈴木さん',   status:'確定' },
-  { id:'r3', date:'2024-12-10', time:'09:00〜10:00', coach:'トミッキー', status:'キャンセル' },
-];
-
+let user = {};
 let regEmail = '';
 let cancelTarget = null;
 
@@ -643,7 +741,7 @@ const APP_PAGES = {
   'schedule':  { el:'app-schedule',  nav:'nav-schedule',  title:'スケジュール予約' },
   'res':       { el:'app-res',       nav:'nav-res',      title:'予約状況' },
   'info':      { el:'app-info',      nav:'nav-info',     title:'ユーザ情報' },
-  'info-edit': { el:'app-info-edit', nav:'nav-info',     title:'ユーザ情報変更' },
+  'info-edit': { el:'app-info-edit', nav:'nav-info',     title:'ユーザ情報' },
   'pw':        { el:'app-pw',        nav:'nav-pw',       title:'パスワード変更' },
   'pw-done':   { el:'app-pw-done',   nav:'nav-pw',       title:'パスワード変更完了' },
 };
@@ -657,7 +755,7 @@ function showApp(key) {
   const nav = document.getElementById(cfg.nav);
   if (nav) nav.classList.add('active');
   document.getElementById('topbar-title').textContent = cfg.title;
-  if (key === 'schedule')  renderMemberWeekly();
+  if (key === 'schedule')  { currentWeekOffset = 0; switchWeekTab(0); }
   if (key === 'res')       renderRes();
   if (key === 'info')      renderInfo();
   if (key === 'info-edit') fillEditForm();
@@ -669,91 +767,190 @@ function showApp(key) {
 function enterApp() {
   document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
   document.getElementById('app-wrap').classList.add('visible');
-  document.getElementById('sb-name').textContent = user.name;
-  localStorage.setItem('gym_loggedIn', '1');
+  document.getElementById('sb-name').textContent = user.name || '';
   const hash = location.hash.replace('#', '');
   const page = (hash && APP_PAGES[hash]) ? hash : (localStorage.getItem('gym_currentPage') || 'top');
   showApp(APP_PAGES[page] ? page : 'top');
+  loadNotices();
 }
 
-// ===== AUTH =====
-function doLogin() { enterApp(); }
+// ===== HELPERS =====
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-function sendVerification() {
-  regEmail = document.getElementById('reg-email').value.trim() || 'sample@example.com';
+// ===== SESSION =====
+async function loadUserProfile(authUser) {
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
+  if (profile) {
+    const bd = profile.birth_date ? profile.birth_date.split('-') : ['1990','01','01'];
+    const wins   = profile.wins   || 0;
+    const losses = profile.losses || 0;
+    const draws  = profile.draws  || 0;
+    user = {
+      id:           profile.id,
+      name:         profile.name          || '',
+      email:        profile.email         || authUser.email,
+      gender:       profile.gender        || '男',
+      birthYear:    parseInt(bd[0]),
+      birthMonth:   parseInt(bd[1]),
+      birthDay:     parseInt(bd[2]),
+      style:        profile.style         || 'オーソドックス',
+      weight:       profile.weight        || 0,
+      targetWeight: profile.target_weight || 0,
+      wins, losses, draws,
+      fights:       wins + losses + draws,
+      totalVisits:  profile.total_visits  || 0,
+      yearVisits:   profile.year_visits   || 0,
+      monthVisits:  profile.month_visits  || 0,
+      startDate:    profile.start_date    || null,
+    };
+  }
+}
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    await loadUserProfile(session.user);
+    // Skip auto-navigate if user is in registration flow
+    const activeReg = document.querySelector('#page-reg2.active, #page-reg3.active');
+    if (!activeReg) enterApp();
+  }
+});
+
+// ===== AUTH =====
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  if (!email || !pw) { alert('メールアドレスとパスワードを入力してください'); return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { alert('ログインに失敗しました: ' + error.message); }
+}
+
+async function doGoogleLogin() {
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google' });
+  if (error) { alert('Googleログインに失敗しました: ' + error.message); }
+}
+
+async function sendVerification() {
+  regEmail = document.getElementById('reg-email').value.trim();
+  if (!regEmail) { alert('メールアドレスを入力してください'); return; }
+  const { error } = await sb.auth.signInWithOtp({ email: regEmail, options: { shouldCreateUser: true } });
+  if (error) { alert('送信に失敗しました: ' + error.message); return; }
   document.getElementById('reg2-email').textContent = regEmail;
   goTo('page-reg2');
 }
 
-function verifyCode() { goTo('page-reg3'); }
+async function verifyCode() {
+  const token = document.getElementById('reg-code').value.trim();
+  if (!token) { alert('認証コードを入力してください'); return; }
+  const { error } = await sb.auth.verifyOtp({ email: regEmail, token, type: 'email' });
+  if (error) { alert('認証コードが正しくありません: ' + error.message); return; }
+  goTo('page-reg3');
+}
 
-function completeReg() {
-  const pw = document.getElementById('reg-pw').value;
+async function completeReg() {
+  const pw  = document.getElementById('reg-pw').value;
   const pw2 = document.getElementById('reg-pw2').value;
   const err = document.getElementById('err-pw-match');
   if (pw !== pw2) { err.style.display = 'block'; return; }
   err.style.display = 'none';
-  user.name        = document.getElementById('reg-name').value.trim() || '山田 太郎';
-  user.email       = regEmail;
-  user.gender      = document.getElementById('reg-gender').value;
-  user.birthYear   = +document.getElementById('reg-year').value;
-  user.birthMonth  = +document.getElementById('reg-month').value;
-  user.birthDay    = +document.getElementById('reg-day').value;
+  const name       = document.getElementById('reg-name').value.trim() || '会員';
+  const gender     = document.getElementById('reg-gender').value;
+  const y          = document.getElementById('reg-year').value;
+  const m          = String(document.getElementById('reg-month').value).padStart(2,'0');
+  const d          = String(document.getElementById('reg-day').value).padStart(2,'0');
+  const birth_date = `${y}-${m}-${d}`;
+  const { error: pwErr } = await sb.auth.updateUser({ password: pw });
+  if (pwErr) { alert('エラー: ' + pwErr.message); return; }
+  const { data: { user: u } } = await sb.auth.getUser();
+  if (u) {
+    await sb.from('profiles').update({ name, gender, birth_date }).eq('id', u.id);
+    user.name = name;
+  }
   goTo('page-reg4');
 }
 
-function sendReset() {
-  const email = document.getElementById('reset-email').value.trim() || 'sample@example.com';
+async function sendReset() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { alert('メールアドレスを入力してください'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if (error) { alert('送信に失敗しました: ' + error.message); return; }
   document.getElementById('reset-email-disp').textContent = email;
   goTo('page-pw-reset2');
 }
 
-function doLogout() {
-  localStorage.removeItem('gym_loggedIn');
+async function doLogout() {
+  await sb.auth.signOut();
+  user = {};
   localStorage.removeItem('gym_currentPage');
   location.hash = '';
   goTo('page-login');
 }
 
-// ===== RESERVATIONS =====
-function renderRes() {
-  const el = document.getElementById('res-list');
-  if (!reservations.length) {
-    el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
-    return;
-  }
-  el.innerHTML = reservations.map(r => {
-    const d = new Date(r.date);
-    const cancelled = r.status === 'キャンセル';
-    return `<div class="res-card">
-      <div class="res-date-blk">
-        <div class="res-month">${d.getMonth()+1}月</div>
-        <div class="res-day">${d.getDate()}</div>
-        <div class="res-wd">${WD[d.getDay()]}曜日</div>
-      </div>
-      <div class="res-info">
-        <div class="res-time">${r.time}</div>
-        <div class="res-coach"><i class="fas fa-user" style="margin-right:4px;opacity:0.5;font-size:0.75rem;"></i>${r.coach} コーチ</div>
-        <span class="badge ${cancelled?'badge-ng':'badge-ok'}">${r.status}</span>
-      </div>
-      ${!cancelled ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}')">キャンセル</button>` : ''}
+// ===== NOTICES =====
+async function loadNotices() {
+  const { data } = await sb.from('notices')
+    .select('*').eq('visible', true)
+    .order('date', { ascending: false }).limit(5);
+  if (!data || !data.length) return;
+  const list = document.getElementById('notice-list');
+  if (!list) return;
+  list.innerHTML = data.map(n => {
+    const nd = new Date(n.date);
+    const label = `${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.${String(nd.getDate()).padStart(2,'0')}`;
+    const isNew = (Date.now() - nd.getTime()) < 7 * 24 * 3600 * 1000;
+    return `<div class="notice-item">
+      <div class="notice-date">${label}</div>
+      <div class="notice-text">${isNew ? '<span class="notice-badge">NEW</span>' : ''}${escHtml(n.title)}：${escHtml(n.content)}</div>
     </div>`;
   }).join('');
 }
 
-function openCancel(id) {
-  cancelTarget = reservations.find(r => r.id === id);
-  if (!cancelTarget) return;
-  const d = new Date(cancelTarget.date);
+// ===== RESERVATIONS =====
+async function renderRes() {
+  const el = document.getElementById('res-list');
+  el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
+  const { data, error } = await sb.from('reservations')
+    .select('*').eq('user_id', user.id)
+    .order('date', { ascending: false });
+  if (error || !data || !data.length) {
+    el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
+    return;
+  }
+  el.innerHTML = data.map(r => {
+    const rd = new Date(r.date);
+    const cancelled = r.status === 'cancelled';
+    const statusLabel = cancelled ? 'キャンセル' : '確定';
+    return `<div class="res-card">
+      <div class="res-date-blk">
+        <div class="res-month">${rd.getMonth()+1}月</div>
+        <div class="res-day">${rd.getDate()}</div>
+        <div class="res-wd">${WD[rd.getDay()]}曜日</div>
+      </div>
+      <div class="res-info">
+        <div class="res-time">${escHtml(r.time)}　${escHtml(r.class_name)}</div>
+        <span class="badge ${cancelled?'badge-ng':'badge-ok'}">${statusLabel}</span>
+      </div>
+      ${!cancelled ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}','${r.date}',${JSON.stringify(r.time)})">キャンセル</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openCancel(id, date, time) {
+  cancelTarget = { id, date, time };
+  const d = new Date(date);
   document.getElementById('cancel-detail').innerHTML =
     `<strong>${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）</strong><br>
-     ${cancelTarget.time}<br>${cancelTarget.coach} コーチ<br><br>
+     ${escHtml(time)}<br><br>
      この予約をキャンセルしてもよろしいですか？`;
   document.getElementById('cancel-modal').classList.add('visible');
 }
 
-function doCancel() {
-  if (cancelTarget) { cancelTarget.status = 'キャンセル'; }
+async function doCancel() {
+  if (!cancelTarget) return;
+  const { error } = await sb.from('reservations')
+    .update({ status: 'cancelled' }).eq('id', cancelTarget.id);
+  if (error) { alert('キャンセルに失敗しました'); return; }
   closeModal();
   renderRes();
 }
@@ -764,57 +961,83 @@ function closeModal() {
 }
 
 // ===== USER INFO =====
+function formatStartDate(sd) {
+  if (!sd) return null;
+  return sd.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$1年$2月$3日');
+}
+
 function renderInfo() {
   const u = user;
+  const startStr = formatStartDate(u.startDate);
+  document.getElementById('info-total-visits').textContent  = u.totalVisits || 0;
+  document.getElementById('info-year-visits').textContent   = u.yearVisits  || 0;
+  document.getElementById('info-month-visits').textContent  = u.monthVisits || 0;
+  document.getElementById('info-start-note').textContent    = startStr ? `※${startStr}～の利用回数です。` : '';
   document.getElementById('info-table').innerHTML = `
-    <div class="info-row"><div class="info-key">氏名</div><div class="info-val">${u.name}</div></div>
-    <div class="info-row"><div class="info-key">性別</div><div class="info-val">${u.gender}</div></div>
+    <div class="info-row"><div class="info-key">氏名</div><div class="info-val">${escHtml(u.name)}</div></div>
+    <div class="info-row"><div class="info-key">性別</div><div class="info-val">${escHtml(u.gender)}</div></div>
     <div class="info-row"><div class="info-key">生年月日</div><div class="info-val">${u.birthYear}年${u.birthMonth}月${u.birthDay}日</div></div>
-    <div class="info-row"><div class="info-key">スタイル</div><div class="info-val">${u.style}</div></div>
+    <div class="info-row"><div class="info-key">スタイル</div><div class="info-val">${escHtml(u.style)}</div></div>
     <div class="info-row"><div class="info-key">通常体重</div><div class="info-val">${u.weight}kg</div></div>
     <div class="info-row"><div class="info-key">目標体重</div><div class="info-val">${u.targetWeight}kg</div></div>
-    <div class="info-row"><div class="info-key">戦績</div><div class="info-val">${u.wins}勝 ${u.losses}敗 ${u.draws}引き分け</div></div>
-    <div class="info-row">
-      <div class="info-stats">
-        <div class="info-stat"><div class="info-stat-lbl">今までの利用回数</div><div class="info-stat-val">${u.totalVisits}回</div></div>
-        <div class="info-stat"><div class="info-stat-lbl">今年の利用回数</div><div class="info-stat-val">${u.yearVisits}回</div></div>
-        <div class="info-stat"><div class="info-stat-lbl">今月の利用回数</div><div class="info-stat-val">${u.monthVisits}回</div></div>
-      </div>
-    </div>
-    <div class="info-row"><div class="info-key">システム利用開始日</div><div class="info-val">${u.startDate}</div></div>
+    <div class="info-row"><div class="info-key">戦績</div><div class="info-val">${u.fights}戦 ${u.wins}勝 ${u.losses}敗 ${u.draws}分</div></div>
+    ${startStr ? `<div class="info-row"><div class="info-key">システム利用開始日</div><div class="info-val">${startStr}</div></div>` : ''}
   `;
+}
+
+function buildSelect100(id, selected) {
+  const opts = Array.from({length:101}, (_,i) => `<option value="${i}"${i===selected?' selected':''}>${i}</option>`).join('');
+  document.getElementById(id).innerHTML = opts;
 }
 
 function fillEditForm() {
   const u = user;
-  document.getElementById('e-name').value    = u.name;
-  document.getElementById('e-gender').value  = u.gender;
-  document.getElementById('e-style').value   = u.style;
-  document.getElementById('e-weight').value  = u.weight;
-  document.getElementById('e-tweight').value = u.targetWeight;
-  buildDates('e-year','e-month','e-day', u.birthYear, u.birthMonth, u.birthDay);
+  const startStr = formatStartDate(u.startDate);
+  document.getElementById('edit-total-visits').textContent  = u.totalVisits || 0;
+  document.getElementById('edit-year-visits').textContent   = u.yearVisits  || 0;
+  document.getElementById('edit-month-visits').textContent  = u.monthVisits || 0;
+  document.getElementById('edit-start-note').textContent    = startStr ? `※${startStr}～の利用回数です。` : '';
+  document.getElementById('e-name').value    = u.name    || '';
+  document.getElementById('e-gender').value  = u.gender  || '男';
+  document.getElementById('e-style').value   = u.style   || 'オーソドックス';
+  document.getElementById('e-weight').value  = u.weight  || '';
+  document.getElementById('e-tweight').value = u.targetWeight || '';
+  document.getElementById('e-birth-display').textContent = `${u.birthYear}年${u.birthMonth}月${u.birthDay}日`;
+  buildSelect100('e-fights', u.fights || 0);
+  buildSelect100('e-wins',   u.wins   || 0);
+  buildSelect100('e-losses', u.losses || 0);
+  buildSelect100('e-draws',  u.draws  || 0);
 }
 
-function saveInfo() {
-  user.name        = document.getElementById('e-name').value || user.name;
-  user.gender      = document.getElementById('e-gender').value;
-  user.style       = document.getElementById('e-style').value;
-  user.weight      = +document.getElementById('e-weight').value || user.weight;
-  user.targetWeight= +document.getElementById('e-tweight').value || user.targetWeight;
-  user.birthYear   = +document.getElementById('e-year').value;
-  user.birthMonth  = +document.getElementById('e-month').value;
-  user.birthDay    = +document.getElementById('e-day').value;
-  document.getElementById('sb-name').textContent = user.name;
+async function saveInfo() {
+  const { data: { user: authUser } } = await sb.auth.getUser();
+  if (!authUser) return;
+  const name         = document.getElementById('e-name').value.trim() || user.name;
+  const gender       = document.getElementById('e-gender').value;
+  const style        = document.getElementById('e-style').value;
+  const weight       = +document.getElementById('e-weight').value  || user.weight;
+  const targetWeight = +document.getElementById('e-tweight').value || user.targetWeight;
+  const wins         = +document.getElementById('e-wins').value;
+  const losses       = +document.getElementById('e-losses').value;
+  const draws        = +document.getElementById('e-draws').value;
+  const { error } = await sb.from('profiles').update({
+    name, gender, style, weight, target_weight: targetWeight, wins, losses, draws
+  }).eq('id', authUser.id);
+  if (error) { alert('保存に失敗しました: ' + error.message); return; }
+  Object.assign(user, { name, gender, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws });
+  document.getElementById('sb-name').textContent = name;
   showApp('info');
 }
 
 // ===== PASSWORD =====
-function changePw() {
-  const nw = document.getElementById('pw-new').value;
-  const nw2= document.getElementById('pw-new2').value;
-  const err= document.getElementById('err-pw-change');
+async function changePw() {
+  const nw  = document.getElementById('pw-new').value;
+  const nw2 = document.getElementById('pw-new2').value;
+  const err = document.getElementById('err-pw-change');
   if (nw !== nw2) { err.style.display='block'; return; }
   err.style.display = 'none';
+  const { error } = await sb.auth.updateUser({ password: nw });
+  if (error) { alert('パスワード変更に失敗しました: ' + error.message); return; }
   ['pw-cur','pw-new','pw-new2'].forEach(id => { document.getElementById(id).value=''; });
   showApp('pw-done');
 }
@@ -835,21 +1058,28 @@ function buildDates(yId, mId, dId, selY, selM, selD) {
 // ===== INIT =====
 buildDates('reg-year','reg-month','reg-day', 1990, 12, 31);
 
-// ===== WEEKLY SCHEDULE (管理側と連動) =====
-function loadScheduleFromStorage() {
+// ===== WEEKLY SCHEDULE (DBから読み込み) =====
+async function loadScheduleFromDB() {
   try {
-    const sd  = localStorage.getItem('gym_scheduleData');
-    const dn  = localStorage.getItem('gym_dayNotes');
-    const hol = localStorage.getItem('gym_holidays');
-    const bi  = localStorage.getItem('gym_businessHours');
-    return {
-      scheduleData: sd  ? JSON.parse(sd)  : {},
-      dayNotes:     dn  ? JSON.parse(dn)  : {},
-      holidays:     new Set(hol ? JSON.parse(hol) : []),
-      businessHours: bi ? JSON.parse(bi)  : {}
-    };
+    const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
+      sb.from('schedule_slots').select('*'),
+      sb.from('day_notes').select('*'),
+      sb.from('gym_holidays').select('*'),
+      sb.from('gym_settings').select('*'),
+    ]);
+    const scheduleData = {};
+    (slotsRes.data || []).forEach(s => {
+      if (!scheduleData[s.date]) scheduleData[s.date] = [];
+      scheduleData[s.date].push({ time: s.time, name: s.class_name });
+    });
+    const dayNotes = {};
+    (notesRes.data || []).forEach(n => { dayNotes[n.date] = n.note; });
+    const holidays = new Set((holRes.data || []).map(h => h.date));
+    const businessHours = {};
+    (settingsRes.data || []).forEach(s => { businessHours[s.key] = s.value; });
+    return { scheduleData, dayNotes, holidays, businessHours };
   } catch(e) {
-    return { scheduleData:{}, dayNotes:{}, holidays:new Set(), businessHours:{} };
+    return { scheduleData:{}, dayNotes:{}, holidays: new Set(), businessHours:{} };
   }
 }
 
@@ -866,7 +1096,7 @@ function getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours
   if (dayNotes[dateStr])     return { type:'event', note: dayNotes[dateStr] };
   const existing = scheduleData[dateStr];
   if (existing !== undefined) {
-    if (Array.isArray(existing)) return { type:'slots', slots: existing.map(t=>({time:t,name:'練習'})) };
+    if (Array.isArray(existing)) return { type:'slots', slots: existing };
     return { type:'slots', slots: Object.entries(existing).map(([t,n])=>({time:t,name:n})).sort((a,b)=>a.time.localeCompare(b.time)) };
   }
   const isWkend = (dow === 0 || dow === 6);
@@ -879,23 +1109,38 @@ function getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours
   return { type:'slots', slots };
 }
 
-function renderMemberWeekly() {
+let currentWeekOffset = 0;
+
+function switchWeekTab(offset) {
+  currentWeekOffset = offset;
+  document.getElementById('tab-this-week').classList.toggle('active', offset === 0);
+  document.getElementById('tab-next-week').classList.toggle('active', offset === 7);
+  document.getElementById('tab-week-after').classList.toggle('active', offset === 14);
+  const labels = { 0: '今週のスケジュール', 7: '来週のスケジュール', 14: '再来週のスケジュール' };
+  document.getElementById('week-label').textContent = labels[offset] || '今週のスケジュール';
+  renderMemberWeekly(offset);
+}
+
+async function renderMemberWeekly(weekOffset) {
+  weekOffset = weekOffset != null ? weekOffset : currentWeekOffset;
   const grid = document.getElementById('member-week-grid');
   if (!grid) return;
-  const { scheduleData, dayNotes, holidays, businessHours } = loadScheduleFromStorage();
+  const { scheduleData, dayNotes, holidays, businessHours } = await loadScheduleFromDB();
   const now = new Date();
   const DAYS = ['日','月','火','水','木','金','土'];
   let html = '';
   for (let d = 0; d < 7; d++) {
     const date = new Date(now);
-    date.setDate(now.getDate() + d);
+    date.setDate(now.getDate() + weekOffset + d);
     date.setHours(0,0,0,0);
     const dow = date.getDay();
     const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    const isToday = d === 0;
+    const isToday = weekOffset === 0 && d === 0;
+    const isJpHoliday = JP_HOLIDAYS.has(dateStr);
     const dowClass = dow === 0 ? 'wk-sun' : dow === 6 ? 'wk-sat' : '';
-    const hdCls = ['week-col-hd', isToday ? 'is-today' : '', dowClass].filter(Boolean).join(' ');
-    const label = isToday ? '今日' : d === 1 ? '明日' : `${date.getMonth()+1}/${date.getDate()}`;
+    const hdCls = ['week-col-hd', isToday ? 'is-today' : '', dowClass, isJpHoliday ? 'is-jpholiday' : ''].filter(Boolean).join(' ');
+    const label = isToday ? '今日' : (weekOffset === 0 && d === 1) ? '明日' : `${date.getMonth()+1}/${date.getDate()}`;
+    const shukuTag = isJpHoliday ? '<span class="wk-shuku">祝</span>' : '';
 
     const { type, slots, note } = getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours);
     let body = '';
@@ -909,16 +1154,16 @@ function renderMemberWeekly() {
         const [h,m] = time.split(':').map(Number);
         const slotMs = new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m).getTime();
         const past = slotMs < nowMs ? ' is-past' : '';
-        return `<div class="wk-slot${past}" onclick="openBkModal('${dateStr}','${time}','${name}')">
+        return `<div class="wk-slot${past}" onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name)})">
           <div class="wk-slot-time">${time}</div>
-          <div class="wk-slot-name">${name}</div>
+          <div class="wk-slot-name">${escHtml(name)}</div>
         </div>`;
       }).join('') || `<div class="wk-holiday" style="font-size:0.7rem;">予定なし</div>`;
     }
     html += `<div class="week-col">
       <div class="${hdCls}">
         <div class="wk-date-num">${label}</div>
-        <div class="wk-dow">${DAYS[dow]}</div>
+        <div class="wk-dow">${DAYS[dow]}${shukuTag}</div>
       </div>
       <div class="week-col-body">${body}</div>
     </div>`;
@@ -944,20 +1189,30 @@ function closeBkModal() {
   bkDate = bkTime = bkClass = null;
 }
 
-function submitBkModal() {
+async function submitBkModal() {
+  const { data: { user: authUser } } = await sb.auth.getUser();
+  if (!authUser) { alert('ログインが必要です'); return; }
+  const { error } = await sb.from('reservations').insert({
+    user_id:    authUser.id,
+    date:       bkDate,
+    time:       bkTime,
+    class_name: bkClass,
+    status:     'confirmed',
+  });
+  if (error) { alert('予約に失敗しました: ' + error.message); return; }
   const [y,m,d] = bkDate.split('-').map(Number);
-  const id = 'bk_' + Date.now();
-  reservations.push({ id, date: bkDate, time:`${bkTime}〜`, coach:'', status:'確定' });
+  const dow = new Date(y,m-1,d).getDay();
+  const DAYS = ['日','月','火','水','木','金','土'];
   closeBkModal();
-  alert(`予約を受け付けました。\n${m}月${d}日 ${bkTime} ${bkClass}`);
+  document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${bkTime}　${bkClass}`;
+  document.getElementById('bk-success-overlay').classList.add('open');
 }
 
-// ===== RELOAD RESTORE =====
-window.addEventListener('DOMContentLoaded', function() {
-  if (localStorage.getItem('gym_loggedIn') === '1') {
-    enterApp();
-  }
-});
+function closeBkSuccess() {
+  document.getElementById('bk-success-overlay').classList.remove('open');
+}
+
+// Session restore is handled by sb.auth.onAuthStateChange above
 </script>
 </body>
 </html>

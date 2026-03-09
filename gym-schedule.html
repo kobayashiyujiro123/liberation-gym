@@ -413,6 +413,7 @@
 
     <!-- BASIC INFO -->
     <div class="view" id="view-basicinfo">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="form-card">
         <div style="font-size:0.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:18px;"><i class="fas fa-clock" style="margin-right:6px;"></i>基本営業時間</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-bottom:24px;">
@@ -491,6 +492,7 @@
 
     <!-- SCHEDULE -->
     <div class="view" id="view-schedule">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="cal-header">
         <button class="cal-nav-btn" onclick="calPrev()"><i class="fas fa-chevron-left"></i></button>
         <div class="cal-month-title" id="cal-month-title"></div>
@@ -516,6 +518,7 @@
 
     <!-- RESERVATION -->
     <div class="view" id="view-reservation">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <!-- 7日分の日付タブ -->
       <div class="res-day-tabs" id="res-day-tabs"></div>
 
@@ -526,7 +529,7 @@
 
       <div class="search-bar" style="margin-top:16px;">
         <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="res-search" placeholder="会員名・コーチ名で検索..." oninput="renderReservations()" /></div>
-        <button class="btn-p"><i class="fas fa-plus"></i> 予約追加</button>
+        <button class="btn-p" onclick="openAddResModal()"><i class="fas fa-plus"></i> 予約追加</button>
       </div>
       <div class="res-coach-tabs" id="res-coach-tabs"></div>
       <div id="res-timeline"></div>
@@ -534,6 +537,7 @@
 
     <!-- MEMBERS LIST -->
     <div class="view" id="view-members">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="member-search" placeholder="会員名・メールで検索..." oninput="renderMembers()" /></div>
         <button class="btn-p"><i class="fas fa-plus"></i> 会員追加</button>
@@ -656,16 +660,17 @@
 
     <!-- PASSWORD -->
     <div class="view" id="view-password">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="form-card">
-        <div class="form-group"><label class="form-label">現在のパスワード</label><input type="password" class="form-ctrl" placeholder="現在のパスワードを入力" /></div>
-        <div class="form-group"><label class="form-label">新しいパスワード</label><input type="password" class="form-ctrl" placeholder="新しいパスワードを入力" /></div>
-        <div class="form-group"><label class="form-label">新しいパスワード（確認）</label><input type="password" class="form-ctrl" placeholder="もう一度入力してください" /></div>
-        <div class="form-actions"><button class="btn-p">変更する</button><button class="btn-o">キャンセル</button></div>
+        <div class="form-group"><label class="form-label">新しいパスワード</label><input type="password" id="pw-new" class="form-ctrl" placeholder="新しいパスワードを入力" /></div>
+        <div class="form-group"><label class="form-label">新しいパスワード（確認）</label><input type="password" id="pw-new2" class="form-ctrl" placeholder="もう一度入力してください" /></div>
+        <div class="form-actions"><button class="btn-p" onclick="changePw()">変更する</button><button class="btn-o" onclick="document.getElementById('pw-new').value='';document.getElementById('pw-new2').value=''">キャンセル</button></div>
       </div>
     </div>
 
     <!-- NOTICE -->
     <div class="view" id="view-notice">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="notice-wrap">
         <!-- 作成フォーム -->
         <div class="form-card" style="max-width:none;">
@@ -703,6 +708,7 @@
 
     <!-- BIRTHDAY -->
     <div class="view" id="view-birthday">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
 
       <!-- 本日 -->
       <div class="bday-section-header">
@@ -723,6 +729,7 @@
 
     <!-- COACH LIST -->
     <div class="view" id="view-coach">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="coach-search" placeholder="コーチ名・専門で検索..." oninput="renderCoaches()" /></div>
         <button class="btn-p"><i class="fas fa-plus"></i> コーチ追加</button>
@@ -802,6 +809,41 @@
   </main>
 </div>
 
+<!-- ADD RESERVATION MODAL -->
+<div class="cal-modal-overlay" id="add-res-overlay" onclick="closeAddResModal()">
+  <div class="cal-modal" onclick="event.stopPropagation()" style="max-width:420px;">
+    <div class="cal-modal-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span><i class="fas fa-plus" style="margin-right:8px;color:var(--primary);font-size:0.9rem;"></i>予約追加</span>
+      <span id="add-res-date-label" style="font-size:0.88rem;font-weight:400;color:var(--text-light);"></span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="form-label">お名前 <span style="color:var(--danger);font-weight:400;">*</span></label>
+      <input id="add-res-name" class="form-ctrl" type="text" placeholder="山田 太郎" />
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:12px;">
+      <div style="flex:1;">
+        <label class="form-label">性別</label>
+        <select id="add-res-gender" class="form-ctrl">
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label class="form-label">時間</label>
+        <select id="add-res-time" class="form-ctrl"></select>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label class="form-label">メモ</label>
+      <textarea id="add-res-memo" class="form-ctrl" placeholder="備考・メモを入力..." style="min-height:70px;"></textarea>
+    </div>
+    <div class="cal-modal-footer">
+      <button class="btn-p" onclick="submitAddRes()"><i class="fas fa-check"></i> 予約を追加</button>
+      <button class="btn-o" style="margin-left:auto;" onclick="closeAddResModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <!-- CALENDAR MODAL -->
 <div class="cal-modal-overlay" id="cal-modal-overlay" onclick="closeCalModal()">
   <div class="cal-modal" onclick="event.stopPropagation()">
@@ -827,8 +869,26 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
 const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理' };
+
+// ===== ADMIN AUTH =====
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+    location.href = 'gym-member.html';
+    return;
+  }
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+    const { data: p } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+    if (!p || p.role !== 'admin') {
+      location.href = 'gym-member.html';
+      return;
+    }
+    await initFromDB();
+  }
+});
 
 
 // ===== RESERVATION LOGIC =====
@@ -994,6 +1054,7 @@ function renderReservations() {
               <span><i class="fas fa-user-tie"></i>${r.coach}</span>
               <span><span class="badge ${r.badge}" style="font-size:0.68rem;padding:1px 7px;">${r.status}</span></span>
             </div>
+            ${r.memo ? `<div style="font-size:0.72rem;color:var(--text-light);margin-top:3px;"><i class="fas fa-sticky-note" style="margin-right:4px;opacity:0.6;"></i>${r.memo}</div>` : ''}
           </div>
           <div class="res-card-actions">
             <button class="act-btn" id="res-edit-btn-${r.id}" style="font-size:0.72rem;padding:3px 8px;" onclick="toggleResEdit('${r.id}')">編集</button>
@@ -1067,6 +1128,42 @@ function saveResEdit(id) {
 buildDayTabs();
 initResCoachTabs();
 renderReservations();
+
+// ===== ADD RESERVATION MODAL =====
+function openAddResModal() {
+  const sel = document.getElementById('add-res-time');
+  sel.innerHTML = TIMES.map(t => `<option value="${t}">${t}</option>`).join('');
+  document.getElementById('add-res-name').value   = '';
+  document.getElementById('add-res-gender').value = '男';
+  document.getElementById('add-res-memo').value   = '';
+  // 選択中の日付ラベルを設定
+  const dateIdx = resDates.indexOf(resSelectedDate);
+  const base = new Date(); base.setHours(0,0,0,0);
+  const dt = new Date(base); dt.setDate(base.getDate() + dateIdx);
+  document.getElementById('add-res-date-label').textContent =
+    `${dt.getMonth()+1}/${dt.getDate()}（${WEEKDAYS[dt.getDay()]}）`;
+  document.getElementById('add-res-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('add-res-name').focus(), 50);
+}
+
+function closeAddResModal() {
+  document.getElementById('add-res-overlay').classList.remove('open');
+}
+
+function submitAddRes() {
+  const name = document.getElementById('add-res-name').value.trim();
+  if (!name) { document.getElementById('add-res-name').focus(); return; }
+  const gender = document.getElementById('add-res-gender').value;
+  const time   = document.getElementById('add-res-time').value;
+  const memo   = document.getElementById('add-res-memo').value.trim();
+  const id = '#' + String(Date.now()).slice(-6);
+  resData[resSelectedDate] = resData[resSelectedDate] || [];
+  resData[resSelectedDate].push({ id, name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo });
+  resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
+  closeAddResModal();
+  buildDayTabs();
+  renderReservations();
+}
 
 // ===== MEMBER PAGINATION =====
 const allMembers = [
@@ -1186,15 +1283,22 @@ function openMemberEdit(id) {
   document.getElementById('nav-members').classList.add('active');
 }
 
-function saveMemberEdit() {
+async function saveMemberEdit() {
   const m = allMembers.find(m => m.id === currentMemberId);
   if (!m) return;
-  m.status      = document.getElementById('me-status').value;
-  m.badge       = m.status === '有効' ? 'badge-s' : m.status === '休会' ? 'badge-w' : 'badge-d';
-  m.coach       = document.getElementById('me-coach').value;
-  m.leftDate    = document.getElementById('me-left').value;
-  m.memo        = document.getElementById('me-memo').value;
-  m.canView     = document.getElementById('me-toggle').checked;
+  m.status   = document.getElementById('me-status').value;
+  m.badge    = m.status === '有効' ? 'badge-s' : m.status === '休会' ? 'badge-w' : 'badge-d';
+  m.coach    = document.getElementById('me-coach').value;
+  m.leftDate = document.getElementById('me-left').value;
+  m.memo     = document.getElementById('me-memo').value;
+  m.canView  = document.getElementById('me-toggle').checked;
+  const statusRevMap = { '有効': 'active', '休会': 'suspended', '退会': 'withdrawn' };
+  await sb.from('profiles').update({
+    status:     statusRevMap[m.status] || 'active',
+    coach_name: m.coach,
+    left_date:  m.leftDate || null,
+    memo:       m.memo,
+  }).eq('id', m.id);
   openMemberDetail(currentMemberId);
 }
 
@@ -1430,18 +1534,37 @@ function openCalModal(dateStr) {
 }
 
 
-function saveScheduleToStorage() {
+async function saveScheduleToStorage() {
   try {
-    localStorage.setItem('gym_scheduleData', JSON.stringify(scheduleData));
-    localStorage.setItem('gym_dayNotes', JSON.stringify(dayNotes));
-    localStorage.setItem('gym_holidays', JSON.stringify([...holidays]));
-    const bi = {};
-    ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) bi[id] = el.value;
-    });
-    localStorage.setItem('gym_businessHours', JSON.stringify(bi));
-  } catch(e) {}
+    // Business hours → gym_settings
+    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];
+    const settings = biKeys.map(key => { const el = document.getElementById(key); return el ? { key, value: el.value } : null; }).filter(Boolean);
+    if (settings.length) await sb.from('gym_settings').upsert(settings, { onConflict: 'key' });
+
+    // Holidays → gym_holidays (全件再sync)
+    await sb.from('gym_holidays').delete().gte('date', '2000-01-01');
+    const holArr = [...holidays].map(date => ({ date }));
+    if (holArr.length) await sb.from('gym_holidays').insert(holArr);
+
+    // Day notes → day_notes (upsert)
+    const notes = Object.entries(dayNotes).map(([date, note]) => ({ date, note }));
+    if (notes.length) await sb.from('day_notes').upsert(notes, { onConflict: 'date' });
+
+    // Schedule slots → schedule_slots (変更日付のみ再sync)
+    const dates = Object.keys(scheduleData);
+    if (dates.length) {
+      await sb.from('schedule_slots').delete().in('date', dates);
+      const slots = [];
+      for (const [date, times] of Object.entries(scheduleData)) {
+        if (times && typeof times === 'object' && !Array.isArray(times)) {
+          for (const [time, class_name] of Object.entries(times)) {
+            slots.push({ date, time, class_name: class_name || '練習' });
+          }
+        }
+      }
+      if (slots.length) await sb.from('schedule_slots').insert(slots);
+    }
+  } catch(e) { console.warn('DB save failed:', e); }
 }
 
 function saveCalModal() {
@@ -1735,8 +1858,12 @@ function openMemberFromBday(name) {
 }
 
 function renderBirthdays() {
-  const todayList = members.filter(m => daysUntilBirthday(m.month, m.day) === 0);
-  const weekList  = members.filter(m => { const d = daysUntilBirthday(m.month, m.day); return d > 0 && d <= 7; });
+  const bdayMembers = allMembers.filter(m => m.birthday).map(m => {
+    const parts = m.birthday.split('-').map(Number);
+    return { name: m.name, gender: m.gender, month: parts[1], day: parts[2] };
+  });
+  const todayList = bdayMembers.filter(m => daysUntilBirthday(m.month, m.day) === 0);
+  const weekList  = bdayMembers.filter(m => { const d = daysUntilBirthday(m.month, m.day); return d > 0 && d <= 7; });
 
   const todayEl = document.getElementById('bday-today');
   const weekEl  = document.getElementById('bday-week');
@@ -1844,27 +1971,23 @@ function openCoachEdit(id) {
   document.getElementById('nav-coach').classList.add('active');
 }
 
-function saveCoachEdit() {
+async function saveCoachEdit() {
   const c = allCoaches.find(c => c.id === currentCoachId);
   if (!c) return;
   c.status = document.getElementById('ce-status').value;
   c.badge  = c.status === '在籍中' ? 'badge-s' : c.status === '休暇中' ? 'badge-w' : 'badge-d';
-
-  // 保存後は詳細ページへ
+  c.email  = document.getElementById('ce-email').value.trim();
+  c.tel    = document.getElementById('ce-tel').value.trim();
+  const statusRevMap = { '在籍中': 'active', '休暇中': 'on_leave', '退職': 'resigned' };
+  await sb.from('coaches').update({
+    status: statusRevMap[c.status] || 'active',
+    email: c.email, tel: c.tel,
+  }).eq('id', c.id);
   openCoachDetail(currentCoachId);
 }
 
-renderCoaches();
-
-renderBirthdays();
-
 // ===== NOTICE LOGIC =====
-const allNotices = [
-  { id:'N001', title:'年末年始の営業時間について',  content:'12月30日〜1月3日は休館となります。ご了承ください。',                                          date:'2025/12/15', visible:true  },
-  { id:'N002', title:'新クラス開始のお知らせ',      content:'4月より毎週火曜日10時から新しいクラスを開始します。詳細はスタッフまでお問い合わせください。',  date:'2025/03/20', visible:true  },
-  { id:'N003', title:'メンテナンスのお知らせ',      content:'3月15日（土）午前中はシステムメンテナンスのため予約システムが一時停止します。',               date:'2025/03/10', visible:false },
-];
-let noticeIdSeq = 4;
+const allNotices = [];
 
 function renderNotices() {
   const body = document.getElementById('notice-list-body');
@@ -1875,7 +1998,7 @@ function renderNotices() {
     body.innerHTML = '<div class="notice-empty"><i class="fas fa-inbox" style="font-size:1.4rem;display:block;margin-bottom:8px;opacity:0.3;"></i>お知らせはまだありません</div>';
     return;
   }
-  body.innerHTML = [...allNotices].reverse().map(n => `
+  body.innerHTML = [...allNotices].map(n => `
     <div class="notice-item">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
         <div class="notice-item-title" style="flex:1;">${n.title}</div>
@@ -1892,41 +2015,45 @@ function renderNotices() {
   `).join('');
 }
 
-function submitNotice() {
+async function submitNotice() {
   const title   = document.getElementById('notice-title').value.trim();
   const content = document.getElementById('notice-content').value.trim();
   if (!title) { alert('タイトルを入力してください'); return; }
   if (!content) { alert('内容を入力してください'); return; }
-  const now = new Date();
-  const date = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
   const visibleVal = document.querySelector('input[name="notice-visible"]:checked');
   const visible = visibleVal ? visibleVal.value === '1' : true;
-  allNotices.push({ id: 'N' + String(noticeIdSeq++).padStart(3,'0'), title, content, date, visible });
+  const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
+  if (error) { alert('保存に失敗しました: ' + error.message); return; }
+  const nd = new Date(data.date);
+  const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
+  allNotices.unshift({ id: data.id, title: data.title, content: data.content, date: dateStr, visible: data.visible });
   document.getElementById('notice-title').value   = '';
   document.getElementById('notice-content').value = '';
   renderNotices();
 }
 
-function toggleNoticeVisible(id) {
+async function toggleNoticeVisible(id) {
   const n = allNotices.find(x => x.id === id);
-  if (n) n.visible = !n.visible;
-  renderNotices();
+  if (!n) return;
+  const newVisible = !n.visible;
+  const { error } = await sb.from('notices').update({ visible: newVisible }).eq('id', id);
+  if (!error) { n.visible = newVisible; renderNotices(); }
 }
 
-function deleteNotice(id) {
+async function deleteNotice(id) {
   if (!confirm('このお知らせを削除しますか？')) return;
+  const { error } = await sb.from('notices').delete().eq('id', id);
+  if (error) { alert('削除に失敗しました'); return; }
   const idx = allNotices.findIndex(n => n.id === id);
   if (idx !== -1) allNotices.splice(idx, 1);
   renderNotices();
 }
 
-renderNotices();
-
 // リロード時にハッシュからページを復元
 const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach'];
 
-function saveBasicInfo() {
-  saveScheduleToStorage();
+async function saveBasicInfo() {
+  await saveScheduleToStorage();
   const btn = document.querySelector('#view-basicinfo .btn-p');
   btn.innerHTML = '<i class="fas fa-check"></i> 保存しました';
   btn.style.background = 'var(--success)';
@@ -1934,6 +2061,147 @@ function saveBasicInfo() {
     btn.innerHTML = '<i class="fas fa-save"></i> 保存する';
     btn.style.background = '';
   }, 2000);
+}
+
+// ===== PASSWORD CHANGE =====
+async function changePw() {
+  const nw  = document.getElementById('pw-new').value;
+  const nw2 = document.getElementById('pw-new2').value;
+  if (!nw || nw.length < 6) { alert('新しいパスワードを6文字以上で入力してください'); return; }
+  if (nw !== nw2) { alert('パスワードが一致しません'); return; }
+  const { error } = await sb.auth.updateUser({ password: nw });
+  if (error) { alert('変更失敗: ' + error.message); return; }
+  alert('パスワードを変更しました');
+  document.getElementById('pw-new').value  = '';
+  document.getElementById('pw-new2').value = '';
+}
+
+// ===== DB INIT =====
+async function initFromDB() {
+  await Promise.all([
+    initScheduleFromDB(),
+    initNoticesFromDB(),
+    initCoachesFromDB(),
+    initMembersFromDB(),
+  ]);
+  await initReservationsFromDB();
+  renderBirthdays();
+}
+
+async function initScheduleFromDB() {
+  try {
+    const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
+      sb.from('schedule_slots').select('*'),
+      sb.from('day_notes').select('*'),
+      sb.from('gym_holidays').select('*'),
+      sb.from('gym_settings').select('*'),
+    ]);
+    (slotsRes.data || []).forEach(s => {
+      if (!scheduleData[s.date]) scheduleData[s.date] = {};
+      scheduleData[s.date][s.time] = s.class_name;
+    });
+    (notesRes.data || []).forEach(n => { dayNotes[n.date] = n.note; });
+    (holRes.data || []).forEach(h => { holidays.add(h.date); });
+    (settingsRes.data || []).forEach(s => {
+      const el = document.getElementById(s.key);
+      if (el) el.value = s.value;
+    });
+    if (calYear === undefined) { const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); }
+    renderCalendar();
+  } catch(e) { console.warn('initScheduleFromDB failed:', e); }
+}
+
+async function initNoticesFromDB() {
+  const { data } = await sb.from('notices').select('*').order('date', { ascending: false });
+  if (!data) return;
+  allNotices.length = 0;
+  data.forEach(n => {
+    const nd = new Date(n.date);
+    const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
+    allNotices.push({ id: n.id, title: n.title, content: n.content, date: dateStr, visible: n.visible });
+  });
+  renderNotices();
+}
+
+async function initCoachesFromDB() {
+  const { data } = await sb.from('coaches').select('*').order('created_at');
+  if (!data || !data.length) return;
+  allCoaches.length = 0;
+  const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
+  const badgeMap  = { active: 'badge-s', on_leave: 'badge-w', resigned: 'badge-d' };
+  const colors = ['linear-gradient(135deg,#4caf50,#1b5e20)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#ff9800,#e65100)','linear-gradient(135deg,#9c27b0,#4a148c)'];
+  data.forEach((c, i) => {
+    allCoaches.push({
+      id: c.id, name: c.name, specialty: c.specialty || '', exp: c.experience || '',
+      classes: 0, rating: 5, status: statusMap[c.status] || '在籍中',
+      badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
+      joined: c.joined_at || '', color: colors[i % colors.length],
+    });
+  });
+  renderCoaches();
+}
+
+async function initMembersFromDB() {
+  const { data } = await sb.from('profiles').select('*').order('created_at');
+  if (!data || !data.length) return;
+  allMembers.length = 0;
+  const statusMap = { active: '有効', suspended: '休会', withdrawn: '退会' };
+  const badgeMap  = { active: 'badge-s', suspended: 'badge-w', withdrawn: 'badge-d' };
+  data.forEach(p => {
+    const wins = p.wins || 0, losses = p.losses || 0, draws = p.draws || 0;
+    allMembers.push({
+      id: p.id, name: p.name || '未設定', email: p.email || '', tel: p.tel || '',
+      date: p.start_date || (p.created_at || '').slice(0,10),
+      status: statusMap[p.status] || '有効', badge: badgeMap[p.status] || 'badge-s',
+      visits: p.total_visits || 0, visitsYear: p.year_visits || 0, visitsMonth: p.month_visits || 0,
+      gender: p.gender || '', birthday: p.birth_date || '', style: p.style || '',
+      weight: p.weight || 0, targetWeight: p.target_weight || 0,
+      record: wins + '勝' + losses + '敗' + draws + '分',
+      coach: p.coach_name || '', memo: p.memo || '', leftDate: p.left_date || '', canView: false,
+    });
+  });
+  memberPage = 1;
+  renderMembers();
+}
+
+async function initReservationsFromDB() {
+  try {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const endDate = new Date(today); endDate.setDate(today.getDate() + 6);
+    const { data } = await sb.from('reservations')
+      .select('*, profiles(name, gender)')
+      .gte('date', today.toISOString().slice(0,10))
+      .lte('date', endDate.toISOString().slice(0,10))
+      .order('date').order('time');
+    if (!data) return;
+
+    // Rebuild resData
+    Object.keys(resData).forEach(k => delete resData[k]);
+    const base = new Date(); base.setHours(0,0,0,0);
+    resDates.length = 0;
+    for (let d = 0; d < 7; d++) {
+      const dt = new Date(base); dt.setDate(base.getDate() + d);
+      const key = dt.toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'/');
+      resDates.push(key);
+      resData[key] = [];
+    }
+    data.forEach(r => {
+      const dt = new Date(r.date);
+      const key = dt.toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'/');
+      if (resData[key]) {
+        const isCancelled = r.status === 'cancelled';
+        resData[key].push({
+          id: r.id, name: r.profiles?.name || '不明', gender: r.profiles?.gender || '男',
+          cls: r.class_name, time: r.time, coach: '',
+          status: isCancelled ? 'キャンセル' : '確定',
+          badge: isCancelled ? 'badge-d' : 'badge-s',
+        });
+      }
+    });
+    resSelectedDate = resDates[0];
+    buildDayTabs();
+    renderReservations();
+  } catch(e) { console.warn('initReservationsFromDB failed:', e); }
 }
 function restoreFromHash() {
   const hash = location.hash.replace('#', '');
