@@ -885,6 +885,7 @@ if (DEMO_MODE) {
     renderBirthdays();
     buildDayTabs();
     renderReservations();
+    saveScheduleToStorage(); // 初期営業時間をlocalStorageに保存
   });
 } else {
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -1548,6 +1549,16 @@ function openCalModal(dateStr) {
 
 
 async function saveScheduleToStorage() {
+  if (DEMO_MODE) {
+    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];
+    const bh = {};
+    biKeys.forEach(k => { const el = document.getElementById(k); if (el) bh[k] = el.value; });
+    localStorage.setItem('demo_scheduleData',   JSON.stringify(scheduleData));
+    localStorage.setItem('demo_dayNotes',        JSON.stringify(dayNotes));
+    localStorage.setItem('demo_holidays',        JSON.stringify([...holidays]));
+    localStorage.setItem('demo_businessHours',   JSON.stringify(bh));
+    return;
+  }
   try {
     // Business hours → gym_settings
     const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];

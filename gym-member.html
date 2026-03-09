@@ -1100,16 +1100,34 @@ buildDates('reg-year','reg-month','reg-day', 1990, 12, 31);
 // ===== WEEKLY SCHEDULE (DBから読み込み) =====
 async function loadScheduleFromDB() {
   if (DEMO_MODE) {
+    // 管理側が localStorage に保存したデータを読み込む
+    const raw         = JSON.parse(localStorage.getItem('demo_scheduleData')  || '{}');
+    const dayNotes    = JSON.parse(localStorage.getItem('demo_dayNotes')      || '{}');
+    const holArr      = JSON.parse(localStorage.getItem('demo_holidays')      || '[]');
+    const businessHours = JSON.parse(localStorage.getItem('demo_businessHours') || '{}');
+    const holidays    = new Set(holArr);
+    // 管理側フォーマット { "HH:MM": "クラス名" } → 会員側フォーマット [{ time, name }]
     const scheduleData = {};
-    const d = i => { const dt = new Date(); dt.setDate(dt.getDate() + i); return dt.toISOString().slice(0,10); };
-    [0,1,2,3,4,5,6].forEach(i => {
-      scheduleData[d(i)] = [
-        { time: '10:00', name: '練習' },
-        { time: '14:00', name: 'スパーリング' },
-        { time: '19:00', name: '練習' },
-      ];
-    });
-    return { scheduleData, dayNotes: {}, holidays: new Set(), businessHours: {} };
+    for (const [date, times] of Object.entries(raw)) {
+      if (times && typeof times === 'object' && !Array.isArray(times)) {
+        scheduleData[date] = Object.entries(times)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([time, name]) => ({ time, name }));
+      }
+    }
+    // 管理側データ未設定の場合のみデフォルトモックデータを使用
+    const hasAdminSettings = Object.keys(raw).length > 0 || Object.keys(businessHours).length > 0;
+    if (!hasAdminSettings) {
+      const dt = i => { const d = new Date(); d.setDate(d.getDate() + i); return d.toISOString().slice(0,10); };
+      [0,1,2,3,4,5,6].forEach(i => {
+        scheduleData[dt(i)] = [
+          { time: '10:00', name: '練習' },
+          { time: '14:00', name: 'スパーリング' },
+          { time: '19:00', name: '練習' },
+        ];
+      });
+    }
+    return { scheduleData, dayNotes, holidays, businessHours };
   }
   try {
     const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
