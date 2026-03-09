@@ -731,6 +731,9 @@ const WD = ['日','月','火','水','木','金','土'];
 let user = {};
 let regEmail = '';
 let cancelTarget = null;
+// デモモード用インメモリ予約データ
+const demoReservations = [];
+let demoResId = 1;
 
 // ===== NAVIGATION =====
 function goTo(pageId) {
@@ -928,11 +931,21 @@ async function loadNotices() {
 // ===== RESERVATIONS =====
 async function renderRes() {
   const el = document.getElementById('res-list');
-  el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
-  const { data, error } = await sb.from('reservations')
-    .select('*').eq('user_id', user.id)
-    .order('date', { ascending: false });
-  if (error || !data || !data.length) {
+  let data;
+  if (DEMO_MODE) {
+    data = demoReservations;
+  } else {
+    el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
+    const res = await sb.from('reservations')
+      .select('*').eq('user_id', user.id)
+      .order('date', { ascending: false });
+    if (res.error || !res.data || !res.data.length) {
+      el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
+      return;
+    }
+    data = res.data;
+  }
+  if (!data.length) {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
     return;
   }
@@ -967,6 +980,13 @@ function openCancel(id, date, time) {
 
 async function doCancel() {
   if (!cancelTarget) return;
+  if (DEMO_MODE) {
+    const r = demoReservations.find(r => r.id === cancelTarget.id);
+    if (r) r.status = 'cancelled';
+    closeModal();
+    renderRes();
+    return;
+  }
   const { error } = await sb.from('reservations')
     .update({ status: 'cancelled' }).eq('id', cancelTarget.id);
   if (error) { alert('キャンセルに失敗しました'); return; }
@@ -1185,7 +1205,7 @@ async function renderMemberWeekly(weekOffset) {
         const [h,m] = time.split(':').map(Number);
         const slotMs = new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m).getTime();
         const past = slotMs < nowMs ? ' is-past' : '';
-        return `<div class="wk-slot${past}" onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name)})">
+        return `<div class="wk-slot${past}" onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name).replace(/"/g,'&quot;')})">
           <div class="wk-slot-time">${time}</div>
           <div class="wk-slot-name">${escHtml(name)}</div>
         </div>`;
@@ -1221,21 +1241,29 @@ function closeBkModal() {
 }
 
 async function submitBkModal() {
+  const [y,m,d] = bkDate.split('-').map(Number);
+  const dow = new Date(y,m-1,d).getDay();
+  const DAYS = ['日','月','火','水','木','金','土'];
+  const time = bkTime, cls = bkClass; // closeBkModal() が null にする前に保存
+  if (DEMO_MODE) {
+    demoReservations.unshift({ id: 'demo-' + demoResId++, date: bkDate, time, class_name: cls, status: 'confirmed' });
+    closeBkModal();
+    document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
+    document.getElementById('bk-success-overlay').classList.add('open');
+    return;
+  }
   const { data: { user: authUser } } = await sb.auth.getUser();
   if (!authUser) { alert('ログインが必要です'); return; }
   const { error } = await sb.from('reservations').insert({
     user_id:    authUser.id,
     date:       bkDate,
-    time:       bkTime,
-    class_name: bkClass,
+    time:       time,
+    class_name: cls,
     status:     'confirmed',
   });
   if (error) { alert('予約に失敗しました: ' + error.message); return; }
-  const [y,m,d] = bkDate.split('-').map(Number);
-  const dow = new Date(y,m-1,d).getDay();
-  const DAYS = ['日','月','火','水','木','金','土'];
   closeBkModal();
-  document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${bkTime}　${bkClass}`;
+  document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
   document.getElementById('bk-success-overlay').classList.add('open');
 }
 
