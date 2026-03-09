@@ -875,20 +875,33 @@
 const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理' };
 
 // ===== ADMIN AUTH =====
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-    location.href = 'gym-member.html';
-    return;
-  }
-  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    const { data: p } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
-    if (!p || p.role !== 'admin') {
+if (DEMO_MODE) {
+  // Supabase未設定時はモックデータでそのまま表示
+  document.addEventListener('DOMContentLoaded', () => {
+    renderCalendar();
+    renderNotices();
+    renderCoaches();
+    renderMembers();
+    renderBirthdays();
+    buildDayTabs();
+    renderReservations();
+  });
+} else {
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
       location.href = 'gym-member.html';
       return;
     }
-    await initFromDB();
-  }
-});
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+      const { data: p } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+      if (!p || p.role !== 'admin') {
+        location.href = 'gym-member.html';
+        return;
+      }
+      await initFromDB();
+    }
+  });
+}
 
 
 // ===== RESERVATION LOGIC =====

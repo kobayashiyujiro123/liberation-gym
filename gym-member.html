@@ -289,6 +289,9 @@
       Googleでログイン
     </button>
     <a class="auth-link" style="margin-top:20px;" onclick="goTo('page-reg1')">新しくアカウントを作成する</a>
+    <div id="demo-btn-wrap" style="display:none;margin-top:20px;border-top:1px dashed #e0e0e0;padding-top:16px;">
+      <button class="btn-primary" style="background:#607d8b;" onclick="demoLogin()">🎮 デモログイン（テスト用）</button>
+    </div>
   </div>
 </div>
 
@@ -808,14 +811,30 @@ async function loadUserProfile(authUser) {
   }
 }
 
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-    await loadUserProfile(session.user);
-    // Skip auto-navigate if user is in registration flow
-    const activeReg = document.querySelector('#page-reg2.active, #page-reg3.active');
-    if (!activeReg) enterApp();
-  }
-});
+if (DEMO_MODE) {
+  document.getElementById('demo-btn-wrap').style.display = 'block';
+} else {
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+      await loadUserProfile(session.user);
+      // Skip auto-navigate if user is in registration flow
+      const activeReg = document.querySelector('#page-reg2.active, #page-reg3.active');
+      if (!activeReg) enterApp();
+    }
+  });
+}
+
+function demoLogin() {
+  user = {
+    id: 'demo', name: '水野 麻美', email: 'demo@example.com',
+    gender: '女', birthYear: 1990, birthMonth: 3, birthDay: 15,
+    style: 'オーソドックス', weight: 55, targetWeight: 52,
+    wins: 5, losses: 2, draws: 1, fights: 8,
+    totalVisits: 42, yearVisits: 28, monthVisits: 5,
+    startDate: '2024-04-01',
+  };
+  enterApp();
+}
 
 // ===== AUTH =====
 async function doLogin() {
@@ -1060,6 +1079,18 @@ buildDates('reg-year','reg-month','reg-day', 1990, 12, 31);
 
 // ===== WEEKLY SCHEDULE (DBから読み込み) =====
 async function loadScheduleFromDB() {
+  if (DEMO_MODE) {
+    const scheduleData = {};
+    const d = i => { const dt = new Date(); dt.setDate(dt.getDate() + i); return dt.toISOString().slice(0,10); };
+    [0,1,2,3,4,5,6].forEach(i => {
+      scheduleData[d(i)] = [
+        { time: '10:00', name: '練習' },
+        { time: '14:00', name: 'スパーリング' },
+        { time: '19:00', name: '練習' },
+      ];
+    });
+    return { scheduleData, dayNotes: {}, holidays: new Set(), businessHours: {} };
+  }
   try {
     const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
       sb.from('schedule_slots').select('*'),
