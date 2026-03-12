@@ -176,7 +176,8 @@
 
     /* MEMBER AVATAR */
     .m-cell { display: flex; align-items: center; gap: 8px; }
-    .m-av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
+    .m-av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; overflow: hidden; }
+    .m-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     /* 男性会員：青色スタイル */
     .m-av.male { background: linear-gradient(135deg, #64b5f6, #1565c0); }
     .mem-detail-avatar.male { background: linear-gradient(135deg, #64b5f6, #1565c0); }
@@ -188,6 +189,8 @@
     .mem-detail-avatar.female { background: linear-gradient(135deg, #f06292, #ba68c8); }
     .data-table tbody tr.female-row { background: rgba(240, 98, 146, 0.03); }
     .data-table tbody tr.female-row:hover { background: rgba(240, 98, 146, 0.07); }
+    .data-table tbody tr.clickable-row { cursor: pointer; }
+    .data-table tbody tr.clickable-row:not(.male-row):not(.female-row):hover { background: rgba(0,0,0,0.04); }
     .mem-detail-body.female .mem-field-label { background: #ba68c8; }
 
     /* BIRTHDAY */
@@ -254,7 +257,8 @@
     .mem-detail-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
     .mem-detail-left { display: flex; flex-direction: column; gap: 16px; }
     .mem-detail-right { display: flex; flex-direction: column; gap: 16px; }
-    .mem-detail-avatar { width: 140px; height: 140px; background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+    .mem-detail-avatar { width: 140px; height: 140px; background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; overflow: hidden; }
+    .mem-detail-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: block; }
     .mem-detail-fields { display: flex; flex-direction: column; gap: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
     .mem-field-row { display: flex; align-items: center; border-bottom: 1px solid var(--border); min-height: 44px; }
     .mem-field-row:last-child { border-bottom: none; }
@@ -294,8 +298,8 @@
     .time-group-line { flex: 1; height: 1px; background: var(--border); }
     .time-group-count { font-size: 0.75rem; color: var(--text-light); flex-shrink: 0; }
     .res-card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
-    .res-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: box-shadow 0.15s; border-left: 4px solid var(--primary-light); }
-    .res-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
+    .res-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: box-shadow 0.15s; border-left: 4px solid var(--primary-light); cursor: pointer; }
+    .res-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.10); background: #fafafa; }
     .res-card.status-cancel { background: rgba(229,57,53,0.04); border-color: rgba(229,57,53,0.3); border-left: 4px solid var(--danger); }
     .res-card.status-cancel .res-card-name { text-decoration: line-through; color: var(--text-light); }
     .res-card.status-cancel .res-card-avatar { background: #bdbdbd !important; }
@@ -391,8 +395,6 @@
   <header class="topbar">
     <button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
     <span class="topbar-title" id="heading">トップページ</span>
-    <button class="topbar-btn"><i class="fas fa-search"></i></button>
-    <button class="topbar-btn"><i class="fas fa-cog"></i></button>
   </header>
 
   <main class="page-content">
@@ -540,7 +542,6 @@
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="member-search" placeholder="会員名・メールで検索..." oninput="renderMembers()" /></div>
-        <button class="btn-p"><i class="fas fa-plus"></i> 会員追加</button>
       </div>
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
@@ -732,7 +733,7 @@
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="coach-search" placeholder="コーチ名・専門で検索..." oninput="renderCoaches()" /></div>
-        <button class="btn-p"><i class="fas fa-plus"></i> コーチ追加</button>
+        <button class="btn-p" onclick="openCoachInvite()"><i class="fas fa-plus"></i> コーチ追加</button>
       </div>
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
@@ -777,6 +778,74 @@
             <div class="coach-detail-label"><i class="fas fa-calendar-check"></i> 入社日</div>
             <div class="coach-detail-val" id="cd-joined"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COACH INVITE (メールアドレス送信画面) -->
+    <div class="view" id="view-coach-invite">
+      <div class="mem-detail-breadcrumb">
+        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> コーチ一覧に戻る</span>
+      </div>
+      <div class="form-card" style="max-width:520px;margin-top:24px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
+            <i class="fas fa-envelope" style="color:#fff;font-size:1.6rem;"></i>
+          </div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">コーチ招待メールを送信</div>
+          <div style="font-size:0.85rem;color:var(--text-light);line-height:1.6;">招待するコーチのメールアドレスを入力してください。<br>登録用リンクを記載したメールが送信されます。</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">メールアドレス <span style="color:var(--danger);">*</span></label>
+          <input class="form-ctrl" id="invite-email" type="email" placeholder="coach@example.com" />
+          <div id="invite-email-err" style="color:var(--danger);font-size:0.8rem;margin-top:4px;display:none;">有効なメールアドレスを入力してください</div>
+        </div>
+        <div id="invite-success-msg" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:12px 16px;margin-bottom:16px;color:#2e7d32;font-size:0.88rem;">
+          <i class="fas fa-check-circle" style="margin-right:6px;"></i>
+          <span id="invite-success-text"></span>
+        </div>
+        <div class="form-actions" style="flex-direction:column;gap:10px;">
+          <button class="btn-p" id="invite-send-btn" onclick="submitCoachInvite()" style="width:100%;justify-content:center;">
+            <i class="fas fa-paper-plane"></i> メールを送信する
+          </button>
+          <button class="btn-o" id="invite-preview-btn" onclick="openCoachRegister()" style="width:100%;justify-content:center;display:none;">
+            <i class="fas fa-user-plus"></i> コーチ情報入力画面を開く（招待リンクのプレビュー）
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COACH REGISTER (コーチ情報入力画面 ― メールリンク先) -->
+    <div class="view" id="view-coach-register">
+      <div class="mem-detail-breadcrumb">
+        <span onclick="show('coach-invite')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> メール送信画面に戻る</span>
+      </div>
+      <div class="form-card" style="max-width:600px;margin-top:24px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
+            <i class="fas fa-user-tie" style="color:#fff;font-size:1.6rem;"></i>
+          </div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">コーチ情報の登録</div>
+          <div style="font-size:0.85rem;color:var(--text-light);">以下の情報を入力して登録を完了してください</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">メールアドレス</label>
+            <input class="form-ctrl" id="cr-email" type="email" readonly style="background:#f8f9fa;color:var(--text-light);" />
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">氏名 <span style="color:var(--danger);">*</span></label>
+            <input class="form-ctrl" id="cr-name" type="text" placeholder="山田 太郎" />
+            <div id="cr-name-err" style="color:var(--danger);font-size:0.8rem;margin-top:4px;display:none;">氏名を入力してください</div>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">電話番号</label>
+            <input class="form-ctrl" id="cr-tel" type="tel" placeholder="090-0000-0000" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" onclick="submitCoachRegister()"><i class="fas fa-check"></i> 登録する</button>
+          <button class="btn-o" onclick="show('coach-invite')">キャンセル</button>
         </div>
       </div>
     </div>
@@ -869,16 +938,21 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const _SUPA_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+const _IS_DEMO  = _SUPA_URL.includes('YOUR_PROJECT_ID');
+</script>
+<script>if(!_IS_DEMO){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/scr'+'ipt>');}</script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録' };
 
 // ===== ADMIN AUTH =====
 if (DEMO_MODE) {
   // Supabase未設定時はモックデータでそのまま表示
   document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
+    loadDemoNotices();
     renderNotices();
     renderCoaches();
     renderMembers();
@@ -910,9 +984,16 @@ const WEEKDAYS = ['日','月','火','水','木','金','土'];
 const CLASSES  = ['練習'];
 const COACHES  = ['トミッキー','鈴木さん'];
 const MEMBERS_RES = [
-  {name:'水野麻美', gender:'女'},{name:'吉田レマン', gender:'男'},{name:'ビン', gender:'女'},
-  {name:'K4', gender:'男'},{name:'ソジョン', gender:'女'},{name:'渡辺 健太', gender:'男'},
-  {name:'中村 由美', gender:'女'},{name:'小林 翔', gender:'男'},{name:'加藤 美里', gender:'女'},{name:'松本 浩二', gender:'男'},
+  {name:'水野麻美', gender:'女', coach:''},
+  {name:'吉田レマン', gender:'男', coach:'トミッキー'},
+  {name:'K4',        gender:'男', coach:'鈴木さん'},
+  {name:'桑田',      gender:'男', coach:'鈴木さん'},
+  {name:'ソジョン',  gender:'女', coach:''},
+  {name:'中村',      gender:'女', coach:'トミッキー'},
+  {name:'森',        gender:'男', coach:'トミッキー'},
+  {name:'中庭',      gender:'男', coach:''},
+  {name:'山下',      gender:'男', coach:'鈴木さん'},
+  {name:'ソエジ',    gender:'男', coach:'鈴木さん'},
 ];
 const STATUSES = [
   { label:'確定',     badge:'badge-s' },
@@ -956,7 +1037,7 @@ function genReservations() {
         gender: mb.gender,
         cls:  CLASSES[Math.floor(rng() * CLASSES.length)],
         time: TIMES[Math.floor(rng() * TIMES.length)],
-        coach: COACHES[Math.floor(rng() * COACHES.length)],
+        coach: mb.coach,
         status: st.label,
         badge: st.badge,
       });
@@ -1019,6 +1100,19 @@ function setResCoachFilter(name) {
   renderReservations();
 }
 
+function openMemberDetailByResName(name) {
+  const m = allMembers.find(m => m.name === name);
+  if (m) {
+    openMemberDetail(m.id);
+    // バックボタンを「予約管理に戻る」に差し替え
+    const back = document.getElementById('mem-detail-back');
+    if (back) {
+      back.onclick = () => show('reservation');
+      back.innerHTML = '<i class="fas fa-chevron-left"></i> 予約管理に戻る';
+    }
+  }
+}
+
 function renderReservations() {
   const q = (document.getElementById('res-search')?.value || '').toLowerCase();
   const all = resData[resSelectedDate] || [];
@@ -1060,7 +1154,7 @@ function renderReservations() {
       const avStyle = isCancel ? '' : isMale ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"' : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
       const cardStyle = isCancel ? '' : isMale ? 'style="border-left-color:#1565c0;"' : isFemale ? 'style="border-left-color:#ba68c8;"' : '';
       return `
-        <div class="${cardClass}" ${cardStyle} id="res-card-${r.id}">
+        <div class="${cardClass}" ${cardStyle} id="res-card-${r.id}" onclick="openMemberDetailByResName('${r.name.replace(/'/g, "\\'")}')">
           <div class="res-card-avatar" ${avStyle}>${r.name.slice(0,2)}</div>
           <div class="res-card-body">
             <div class="res-card-name">${r.name}</div>
@@ -1070,7 +1164,7 @@ function renderReservations() {
             </div>
             ${r.memo ? `<div style="font-size:0.72rem;color:var(--text-light);margin-top:3px;"><i class="fas fa-sticky-note" style="margin-right:4px;opacity:0.6;"></i>${r.memo}</div>` : ''}
           </div>
-          <div class="res-card-actions">
+          <div class="res-card-actions" onclick="event.stopPropagation()">
             <button class="act-btn" id="res-edit-btn-${r.id}" style="font-size:0.72rem;padding:3px 8px;" onclick="toggleResEdit('${r.id}')">編集</button>
           </div>
         </div>`;
@@ -1143,10 +1237,86 @@ buildDayTabs();
 initResCoachTabs();
 renderReservations();
 
+// ===== DEMO: 会員側予約の反映 =====
+function mergeDemoReservations() {
+  if (!DEMO_MODE) return;
+  const raw = JSON.parse(localStorage.getItem('demo_reservations') || '[]');
+
+  // 既存のデモ予約IDを全日付から削除（再マージのため）
+  for (const key of Object.keys(resData)) {
+    resData[key] = resData[key].filter(r => !String(r.id).startsWith('demo-'));
+  }
+
+  // 会員側の予約を管理側形式に変換してマージ
+  for (const r of raw) {
+    const adminKey = r.date.replace(/-/g, '/'); // 2026-03-09 → 2026/03/09
+    if (!resData[adminKey]) continue; // 7日間の範囲外はスキップ
+    const statusLabel = r.status === 'cancelled' ? 'キャンセル' : '確定';
+    const badge       = r.status === 'cancelled' ? 'badge-d' : 'badge-s';
+    resData[adminKey].push({
+      id:     r.id,
+      name:   r.memberName || '水野 麻美',
+      gender: r.memberGender || '女',
+      cls:    r.class_name,
+      time:   r.time,
+      coach:  '',
+      status: statusLabel,
+      badge,
+      memo:   r.memo || '',
+    });
+    resData[adminKey].sort((a, b) => a.time.localeCompare(b.time));
+  }
+  renderReservations();
+}
+
+mergeDemoReservations();
+
+// 会員側でlocalStorageが更新されたら自動反映
+window.addEventListener('storage', e => {
+  if (e.key === 'demo_reservations') mergeDemoReservations();
+  if (e.key === 'demo_member_photos') {
+    // 会員一覧が表示中なら再描画
+    if (document.getElementById('view-members')?.classList.contains('active')) renderMembers();
+    // 詳細/編集が表示中なら再描画
+    if (currentMemberId) {
+      if (document.getElementById('view-member-detail')?.classList.contains('active')) openMemberDetail(currentMemberId, true);
+      if (document.getElementById('view-member-edit')?.classList.contains('active')) openMemberEdit(currentMemberId);
+    }
+  }
+});
+
 // ===== ADD RESERVATION MODAL =====
+function getScheduleTimesForDate(dateKey) {
+  // dateKey は YYYY/MM/DD 形式 → YYYY-MM-DD に変換
+  const sdKey = dateKey.replace(/\//g, '-');
+
+  // 1. 個別に保存されたスロットデータを優先
+  const stored = JSON.parse(localStorage.getItem('gym_scheduleData') || '{}');
+  const slots = stored[sdKey];
+  if (slots && Object.keys(slots).length > 0) {
+    return Object.keys(slots).sort();
+  }
+
+  // 2. 営業時間設定から自動生成（スケジュールカレンダーと同じロジック）
+  const bh = JSON.parse(localStorage.getItem('gym_businessHours') || '{}');
+  const [y, mo, d] = sdKey.split('-').map(Number);
+  const dow = new Date(y, mo - 1, d).getDay();
+  const isWeekend = (dow === 0 || dow === 6);
+  const isHoliday = (typeof jpHolidays !== 'undefined') && jpHolidays.has(sdKey);
+  const prefix = isHoliday ? 'bi-holiday' : isWeekend ? 'bi-weekend' : 'bi-weekday';
+  const startH = parseInt((bh[`${prefix}-start`] || (isWeekend ? '12時' : '9時')).replace('時', ''));
+  const endH   = parseInt((bh[`${prefix}-end`]   || (isWeekend ? '17時' : '21時')).replace('時', ''));
+  const times = [];
+  for (let h = startH; h < endH; h++) {
+    times.push(`${String(h).padStart(2, '0')}:00`);
+  }
+  return times.length > 0 ? times : TIMES;
+}
+
 function openAddResModal() {
   const sel = document.getElementById('add-res-time');
-  sel.innerHTML = TIMES.map(t => `<option value="${t}">${t}</option>`).join('');
+  const times = getScheduleTimesForDate(resSelectedDate);
+  sel.innerHTML = times.map(t => `<option value="${t}">${t}</option>`).join('');
   document.getElementById('add-res-name').value   = '';
   document.getElementById('add-res-gender').value = '男';
   document.getElementById('add-res-memo').value   = '';
@@ -1181,22 +1351,63 @@ function submitAddRes() {
 
 // ===== MEMBER PAGINATION =====
 const allMembers = [
-  { id:'M001', name:'水野麻美',  email:'hanako@example.com',   tel:'090-1234-5678', date:'2024/04/01', status:'有効', badge:'badge-s', visits: 42,  visitsYear: 28, visitsMonth:  5, gender:'女', birthday:'1990-03-15', style:'オーソドックス', weight:55,  targetWeight:52,  record:'なし',         coach:'', memo:'まじめに取り組んでいる', leftDate:'', canView:false },
-  { id:'M002', name:'吉田レマン',email:'ichiro@example.com',   tel:'090-2345-6789', date:'2024/06/15', status:'有効', badge:'badge-s', visits: 28,  visitsYear: 18, visitsMonth:  3, gender:'男', birthday:'1985-07-22', style:'アグレッシブ',   weight:72,  targetWeight:68,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M003', name:'ビン',      email:'misaki@example.com',   tel:'090-3456-7890', date:'2024/08/20', status:'休会', badge:'badge-w', visits: 15,  visitsYear:  0, visitsMonth:  0, gender:'女', birthday:'1995-11-08', style:'オーソドックス', weight:50,  targetWeight:48,  record:'なし',         coach:'', memo:'産休中',                 leftDate:'', canView:false },
-  { id:'M004', name:'K4',        email:'daisuke@example.com',  tel:'090-4567-8901', date:'2023/11/10', status:'有効', badge:'badge-s', visits: 87,  visitsYear: 35, visitsMonth:  8, gender:'男', birthday:'1978-01-30', style:'パワー系',       weight:85,  targetWeight:80,  record:'大会出場歴あり', coach:'', memo:'頑張り屋さん',             leftDate:'', canView:false },
-  { id:'M005', name:'ソジョン',  email:'sakura@example.com',   tel:'090-5678-9012', date:'2025/01/05', status:'退会', badge:'badge-d', visits:  3,  visitsYear:  0, visitsMonth:  0, gender:'女', birthday:'2000-05-12', style:'',               weight:48,  targetWeight:46,  record:'なし',         coach:'', memo:'',                       leftDate:'2025-02-28', canView:false },
-  { id:'M006', name:'渡辺 健太', email:'kenta@example.com',    tel:'090-6789-0123', date:'2024/02/10', status:'有効', badge:'badge-s', visits: 61,  visitsYear: 24, visitsMonth:  6, gender:'男', birthday:'1988-09-03', style:'アグレッシブ',   weight:78,  targetWeight:74,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M007', name:'中村 由美', email:'yumi@example.com',     tel:'090-7890-1234', date:'2024/09/01', status:'有効', badge:'badge-s', visits: 33,  visitsYear: 20, visitsMonth:  4, gender:'女', birthday:'1993-04-18', style:'オーソドックス', weight:53,  targetWeight:50,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M008', name:'小林 翔',   email:'sho@example.com',      tel:'090-8901-2345', date:'2023/07/20', status:'有効', badge:'badge-s', visits:110,  visitsYear: 42, visitsMonth:  9, gender:'男', birthday:'1982-12-25', style:'パワー系',       weight:90,  targetWeight:85,  record:'地区大会優勝',   coach:'', memo:'熱心な常連',               leftDate:'', canView:false },
-  { id:'M009', name:'加藤 美里', email:'misato@example.com',   tel:'090-9012-3456', date:'2025/03/01', status:'有効', badge:'badge-s', visits:  7,  visitsYear:  7, visitsMonth:  3, gender:'女', birthday:'1998-06-07', style:'',               weight:47,  targetWeight:45,  record:'なし',         coach:'', memo:'初心者',                   leftDate:'', canView:false },
-  { id:'M010', name:'松本 浩二', email:'koji@example.com',     tel:'090-0123-4567', date:'2024/11/15', status:'休会', badge:'badge-w', visits: 22,  visitsYear:  0, visitsMonth:  0, gender:'男', birthday:'1975-08-14', style:'オーソドックス', weight:75,  targetWeight:70,  record:'なし',         coach:'', memo:'怪我療養中',               leftDate:'', canView:false },
-  { id:'M011', name:'井上 奈々', email:'nana@example.com',     tel:'080-1234-5678', date:'2023/05/30', status:'退会', badge:'badge-d', visits:  1,  visitsYear:  0, visitsMonth:  0, gender:'女', birthday:'2001-02-14', style:'',               weight:45,  targetWeight:44,  record:'なし',         coach:'', memo:'',                       leftDate:'2023-07-01', canView:false },
-  { id:'M012', name:'木村 大樹', email:'taiki@example.com',    tel:'080-2345-6789', date:'2024/01/08', status:'有効', badge:'badge-s', visits: 54,  visitsYear: 21, visitsMonth:  5, gender:'男', birthday:'1987-10-29', style:'アグレッシブ',   weight:80,  targetWeight:76,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M013', name:'林 さやか', email:'sayaka@example.com',   tel:'080-3456-7890', date:'2024/07/22', status:'有効', badge:'badge-s', visits: 38,  visitsYear: 16, visitsMonth:  4, gender:'女', birthday:'1991-03-05', style:'オーソドックス', weight:52,  targetWeight:49,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M014', name:'清水 拓也', email:'takuya@example.com',   tel:'080-4567-8901', date:'2025/01/18', status:'有効', badge:'badge-s', visits: 19,  visitsYear: 12, visitsMonth:  3, gender:'男', birthday:'1996-07-11', style:'',               weight:68,  targetWeight:65,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M015', name:'山口 愛',   email:'ai@example.com',       tel:'080-5678-9012', date:'2023/10/05', status:'有効', badge:'badge-s', visits: 76,  visitsYear: 31, visitsMonth:  7, gender:'女', birthday:'1984-12-01', style:'アグレッシブ',   weight:57,  targetWeight:54,  record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
+  { id:'M001', name:'水野麻美',  email:'hanako@example.com',   tel:'090-1234-5678', date:'2024/04/01', status:'有効', badge:'badge-s', visits: 42, visitsYear: 28, visitsMonth:  5, gender:'女', birthday:'1990-03-15', style:'オーソドックス', weight:55, targetWeight:52, record:'なし',         coach:'', memo:'まじめに取り組んでいる', leftDate:'', canView:false },
+  { id:'M002', name:'吉田レマン',email:'ichiro@example.com',   tel:'090-2345-6789', date:'2024/06/15', status:'有効', badge:'badge-s', visits: 28, visitsYear: 18, visitsMonth:  3, gender:'男', birthday:'1985-03-09', style:'アグレッシブ',   weight:72, targetWeight:68, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
+  { id:'M003', name:'K4',        email:'daisuke@example.com',  tel:'090-4567-8901', date:'2023/11/10', status:'有効', badge:'badge-s', visits: 87, visitsYear: 35, visitsMonth:  8, gender:'男', birthday:'1978-01-30', style:'パワー系',       weight:85, targetWeight:80, record:'大会出場歴あり', coach:'鈴木さん', memo:'頑張り屋さん',             leftDate:'', canView:false },
+  { id:'M004', name:'桑田',      email:'kuwata@example.com',   tel:'090-1111-2222', date:'2024/03/10', status:'有効', badge:'badge-s', visits: 45, visitsYear: 22, visitsMonth:  4, gender:'男', birthday:'1992-07-20', style:'オーソドックス', weight:70, targetWeight:67, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
+  { id:'M005', name:'ソジョン',  email:'sojong@example.com',   tel:'090-5678-9012', date:'2025/01/05', status:'有効', badge:'badge-s', visits:  3, visitsYear:  3, visitsMonth:  2, gender:'女', birthday:'2000-05-12', style:'',               weight:48, targetWeight:46, record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
+  { id:'M006', name:'中村',      email:'nakamura@example.com', tel:'090-7890-1234', date:'2024/09/01', status:'有効', badge:'badge-s', visits: 33, visitsYear: 20, visitsMonth:  4, gender:'女', birthday:'1993-04-18', style:'オーソドックス', weight:53, targetWeight:50, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
+  { id:'M007', name:'森',        email:'mori@example.com',     tel:'090-2222-3333', date:'2024/05/20', status:'有効', badge:'badge-s', visits: 51, visitsYear: 26, visitsMonth:  5, gender:'男', birthday:'1989-11-03', style:'アグレッシブ',   weight:74, targetWeight:70, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
+  { id:'M008', name:'中庭',      email:'nakaniva@example.com', tel:'090-3333-4444', date:'2024/07/15', status:'有効', badge:'badge-s', visits: 38, visitsYear: 19, visitsMonth:  3, gender:'男', birthday:'1994-02-28', style:'パワー系',       weight:80, targetWeight:76, record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
+  { id:'M009', name:'山下',      email:'yamashita@example.com',tel:'090-4444-5555', date:'2023/12/01', status:'有効', badge:'badge-s', visits: 62, visitsYear: 30, visitsMonth:  6, gender:'男', birthday:'1986-09-14', style:'オーソドックス', weight:68, targetWeight:65, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
+  { id:'M010', name:'ソエジ',    email:'soeji@example.com',    tel:'090-5555-6666', date:'2024/10/08', status:'有効', badge:'badge-s', visits: 20, visitsYear: 15, visitsMonth:  4, gender:'男', birthday:'1997-06-30', style:'アグレッシブ',   weight:72, targetWeight:69, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
 ];
+
+// ===== PROFILE SYNC (gym_member_profile localStorage) =====
+function getProfileStore() {
+  return JSON.parse(localStorage.getItem('gym_member_profile') || '{}');
+}
+function saveProfileStore(s) {
+  localStorage.setItem('gym_member_profile', JSON.stringify(s));
+}
+function getMemberWithProfile(id) {
+  const base = allMembers.find(m => m.id === id);
+  if (!base) return null;
+  const p = getProfileStore()[id];
+  if (!p) return { ...base };
+  const m = { ...base };
+  if (p.name         != null) m.name         = p.name;
+  if (p.gender       != null) m.gender       = p.gender;
+  if (p.style        != null) m.style        = p.style;
+  if (p.weight       != null) m.weight       = p.weight;
+  if (p.targetWeight != null) m.targetWeight = p.targetWeight;
+  if (p.wins         != null) m.record = `${p.fights||0}戦 ${p.wins||0}勝 ${p.losses||0}敗 ${p.draws||0}分`;
+  if (p.status       != null) { m.status = p.status; m.badge = p.status==='有効'?'badge-s':p.status==='休会'?'badge-w':'badge-d'; }
+  if (p.coach        != null) m.coach    = p.coach;
+  if (p.memo         != null) m.memo     = p.memo;
+  if (p.leftDate     != null) m.leftDate = p.leftDate;
+  if (p.canView      != null) m.canView  = p.canView;
+  return m;
+}
+// ページロード時に allMembers へプロフィールストアを適用（一覧表示も同期）
+(function applyProfilesToMembers() {
+  const store = getProfileStore();
+  allMembers.forEach(m => {
+    const p = store[m.id];
+    if (!p) return;
+    if (p.name         != null) m.name         = p.name;
+    if (p.gender       != null) m.gender       = p.gender;
+    if (p.style        != null) m.style        = p.style;
+    if (p.weight       != null) m.weight       = p.weight;
+    if (p.targetWeight != null) m.targetWeight = p.targetWeight;
+    if (p.wins         != null) m.record = `${p.fights||0}戦 ${p.wins||0}勝 ${p.losses||0}敗 ${p.draws||0}分`;
+    if (p.status       != null) { m.status = p.status; m.badge = p.status==='有効'?'badge-s':p.status==='休会'?'badge-w':'badge-d'; }
+    if (p.coach        != null) m.coach    = p.coach;
+    if (p.memo         != null) m.memo     = p.memo;
+    if (p.leftDate     != null) m.leftDate = p.leftDate;
+    if (p.canView      != null) m.canView  = p.canView;
+  });
+})();
 
 const ITEMS_PER_PAGE = 5;
 let memberPage = 1;
@@ -1217,8 +1428,28 @@ function fmtDate(d) {
   return dt.getFullYear() + '年' + (dt.getMonth()+1) + '月' + dt.getDate() + '日';
 }
 
+// ----- member photo helpers -----
+function getDemoMemberPhoto(memberId) {
+  if (!DEMO_MODE) return null;
+  const photos = JSON.parse(localStorage.getItem('demo_member_photos') || '{}');
+  return photos[memberId] || null;
+}
+
+function setMemberAvatarEl(el, m) {
+  const photo = getDemoMemberPhoto(m.id);
+  if (photo) {
+    el.innerHTML = `<img src="${photo}" alt="${m.name}">`;
+    el.className = el.className.replace(/\s*(male|female)\b/g, '');
+  } else {
+    el.innerHTML = m.name.slice(0, 2);
+    const genderCls = m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : '';
+    el.className = el.className.replace(/\s*(male|female)\b/g, '') + genderCls;
+  }
+}
+// ----- /member photo helpers -----
+
 function openMemberDetail(id, fromView) {
-  const m = allMembers.find(m => m.id === id);
+  const m = getMemberWithProfile(id);
   if (!m) return;
   currentMemberId = id;
   // breadcrumb をデフォルトに戻す（バースデーから来た場合は openMemberFromBday が上書きする）
@@ -1230,8 +1461,8 @@ function openMemberDetail(id, fromView) {
 
   // アバター
   const av = document.getElementById('md-avatar');
-  av.textContent = m.name.slice(0,2);
-  av.className = 'mem-detail-avatar' + (m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : '');
+  av.className = 'mem-detail-avatar';
+  setMemberAvatarEl(av, m);
   document.querySelector('#view-member-detail .mem-detail-body').className = 'mem-detail-body' + (m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : '');
 
   document.getElementById('md-name').textContent         = m.name;
@@ -1265,13 +1496,13 @@ function openMemberDetail(id, fromView) {
 }
 
 function openMemberEdit(id) {
-  const m = allMembers.find(m => m.id === id);
+  const m = getMemberWithProfile(id);
   if (!m) return;
   currentMemberId = id;
 
   const meAv = document.getElementById('me-avatar');
-  meAv.textContent = m.name.slice(0,2);
-  meAv.className = 'mem-detail-avatar' + (m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : '');
+  meAv.className = 'mem-detail-avatar';
+  setMemberAvatarEl(meAv, m);
   document.querySelector('#view-member-edit .mem-detail-body').className = 'mem-detail-body' + (m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : '');
   // ラベル表示（読み取り専用）
   document.getElementById('me-name-disp').textContent         = m.name;
@@ -1313,6 +1544,17 @@ async function saveMemberEdit() {
     left_date:  m.leftDate || null,
     memo:       m.memo,
   }).eq('id', m.id);
+  // 管理編集フィールドを gym_member_profile に保存（会員ページとの同期）
+  const _store = getProfileStore();
+  _store[currentMemberId] = {
+    ...(_store[currentMemberId] || {}),
+    status:   m.status,
+    coach:    m.coach,
+    leftDate: m.leftDate || '',
+    memo:     m.memo     || '',
+    canView:  m.canView,
+  };
+  saveProfileStore(_store);
   openMemberDetail(currentMemberId);
 }
 
@@ -1364,9 +1606,9 @@ function renderMembers() {
 
   const tbody = document.getElementById('member-tbody');
   tbody.innerHTML = pageItems.length ? pageItems.map(m => `
-    <tr${m.gender === '男' ? ' class="male-row"' : m.gender === '女' ? ' class="female-row"' : ''}>
+    <tr class="clickable-row${m.gender === '男' ? ' male-row' : m.gender === '女' ? ' female-row' : ''}" onclick="openMemberDetail('${m.id}')">
       <td>${m.id}</td>
-      <td><div class="m-cell"><div class="m-av${m.gender === '男' ? ' male' : m.gender === '女' ? ' female' : ''}">${m.name.slice(0,2)}</div>${m.name}</div></td>
+      <td><div class="m-cell">${(()=>{ const p=getDemoMemberPhoto(m.id); return p ? `<div class="m-av"><img src="${p}" alt="${m.name}"></div>` : `<div class="m-av${m.gender==='男'?' male':m.gender==='女'?' female':''}">${m.name.slice(0,2)}</div>`; })()}${m.name}</div></td>
       <td>${m.email}</td>
       <td>${m.tel}</td>
       <td>${m.date}</td>
@@ -1374,7 +1616,7 @@ function renderMembers() {
       <td style="text-align:center;font-weight:600;">${m.visitsYear}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
       <td style="text-align:center;font-weight:600;">${m.visitsMonth}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
       <td><span class="badge ${m.badge}">${m.status}</span></td>
-      <td><button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button><button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button></td>
+      <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button><button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button></td>
     </tr>`).join('')
   : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当する会員が見つかりません</td></tr>';
 
@@ -1550,7 +1792,7 @@ function openCalModal(dateStr) {
 
 async function saveScheduleToStorage() {
   if (DEMO_MODE) {
-    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];
+    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
     const bh = {};
     biKeys.forEach(k => { const el = document.getElementById(k); if (el) bh[k] = el.value; });
     localStorage.setItem('demo_scheduleData',   JSON.stringify(scheduleData));
@@ -1561,7 +1803,7 @@ async function saveScheduleToStorage() {
   }
   try {
     // Business hours → gym_settings
-    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];
+    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
     const settings = biKeys.map(key => { const el = document.getElementById(key); return el ? { key, value: el.value } : null; }).filter(Boolean);
     if (settings.length) await sb.from('gym_settings').upsert(settings, { onConflict: 'key' });
 
@@ -1923,12 +2165,12 @@ function renderCoaches() {
 
   const tbody = document.getElementById('coach-tbody');
   tbody.innerHTML = items.length ? items.map(c => `
-    <tr>
+    <tr class="clickable-row" onclick="openCoachDetail('${c.id}')">
       <td>${c.id}</td>
       <td><div class="m-cell"><div class="m-av" style="background:${c.color}">${c.name.slice(0,2)}</div>${c.name}</div></td>
       <td>${c.classes}</td>
       <td><span class="badge ${c.badge}">${c.status}</span></td>
-      <td>
+      <td onclick="event.stopPropagation()">
         <button class="act-btn" onclick="openCoachDetail('${c.id}')">詳細</button>
         <button class="act-btn" onclick="openCoachEdit('${c.id}')">編集</button>
       </td>
@@ -1951,6 +2193,136 @@ function coachGoPage(p) {
   if (p < 1 || p > totalPages) return;
   coachPage = p;
   renderCoaches();
+}
+
+// ===== TOAST =====
+function showAdminToast(msg, duration = 3000) {
+  let toast = document.getElementById('admin-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#323232;color:#fff;padding:12px 24px;border-radius:8px;font-size:0.9rem;z-index:9999;opacity:0;transition:opacity 0.25s,transform 0.25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, duration);
+}
+
+// ===== COACH INVITE =====
+let pendingInviteEmail = '';
+
+function openCoachInvite() {
+  const emailInp = document.getElementById('invite-email');
+  if (emailInp) emailInp.value = '';
+  const errEl = document.getElementById('invite-email-err');
+  if (errEl) errEl.style.display = 'none';
+  const succEl = document.getElementById('invite-success-msg');
+  if (succEl) succEl.style.display = 'none';
+  const previewBtn = document.getElementById('invite-preview-btn');
+  if (previewBtn) previewBtn.style.display = 'none';
+  const sendBtn = document.getElementById('invite-send-btn');
+  if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> メールを送信する'; }
+  show('coach-invite');
+}
+
+function submitCoachInvite() {
+  const emailInp = document.getElementById('invite-email');
+  const email = (emailInp?.value || '').trim();
+  const errEl  = document.getElementById('invite-email-err');
+  const succEl = document.getElementById('invite-success-msg');
+  const succTxt = document.getElementById('invite-success-text');
+  const previewBtn = document.getElementById('invite-preview-btn');
+  const sendBtn = document.getElementById('invite-send-btn');
+
+  // バリデーション
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRe.test(email)) {
+    if (errEl) errEl.style.display = '';
+    if (emailInp) emailInp.focus();
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+
+  pendingInviteEmail = email;
+
+  // 送信済み表示（デモ）
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-check"></i> 送信済み';
+  }
+  if (succTxt) succTxt.textContent = `${email} に招待メールを送信しました。`;
+  if (succEl)  succEl.style.display = '';
+  if (previewBtn) previewBtn.style.display = '';
+}
+
+function openCoachRegister() {
+  const emailEl = document.getElementById('cr-email');
+  if (emailEl) emailEl.value = pendingInviteEmail;
+  const nameEl = document.getElementById('cr-name');
+  if (nameEl) nameEl.value = '';
+  const telEl = document.getElementById('cr-tel');
+  if (telEl) telEl.value = '';
+  const errEl = document.getElementById('cr-name-err');
+  if (errEl) errEl.style.display = 'none';
+  show('coach-register');
+}
+
+function submitCoachRegister() {
+  const name   = (document.getElementById('cr-name')?.value || '').trim();
+  const email  = (document.getElementById('cr-email')?.value || '').trim();
+  const tel    = (document.getElementById('cr-tel')?.value || '').trim();
+  const errEl  = document.getElementById('cr-name-err');
+
+  if (!name) {
+    if (errEl) errEl.style.display = '';
+    document.getElementById('cr-name')?.focus();
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+
+  // 新コーチIDを発行
+  const nums = allCoaches.map(c => parseInt(c.id.replace('C',''))).filter(n => !isNaN(n));
+  const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  const newId = 'C' + String(nextNum).padStart(3, '0');
+
+  // カラーをローテーション
+  const colors = [
+    'linear-gradient(135deg,#4caf50,#1b5e20)',
+    'linear-gradient(135deg,#2196f3,#0d47a1)',
+    'linear-gradient(135deg,#ff9800,#e65100)',
+    'linear-gradient(135deg,#e91e63,#880e4f)',
+    'linear-gradient(135deg,#9c27b0,#4a148c)',
+  ];
+  const color = colors[(allCoaches.length) % colors.length];
+
+  allCoaches.push({
+    id: newId,
+    name,
+    email,
+    tel,
+    joined: '',
+    specialty: '',
+    exp: '',
+    classes: 0,
+    rating: 5,
+    status: '在籍中',
+    badge: 'badge-s',
+    color,
+  });
+
+  // コーチ選択肢を更新（予約管理のフィルタ等）
+  initResCoachTabs();
+
+  // 一覧に戻ってトースト表示
+  show('coach');
+  renderCoaches();
+  showAdminToast(`${name} を新しいコーチとして登録しました`);
 }
 
 function openCoachDetail(id) {
@@ -2013,6 +2385,15 @@ async function saveCoachEdit() {
 // ===== NOTICE LOGIC =====
 const allNotices = [];
 
+function saveDemoNotices() {
+  localStorage.setItem('demo_notices', JSON.stringify(allNotices));
+}
+function loadDemoNotices() {
+  const raw = JSON.parse(localStorage.getItem('demo_notices') || '[]');
+  allNotices.length = 0;
+  raw.forEach(n => allNotices.push(n));
+}
+
 function renderNotices() {
   const body = document.getElementById('notice-list-body');
   const countEl = document.getElementById('notice-count');
@@ -2046,6 +2427,16 @@ async function submitNotice() {
   if (!content) { alert('内容を入力してください'); return; }
   const visibleVal = document.querySelector('input[name="notice-visible"]:checked');
   const visible = visibleVal ? visibleVal.value === '1' : true;
+  if (DEMO_MODE) {
+    const nd = new Date();
+    const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
+    allNotices.unshift({ id: 'notice-' + Date.now(), title, content, date: dateStr, visible });
+    saveDemoNotices();
+    document.getElementById('notice-title').value   = '';
+    document.getElementById('notice-content').value = '';
+    renderNotices();
+    return;
+  }
   const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
   if (error) { alert('保存に失敗しました: ' + error.message); return; }
   const nd = new Date(data.date);
@@ -2060,12 +2451,25 @@ async function toggleNoticeVisible(id) {
   const n = allNotices.find(x => x.id === id);
   if (!n) return;
   const newVisible = !n.visible;
+  if (DEMO_MODE) {
+    n.visible = newVisible;
+    saveDemoNotices();
+    renderNotices();
+    return;
+  }
   const { error } = await sb.from('notices').update({ visible: newVisible }).eq('id', id);
   if (!error) { n.visible = newVisible; renderNotices(); }
 }
 
 async function deleteNotice(id) {
   if (!confirm('このお知らせを削除しますか？')) return;
+  if (DEMO_MODE) {
+    const idx = allNotices.findIndex(n => n.id === id);
+    if (idx !== -1) allNotices.splice(idx, 1);
+    saveDemoNotices();
+    renderNotices();
+    return;
+  }
   const { error } = await sb.from('notices').delete().eq('id', id);
   if (error) { alert('削除に失敗しました'); return; }
   const idx = allNotices.findIndex(n => n.id === id);
@@ -2074,7 +2478,7 @@ async function deleteNotice(id) {
 }
 
 // リロード時にハッシュからページを復元
-const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach'];
+const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register'];
 
 async function saveBasicInfo() {
   await saveScheduleToStorage();

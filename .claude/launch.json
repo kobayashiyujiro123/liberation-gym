@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "gym-schedule",
-      "runtimeExecutable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".claude\\serve.ps1"],
-      "port": 8080
+      "runtimeExecutable": "C:\\Program Files\\Git\\usr\\bin\\perl.exe",
+      "runtimeArgs": ["C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve.pl"],
+      "port": 6543,
+      "autoPort": false
     }
   ]
 }

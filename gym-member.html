@@ -66,7 +66,22 @@
     .logo-mark { font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: 2px; }
     .logo-sub  { font-family: 'Oswald', sans-serif; font-size: 0.6rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; margin-top: 2px; }
     .sidebar-user { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    /* Photo upload */
+    .photo-upload-area { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+    .photo-upload-circle { position: relative; width: 96px; height: 96px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: #fff; overflow: hidden; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .photo-upload-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-upload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; opacity: 0; transition: opacity 0.18s; border-radius: 50%; }
+    .photo-upload-circle:hover .photo-upload-overlay { opacity: 1; }
+    .photo-upload-overlay i { font-size: 1.3rem; color: #fff; }
+    .photo-upload-overlay span { font-size: 0.65rem; color: rgba(255,255,255,0.9); font-weight: 600; letter-spacing: 0.3px; }
+    .photo-upload-hint { font-size: 0.76rem; color: var(--text-light); }
+    .photo-remove-btn { font-size: 0.74rem; color: #e05555; background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
+    /* Info page avatar */
+    .info-avatar-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+    .info-avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .info-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-name { font-size: 0.84rem; font-weight: 600; color: #fff; }
     .user-role { font-size: 0.68rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
     .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
@@ -118,11 +133,13 @@
     .notice-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; overflow: hidden; }
     .notice-card-hd { background: var(--primary-dark); color: #fff; font-size: 0.82rem; font-weight: 700; padding: 10px 18px; display: flex; align-items: center; gap: 7px; letter-spacing: 0.5px; }
     .notice-list { padding: 4px 0; }
-    .notice-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .notice-item { display: flex; gap: 14px; align-items: flex-start; padding: 13px 18px; border-bottom: 1px solid var(--border); }
     .notice-item:last-child { border-bottom: none; }
-    .notice-date { font-size: 0.72rem; color: var(--text-light); white-space: nowrap; padding-top: 2px; min-width: 80px; }
-    .notice-text { font-size: 0.84rem; color: var(--text); line-height: 1.6; }
-    .notice-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 3px; padding: 1px 5px; margin-right: 5px; vertical-align: middle; }
+    .notice-date { font-size: 0.72rem; color: var(--text-light); white-space: nowrap; padding-top: 3px; min-width: 80px; }
+    .notice-body-wrap { flex: 1; min-width: 0; }
+    .notice-title { font-size: 0.86rem; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .notice-content { font-size: 0.80rem; color: var(--text-light); line-height: 1.55; margin-top: 3px; }
+    .notice-badge { display: inline-block; font-size: 0.62rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 3px; padding: 1px 5px; vertical-align: middle; flex-shrink: 0; }
 
     /* Usage summary card (edit page top) */
     .usage-summary-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
@@ -159,6 +176,8 @@
     .res-wd { font-size: 0.68rem; color: var(--text-light); }
     .res-info { flex: 1; }
     .res-time { font-size: 0.94rem; font-weight: 600; }
+    .res-memo { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; display: flex; align-items: flex-start; gap: 5px; }
+    .res-memo i { margin-top: 2px; opacity: 0.6; flex-shrink: 0; }
     .res-coach { font-size: 0.8rem; color: var(--text-light); margin-top: 3px; }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; margin-top: 6px; }
     .badge-ok  { background: #e8f5e9; color: var(--success); }
@@ -207,6 +226,12 @@
     .page { display: none; }
     .page.active { display: block; }
     .auth-page { display: none; }
+
+    /* 公式サイトフッター */
+    .app-footer { margin-top: 40px; padding: 16px 0 4px; border-top: 1px solid var(--border); text-align: center; }
+    .app-footer a { font-size: 0.75rem; color: var(--text-light); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s; letter-spacing: 0.02em; }
+    .app-footer a:hover { color: var(--primary); }
+    .app-footer a .fa-external-link-alt { font-size: 0.65rem; opacity: 0.7; }
     .auth-page.active { display: flex; }
 
     /* ===== WEEKLY SCHEDULE ===== */
@@ -228,6 +253,11 @@
     .wk-slot.is-past { opacity: 0.38; cursor: default; pointer-events: none; }
     .wk-slot-time { font-size: 0.72rem; font-weight: 700; color: var(--primary-dark); }
     .wk-slot-name { font-size: 0.66rem; color: var(--text-light); }
+    .wk-slot-cap { font-size: 0.62rem; color: var(--text-light); margin-top: 2px; }
+    .wk-slot-cap.wk-cap-low { color: #e65100; font-weight: 700; }
+    .wk-slot-cap.wk-cap-full { color: var(--danger); font-weight: 700; }
+    .wk-slot.is-full { opacity: 0.55; cursor: not-allowed; background: #f5f5f5; border-left-color: #bbb; pointer-events: none; }
+    .res-cancel-past { font-size: 0.72rem; color: var(--text-light); padding: 4px 0; }
     .wk-holiday { padding: 14px 6px; text-align: center; color: #aaa; font-size: 0.74rem; }
     .wk-event { padding: 10px 6px; text-align: center; color: #f57c00; font-size: 0.78rem; font-weight: 700; }
     .week-col-hd.is-jpholiday:not(.is-today) { background: #fff5f5; }
@@ -246,6 +276,11 @@
     .bk-label { font-size: 0.8rem; font-weight: 600; margin-bottom: 5px; display: block; }
     .bk-select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; background: #fff; outline: none; cursor: pointer; }
     .bk-select:focus { border-color: var(--primary); }
+    .bk-memo-wrap { margin-bottom: 18px; }
+    .bk-memo-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .bk-memo-opt { font-weight: 400; color: var(--text-light); }
+    .bk-memo { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 11px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; color: var(--text); resize: vertical; outline: none; }
+    .bk-memo:focus { border-color: var(--primary); }
     .bk-btns { display: flex; gap: 10px; }
     .bk-btn-ok  { flex:1; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
     .bk-btn-ok:hover { background: var(--primary-dark); }
@@ -450,7 +485,7 @@
       <div class="logo-sub">LIBERATION</div>
     </div>
     <div class="sidebar-user">
-      <div class="user-avatar"><i class="fas fa-user"></i></div>
+      <div class="user-avatar" id="sb-avatar"><i class="fas fa-user"></i></div>
       <div>
         <div class="user-name" id="sb-name">山田 太郎</div>
         <div class="user-role">会員</div>
@@ -489,30 +524,15 @@
     <div class="topbar">
       <button class="hamburger" onclick="openSB()"><i class="fas fa-bars"></i></button>
       <div class="topbar-title" id="topbar-title">トップページ</div>
-      <button class="topbar-icon"><i class="fas fa-search"></i></button>
-      <button class="topbar-icon"><i class="fas fa-cog"></i></button>
     </div>
     <div class="content">
 
       <!-- トップページ -->
       <div class="page active" id="app-top">
         <!-- お知らせ -->
-        <div class="notice-card">
-          <div class="notice-card-hd"><i class="fas fa-bell"></i> お知らせ</div>
-          <div class="notice-list" id="notice-list">
-            <div class="notice-item">
-              <div class="notice-date">2026.03.05</div>
-              <div class="notice-text"><span class="notice-badge">NEW</span>3月の祝日（3月20日）は通常通り営業いたします。</div>
-            </div>
-            <div class="notice-item">
-              <div class="notice-date">2026.02.20</div>
-              <div class="notice-text">スケジュール変更のお知らせ：4月より一部クラスの時間が変更になります。詳細はスタッフまでお問い合わせください。</div>
-            </div>
-            <div class="notice-item">
-              <div class="notice-date">2026.02.01</div>
-              <div class="notice-text">設備メンテナンスのため、2月28日（土）17:00〜19:00はシャワー室をご利用いただけません。</div>
-            </div>
-          </div>
+        <div class="notice-card" id="notice-card">
+          <div class="notice-card-hd"><i class="fas fa-bell"></i> ジムからのお知らせ</div>
+          <div class="notice-list" id="notice-list"></div>
         </div>
         <div class="top-cards">
           <div class="top-card" onclick="showApp('schedule')">
@@ -578,6 +598,7 @@
             </div>
           </div>
         </div>
+        <div class="info-avatar-wrap"><div class="info-avatar" id="info-avatar"><i class="fas fa-user"></i></div></div>
         <div class="info-table" id="info-table"></div>
         <div style="margin-top:20px;">
           <button class="btn-action" onclick="showApp('info-edit')">変更する</button>
@@ -606,6 +627,20 @@
           </div>
         </div>
         <div class="edit-form">
+          <!-- 写真アップロード -->
+          <div class="photo-upload-area">
+            <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhotoChange(this)">
+            <div class="photo-upload-circle" id="photo-circle" onclick="document.getElementById('photo-input').click()">
+              <i class="fas fa-user" id="photo-default-icon"></i>
+              <img id="photo-preview-img" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+              <div class="photo-upload-overlay">
+                <i class="fas fa-camera"></i>
+                <span>写真を変更</span>
+              </div>
+            </div>
+            <div class="photo-upload-hint">タップして写真を選択（JPG / PNG）</div>
+            <button class="photo-remove-btn" id="photo-remove-btn" style="display:none;" onclick="removePhoto()">写真を削除</button>
+          </div>
           <div class="edit-row">
             <label class="edit-label">氏名</label>
             <input class="edit-input" id="e-name" type="text" />
@@ -679,6 +714,13 @@
         </div>
       </div>
 
+      <!-- 公式サイトフッター -->
+      <footer class="app-footer">
+        <a href="https://liberation-boxing.com/" target="_blank" rel="noopener noreferrer">
+          <i class="fas fa-globe"></i> liberation-boxing.com <i class="fas fa-external-link-alt"></i>
+        </a>
+      </footer>
+
     </div><!-- /content -->
   </div><!-- /main-wrap -->
 </div><!-- /app-wrap -->
@@ -688,6 +730,10 @@
   <div class="bk-modal" onclick="event.stopPropagation()">
     <div class="bk-modal-title" id="bk-modal-title"></div>
     <div class="bk-modal-sub" id="bk-modal-sub"></div>
+    <div class="bk-memo-wrap">
+      <label class="bk-memo-label">メモ <span class="bk-memo-opt">（任意）</span></label>
+      <textarea id="bk-memo" class="bk-memo" rows="3" maxlength="200" placeholder="体調や連絡事項など…"></textarea>
+    </div>
     <div class="bk-btns">
       <button class="bk-btn-ok" onclick="submitBkModal()"><i class="fas fa-check"></i> 予約する</button>
       <button class="bk-btn-cl" onclick="closeBkModal()">閉じる</button>
@@ -723,7 +769,13 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Supabase設定を先読み（CDN読み込み前にDEMO_MODEを判定）
+const _SUPA_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+const _IS_DEMO  = _SUPA_URL.includes('YOUR_PROJECT_ID');
+</script>
+<!-- DEMO_MODEでなければSupabase CDNを読み込む（大きなファイルのため条件分岐） -->
+<script>if(!_IS_DEMO){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/scr'+'ipt>');}</script>
 <script src="supabase-config.js"></script>
 <script>
 // ===== DATA =====
@@ -731,9 +783,14 @@ const WD = ['日','月','火','水','木','金','土'];
 let user = {};
 let regEmail = '';
 let cancelTarget = null;
-// デモモード用インメモリ予約データ
-const demoReservations = [];
-let demoResId = 1;
+let currentWeekOffset = 0;
+// デモモード用インメモリ予約データ（localStorageから復元）
+const demoReservations = DEMO_MODE ? (JSON.parse(localStorage.getItem('demo_reservations') || '[]')) : [];
+let demoResId = DEMO_MODE ? (demoReservations.reduce((mx, r) => { const n = parseInt(String(r.id).replace('demo-','')) || 0; return n >= mx ? n + 1 : mx; }, 1)) : 1;
+
+function saveDemoReservations() {
+  localStorage.setItem('demo_reservations', JSON.stringify(demoReservations));
+}
 
 // ===== NAVIGATION =====
 function goTo(pageId) {
@@ -770,10 +827,56 @@ function showApp(key) {
   location.hash = key;
 }
 
+// ----- avatar helpers -----
+function updateAvatarUI(photoUrl) {
+  // sidebar
+  const sb = document.getElementById('sb-avatar');
+  if (sb) sb.innerHTML = photoUrl
+    ? `<img src="${photoUrl}" alt="avatar">`
+    : '<i class="fas fa-user"></i>';
+  // info page
+  const ia = document.getElementById('info-avatar');
+  if (ia) ia.innerHTML = photoUrl
+    ? `<img src="${photoUrl}" alt="avatar">`
+    : '<i class="fas fa-user"></i>';
+}
+
+function setEditPhotoPreview(photoUrl) {
+  const img  = document.getElementById('photo-preview-img');
+  const icon = document.getElementById('photo-default-icon');
+  const rmBtn = document.getElementById('photo-remove-btn');
+  if (!img) return;
+  if (photoUrl) {
+    img.src = photoUrl; img.style.display = '';
+    if (icon) icon.style.display = 'none';
+    if (rmBtn) rmBtn.style.display = '';
+  } else {
+    img.src = ''; img.style.display = 'none';
+    if (icon) icon.style.display = '';
+    if (rmBtn) rmBtn.style.display = 'none';
+  }
+}
+
+function handlePhotoChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以内にしてください。'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => setEditPhotoPreview(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  document.getElementById('photo-input').value = '';
+  setEditPhotoPreview(null);
+}
+// ----- /avatar helpers -----
+
 function enterApp() {
   document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
   document.getElementById('app-wrap').classList.add('visible');
   document.getElementById('sb-name').textContent = user.name || '';
+  updateAvatarUI(user.photoUrl || null);
   const hash = location.hash.replace('#', '');
   const page = (hash && APP_PAGES[hash]) ? hash : (localStorage.getItem('gym_currentPage') || 'top');
   showApp(APP_PAGES[page] ? page : 'top');
@@ -816,6 +919,30 @@ async function loadUserProfile(authUser) {
 
 if (DEMO_MODE) {
   document.getElementById('demo-btn-wrap').style.display = 'block';
+  const savedUser = localStorage.getItem('demo_user');
+  if (savedUser) {
+    user = JSON.parse(savedUser);
+    // gym_member_profile の最新値でマージ（管理ページからの更新を反映）
+    const _p = (JSON.parse(localStorage.getItem('gym_member_profile') || '{}'))['M001'];
+    if (_p) {
+      if (_p.name         != null) user.name         = _p.name;
+      if (_p.gender       != null) user.gender       = _p.gender;
+      if (_p.style        != null) user.style        = _p.style;
+      if (_p.weight       != null) user.weight       = _p.weight;
+      if (_p.targetWeight != null) user.targetWeight = _p.targetWeight;
+      if (_p.wins         != null) { user.wins = _p.wins; user.losses = _p.losses; user.draws = _p.draws; user.fights = _p.fights; }
+    } else {
+      // gym_member_profile が未作成の場合、demo_user から初期化（管理ページへの初回同期）
+      const _init = JSON.parse(localStorage.getItem('gym_member_profile') || '{}');
+      _init['M001'] = {
+        name: user.name, gender: user.gender, style: user.style,
+        weight: user.weight, targetWeight: user.targetWeight,
+        wins: user.wins || 0, losses: user.losses || 0, draws: user.draws || 0, fights: user.fights || 0,
+      };
+      localStorage.setItem('gym_member_profile', JSON.stringify(_init));
+    }
+    setTimeout(enterApp, 0);
+  }
 } else {
   sb.auth.onAuthStateChange(async (event, session) => {
     if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
@@ -828,14 +955,25 @@ if (DEMO_MODE) {
 }
 
 function demoLogin() {
+  // gym_member_profile に保存済みのデータがあれば優先使用（管理ページとの同期）
+  const _p = (JSON.parse(localStorage.getItem('gym_member_profile') || '{}'))['M001'] || {};
   user = {
-    id: 'demo', name: '水野 麻美', email: 'demo@example.com',
-    gender: '女', birthYear: 1990, birthMonth: 3, birthDay: 15,
-    style: 'オーソドックス', weight: 55, targetWeight: 52,
-    wins: 5, losses: 2, draws: 1, fights: 8,
+    id: 'demo',
+    name:         _p.name         != null ? _p.name         : '水野麻美',
+    email:        'demo@example.com',
+    gender:       _p.gender       != null ? _p.gender       : '女',
+    birthYear: 1990, birthMonth: 3, birthDay: 15,
+    style:        _p.style        != null ? _p.style        : 'オーソドックス',
+    weight:       _p.weight       != null ? _p.weight       : 55,
+    targetWeight: _p.targetWeight != null ? _p.targetWeight : 52,
+    wins:         _p.wins         != null ? _p.wins         : 0,
+    losses:       _p.losses       != null ? _p.losses       : 0,
+    draws:        _p.draws        != null ? _p.draws        : 0,
+    fights:       _p.fights       != null ? _p.fights       : 0,
     totalVisits: 42, yearVisits: 28, monthVisits: 5,
     startDate: '2024-04-01',
   };
+  localStorage.setItem('demo_user', JSON.stringify(user));
   enterApp();
 }
 
@@ -902,7 +1040,11 @@ async function sendReset() {
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
+  if (DEMO_MODE) {
+    localStorage.removeItem('demo_user');
+  } else {
+    await sb.auth.signOut();
+  }
   user = {};
   localStorage.removeItem('gym_currentPage');
   location.hash = '';
@@ -910,27 +1052,52 @@ async function doLogout() {
 }
 
 // ===== NOTICES =====
-async function loadNotices() {
-  const { data } = await sb.from('notices')
-    .select('*').eq('visible', true)
-    .order('date', { ascending: false }).limit(5);
-  if (!data || !data.length) return;
+function renderNoticeList(notices) {
   const list = document.getElementById('notice-list');
+  const card = document.getElementById('notice-card');
   if (!list) return;
-  list.innerHTML = data.map(n => {
+  const visible = notices.filter(n => n.visible).slice(0, 5);
+  if (card) card.style.display = visible.length ? '' : 'none';
+  if (!visible.length) { list.innerHTML = ''; return; }
+  list.innerHTML = visible.map(n => {
     const nd = new Date(n.date);
     const label = `${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.${String(nd.getDate()).padStart(2,'0')}`;
     const isNew = (Date.now() - nd.getTime()) < 7 * 24 * 3600 * 1000;
     return `<div class="notice-item">
       <div class="notice-date">${label}</div>
-      <div class="notice-text">${isNew ? '<span class="notice-badge">NEW</span>' : ''}${escHtml(n.title)}：${escHtml(n.content)}</div>
+      <div class="notice-body-wrap">
+        <div class="notice-title">${isNew ? '<span class="notice-badge">NEW</span>' : ''}${escHtml(n.title)}</div>
+        <div class="notice-content">${escHtml(n.content)}</div>
+      </div>
     </div>`;
   }).join('');
+}
+
+async function loadNotices() {
+  if (DEMO_MODE) {
+    const raw = JSON.parse(localStorage.getItem('demo_notices') || '[]');
+    renderNoticeList(raw);
+    return;
+  }
+  const { data } = await sb.from('notices')
+    .select('*').eq('visible', true)
+    .order('date', { ascending: false }).limit(5);
+  if (!data || !data.length) return;
+  renderNoticeList(data.map(n => ({ ...n, visible: true })));
+}
+
+// 管理側でお知らせが更新されたら自動反映
+if (DEMO_MODE) {
+  window.addEventListener('storage', e => {
+    if (e.key === 'demo_notices') loadNotices();
+  });
 }
 
 // ===== RESERVATIONS =====
 async function renderRes() {
   const el = document.getElementById('res-list');
+  const cancelLimit = parseFloat(cachedGymSettings['bi-cancel-limit'] || '1.5');
+  const nowMs = Date.now();
   let data;
   if (DEMO_MODE) {
     data = demoReservations;
@@ -962,13 +1129,30 @@ async function renderRes() {
       <div class="res-info">
         <div class="res-time">${escHtml(r.time)}　${escHtml(r.class_name)}</div>
         <span class="badge ${cancelled?'badge-ng':'badge-ok'}">${statusLabel}</span>
+        ${r.memo ? `<div class="res-memo"><i class="fas fa-sticky-note"></i>${escHtml(r.memo)}</div>` : ''}
       </div>
-      ${!cancelled ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}','${r.date}',${JSON.stringify(r.time)})">キャンセル</button>` : ''}
+      ${!cancelled ? (() => {
+        const [ry,rmm,rd2] = r.date.split('-').map(Number);
+        const [rh,rmin]    = r.time.split(':').map(Number);
+        const slotMs = new Date(ry,rmm-1,rd2,rh,rmin).getTime();
+        return nowMs < slotMs - cancelLimit * 3600000
+          ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}','${r.date}','${r.time}')">キャンセル</button>`
+          : `<div class="res-cancel-past"><i class="fas fa-lock"></i> キャンセル期限切れ</div>`;
+      })() : ''}
     </div>`;
   }).join('');
 }
 
 function openCancel(id, date, time) {
+  // キャンセル可能時間チェック
+  const cancelLimit = parseFloat(cachedGymSettings['bi-cancel-limit'] || '1.5');
+  const [cy,cm,cd] = date.split('-').map(Number);
+  const [ch,cmin]  = time.split(':').map(Number);
+  const slotMs = new Date(cy,cm-1,cd,ch,cmin).getTime();
+  if (Date.now() > slotMs - cancelLimit * 3600000) {
+    alert(`このクラスのキャンセルは開始 ${cancelLimit} 時間前に締め切られました`);
+    return;
+  }
   cancelTarget = { id, date, time };
   const d = new Date(date);
   document.getElementById('cancel-detail').innerHTML =
@@ -983,6 +1167,7 @@ async function doCancel() {
   if (DEMO_MODE) {
     const r = demoReservations.find(r => r.id === cancelTarget.id);
     if (r) r.status = 'cancelled';
+    saveDemoReservations();
     closeModal();
     renderRes();
     return;
@@ -1007,6 +1192,7 @@ function formatStartDate(sd) {
 
 function renderInfo() {
   const u = user;
+  updateAvatarUI(u.photoUrl || null);
   const startStr = formatStartDate(u.startDate);
   document.getElementById('info-total-visits').textContent  = u.totalVisits || 0;
   document.getElementById('info-year-visits').textContent   = u.yearVisits  || 0;
@@ -1046,11 +1232,12 @@ function fillEditForm() {
   buildSelect100('e-wins',   u.wins   || 0);
   buildSelect100('e-losses', u.losses || 0);
   buildSelect100('e-draws',  u.draws  || 0);
+  // photo preview
+  setEditPhotoPreview(u.photoUrl || null);
+  document.getElementById('photo-input').value = '';
 }
 
 async function saveInfo() {
-  const { data: { user: authUser } } = await sb.auth.getUser();
-  if (!authUser) return;
   const name         = document.getElementById('e-name').value.trim() || user.name;
   const gender       = document.getElementById('e-gender').value;
   const style        = document.getElementById('e-style').value;
@@ -1059,12 +1246,40 @@ async function saveInfo() {
   const wins         = +document.getElementById('e-wins').value;
   const losses       = +document.getElementById('e-losses').value;
   const draws        = +document.getElementById('e-draws').value;
+  // 写真: preview img の src を使う（未変更なら元の値、削除なら空）
+  const previewImg = document.getElementById('photo-preview-img');
+  const photoUrl = (previewImg && previewImg.style.display !== 'none' && previewImg.src) ? previewImg.src : null;
+
+  if (DEMO_MODE) {
+    Object.assign(user, { name, gender, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
+    localStorage.setItem('demo_user', JSON.stringify(user));
+    // 管理側の会員管理に写真を反映（デモユーザーは M001 に対応）
+    const photos = JSON.parse(localStorage.getItem('demo_member_photos') || '{}');
+    if (photoUrl) { photos['M001'] = photoUrl; } else { delete photos['M001']; }
+    localStorage.setItem('demo_member_photos', JSON.stringify(photos));
+    // gym_member_profile に会員編集フィールドを保存（管理ページとの同期）
+    const _pStore = JSON.parse(localStorage.getItem('gym_member_profile') || '{}');
+    _pStore['M001'] = {
+      ...(_pStore['M001'] || {}),
+      name, gender, style, weight, targetWeight,
+      wins, losses, draws, fights: wins + losses + draws,
+    };
+    localStorage.setItem('gym_member_profile', JSON.stringify(_pStore));
+    document.getElementById('sb-name').textContent = name;
+    updateAvatarUI(user.photoUrl || null);
+    showApp('info');
+    return;
+  }
+
+  const { data: { user: authUser } } = await sb.auth.getUser();
+  if (!authUser) return;
   const { error } = await sb.from('profiles').update({
     name, gender, style, weight, target_weight: targetWeight, wins, losses, draws
   }).eq('id', authUser.id);
   if (error) { alert('保存に失敗しました: ' + error.message); return; }
-  Object.assign(user, { name, gender, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws });
+  Object.assign(user, { name, gender, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
   document.getElementById('sb-name').textContent = name;
+  updateAvatarUI(user.photoUrl || null);
   showApp('info');
 }
 
@@ -1178,7 +1393,6 @@ function getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours
   return { type:'slots', slots };
 }
 
-let currentWeekOffset = 0;
 
 function switchWeekTab(offset) {
   currentWeekOffset = offset;
@@ -1195,6 +1409,24 @@ async function renderMemberWeekly(weekOffset) {
   const grid = document.getElementById('member-week-grid');
   if (!grid) return;
   const { scheduleData, dayNotes, holidays, businessHours } = await loadScheduleFromDB();
+  cachedGymSettings = businessHours;
+  const capacity     = parseInt(businessHours['bi-capacity']     || '8');
+  // 確定予約のスロット別カウント（DEMO_MODE: ローカル集計 / 本番: 全予約を取得して集計）
+  const resCounts = {};
+  if (DEMO_MODE) {
+    demoReservations.filter(r => r.status === 'confirmed').forEach(r => {
+      const key = r.date + '_' + r.time;
+      resCounts[key] = (resCounts[key] || 0) + 1;
+    });
+  } else {
+    try {
+      const { data: allRes } = await sb.from('reservations').select('date,time').eq('status','confirmed');
+      (allRes || []).forEach(r => {
+        const key = r.date + '_' + r.time;
+        resCounts[key] = (resCounts[key] || 0) + 1;
+      });
+    } catch(e) { /* フォールバック: 全スロットを予約可能として扱う */ }
+  }
   const now = new Date();
   const DAYS = ['日','月','火','水','木','金','土'];
   let html = '';
@@ -1222,10 +1454,17 @@ async function renderMemberWeekly(weekOffset) {
       body = (slots||[]).map(({time,name}) => {
         const [h,m] = time.split(':').map(Number);
         const slotMs = new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m).getTime();
-        const past = slotMs < nowMs ? ' is-past' : '';
-        return `<div class="wk-slot${past}" onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name).replace(/"/g,'&quot;')})">
+        const past      = slotMs < nowMs ? ' is-past' : '';
+        const occupied  = resCounts[dateStr + '_' + time] || 0;
+        const remaining = capacity - occupied;
+        const isFull    = remaining <= 0;
+        const capCls    = isFull ? 'wk-cap-full' : remaining <= 2 ? 'wk-cap-low' : '';
+        const capLabel  = isFull ? '満員' : `残り${remaining}名`;
+        const clickAttr = (!past && !isFull) ? `onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name).replace(/"/g,'&quot;')})"` : '';
+        return `<div class="wk-slot${past}${isFull?' is-full':''}" ${clickAttr}>
           <div class="wk-slot-time">${time}</div>
           <div class="wk-slot-name">${escHtml(name)}</div>
+          <div class="wk-slot-cap ${capCls}">${capLabel}</div>
         </div>`;
       }).join('') || `<div class="wk-holiday" style="font-size:0.7rem;">予定なし</div>`;
     }
@@ -1242,19 +1481,31 @@ async function renderMemberWeekly(weekOffset) {
 
 // ===== BOOKING MODAL =====
 let bkDate = null, bkTime = null, bkClass = null;
+let cachedGymSettings = {};
 
 function openBkModal(dateStr, time, className) {
-  bkDate = dateStr; bkTime = time; bkClass = className;
+  // 予約可能時間チェック
+  const reserveLimit = parseFloat(cachedGymSettings['bi-reserve-limit'] || '1.5');
   const [y,m,d] = dateStr.split('-').map(Number);
+  const [sh,sm] = time.split(':').map(Number);
+  const slotMs = new Date(y,m-1,d,sh,sm).getTime();
+  if (Date.now() > slotMs - reserveLimit * 3600000) {
+    const lbl = reserveLimit % 1 === 0 ? `${reserveLimit}時間` : `${reserveLimit}時間`;
+    alert(`このクラスの予約受付は開始 ${lbl} 前に締め切られました`);
+    return;
+  }
+  bkDate = dateStr; bkTime = time; bkClass = className;
   const dow = new Date(y,m-1,d).getDay();
   const DAYS = ['日','月','火','水','木','金','土'];
   document.getElementById('bk-modal-title').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}`;
   document.getElementById('bk-modal-sub').textContent = `クラス：${className}`;
+  document.getElementById('bk-memo').value = '';
   document.getElementById('bk-overlay').classList.add('open');
 }
 
 function closeBkModal() {
   document.getElementById('bk-overlay').classList.remove('open');
+  document.getElementById('bk-memo').value = '';
   bkDate = bkTime = bkClass = null;
 }
 
@@ -1263,8 +1514,10 @@ async function submitBkModal() {
   const dow = new Date(y,m-1,d).getDay();
   const DAYS = ['日','月','火','水','木','金','土'];
   const time = bkTime, cls = bkClass; // closeBkModal() が null にする前に保存
+  const memo = document.getElementById('bk-memo').value.trim();
   if (DEMO_MODE) {
-    demoReservations.unshift({ id: 'demo-' + demoResId++, date: bkDate, time, class_name: cls, status: 'confirmed' });
+    demoReservations.unshift({ id: 'demo-' + demoResId++, date: bkDate, time, class_name: cls, status: 'confirmed', memo, memberName: user.name, memberGender: user.gender });
+    saveDemoReservations();
     closeBkModal();
     document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
     document.getElementById('bk-success-overlay').classList.add('open');
@@ -1278,6 +1531,7 @@ async function submitBkModal() {
     time:       time,
     class_name: cls,
     status:     'confirmed',
+    memo:       memo || null,
   });
   if (error) { alert('予約に失敗しました: ' + error.message); return; }
   closeBkModal();
