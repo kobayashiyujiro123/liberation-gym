@@ -360,25 +360,25 @@
     <div class="nav-item active" id="nav-dashboard" onclick="show('dashboard')">
       <i class="nav-icon fas fa-th-large"></i><span>トップメニュー</span>
     </div>
-    <div class="nav-item" id="nav-basicinfo" onclick="show('basicinfo')">
+    <div class="nav-item" id="nav-basicinfo" onclick="show('basicinfo')" data-admin-only>
       <i class="nav-icon fas fa-cog"></i><span>基本情報設定</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-schedule" onclick="show('schedule')">
+    <div class="nav-item" id="nav-schedule" onclick="show('schedule')" data-admin-only>
       <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
       <i class="nav-icon fas fa-clipboard-list"></i><span>予約管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-members" onclick="show('members')">
+    <div class="nav-item" id="nav-members" onclick="show('members')" data-admin-only>
       <i class="nav-icon fas fa-users"></i><span>会員管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-coach" onclick="show('coach')">
+    <div class="nav-item" id="nav-coach" onclick="show('coach')" data-admin-only>
       <i class="nav-icon fas fa-dumbbell"></i><span>コーチ管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-notice" onclick="show('notice')">
+    <div class="nav-item" id="nav-notice" onclick="show('notice')" data-admin-only>
       <i class="nav-icon fas fa-bell"></i><span>お知らせ作成</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-birthday" onclick="show('birthday')">
+    <div class="nav-item" id="nav-birthday" onclick="show('birthday')" data-admin-only>
       <i class="nav-icon fas fa-birthday-cake"></i><span>バースデー</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-password" onclick="show('password')">
@@ -402,13 +402,13 @@
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div class="dash-grid">
-        <div class="dash-card" onclick="show('basicinfo')"><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
-        <div class="dash-card" onclick="show('schedule')"><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
+        <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
+        <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
         <div class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
-        <div class="dash-card" onclick="show('members')"><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
-        <div class="dash-card" onclick="show('coach')"><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
-        <div class="dash-card" onclick="show('notice')"><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
-        <div class="dash-card" onclick="show('birthday')"><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
+        <div class="dash-card" onclick="show('members')" data-admin-only><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
+        <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
+        <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
+        <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
         <div class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
       </div>
     </div>
@@ -640,8 +640,6 @@
               <div class="mem-field-row"><div class="mem-field-label">担当コーチ</div>
                 <select class="form-ctrl mem-edit-inp" id="me-coach">
                   <option value="">未割当</option>
-                  <option>トミッキー</option>
-                  <option>鈴木さん</option>
                 </select>
               </div>
               <div class="mem-field-row"><div class="mem-field-label">退会日</div><input class="form-ctrl mem-edit-inp" id="me-left" type="date" /></div>
@@ -663,9 +661,10 @@
     <div class="view" id="view-password">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="form-card">
-        <div class="form-group"><label class="form-label">新しいパスワード</label><input type="password" id="pw-new" class="form-ctrl" placeholder="新しいパスワードを入力" /></div>
-        <div class="form-group"><label class="form-label">新しいパスワード（確認）</label><input type="password" id="pw-new2" class="form-ctrl" placeholder="もう一度入力してください" /></div>
-        <div class="form-actions"><button class="btn-p" onclick="changePw()">変更する</button><button class="btn-o" onclick="document.getElementById('pw-new').value='';document.getElementById('pw-new2').value=''">キャンセル</button></div>
+        <div class="form-group"><label class="form-label">現在のパスワード</label><input type="password" id="pw-cur" class="form-ctrl" placeholder="現在のパスワードを入力" /></div>
+        <div class="form-group"><label class="form-label">新しいパスワード</label><input type="password" id="pw-new" class="form-ctrl" placeholder="8文字以上の英数字" /></div>
+        <div class="form-group"><label class="form-label">新しいパスワード（確認）</label><input type="password" id="pw-new2" class="form-ctrl" placeholder="8文字以上の英数字" /></div>
+        <div class="form-actions"><button class="btn-p" onclick="changePw()">変更する</button><button class="btn-o" onclick="['pw-cur','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='')">キャンセル</button></div>
       </div>
     </div>
 
@@ -746,8 +745,8 @@
 
     <!-- COACH DETAIL -->
     <div class="view" id="view-coach-detail">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <button class="btn-o" onclick="show('coach')"><i class="fas fa-arrow-left"></i> 一覧に戻る</button>
+      <div class="mem-detail-breadcrumb">
+        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> コーチ一覧に戻る</span>
       </div>
       <div class="coach-detail-wrap">
         <!-- プロフィールカード -->
@@ -947,10 +946,42 @@ const _IS_DEMO  = _SUPA_URL.includes('YOUR_PROJECT_ID');
 <script>
 const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録' };
 
-// ===== ADMIN AUTH =====
+// ===== ROLE VISIBILITY =====
+let currentUserRole = 'admin';
+
+function applyRoleVisibility(role) {
+  currentUserRole = role;
+  if (role === 'coach') {
+    // admin-only 要素を非表示
+    document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+  }
+}
+
+// ===== ADMIN/COACH AUTH =====
 if (DEMO_MODE) {
-  // Supabase未設定時はモックデータでそのまま表示
+  // デモモード: URLパラメータ ?demo_role=coach でコーチ表示をテスト可能
+  const demoRole = new URLSearchParams(location.search).get('demo_role') || 'admin';
   document.addEventListener('DOMContentLoaded', () => {
+    applyRoleVisibility(demoRole);
+
+    // ── 保存済みデータを localStorage から復元 ──────────────
+    const savedSchedule = JSON.parse(localStorage.getItem('demo_scheduleData')  || '{}');
+    const savedNotes    = JSON.parse(localStorage.getItem('demo_dayNotes')       || '{}');
+    const savedHolidays = JSON.parse(localStorage.getItem('demo_holidays')       || '[]');
+    const savedBH       = JSON.parse(localStorage.getItem('demo_businessHours')  || '{}');
+
+    // in-memory 変数に反映
+    Object.assign(scheduleData, savedSchedule);
+    Object.assign(dayNotes, savedNotes);
+    savedHolidays.forEach(d => holidays.add(d));
+
+    // 保存済み営業時間を UI select に反映（管理カレンダーと会員側を同期）
+    Object.entries(savedBH).forEach(([k, v]) => {
+      const el = document.getElementById(k);
+      if (el) el.value = v;
+    });
+    // ────────────────────────────────────────────────────────
+
     renderCalendar();
     loadDemoNotices();
     renderNotices();
@@ -959,7 +990,11 @@ if (DEMO_MODE) {
     renderBirthdays();
     buildDayTabs();
     renderReservations();
-    saveScheduleToStorage(); // 初期営業時間をlocalStorageに保存
+
+    // 初回のみデフォルト営業時間を保存（既存データがある場合は上書きしない）
+    if (!localStorage.getItem('demo_businessHours')) {
+      saveScheduleToStorage();
+    }
   });
 } else {
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -969,10 +1004,11 @@ if (DEMO_MODE) {
     }
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       const { data: p } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
-      if (!p || p.role !== 'admin') {
+      if (!p || (p.role !== 'admin' && p.role !== 'coach')) {
         location.href = 'gym-member.html';
         return;
       }
+      applyRoleVisibility(p.role);
       await initFromDB();
     }
   });
@@ -1057,13 +1093,15 @@ const RES_PER_PAGE = 5;
 let resCoachFilter = ''; // '' = 全て、コーチ名 = フィルター中
 
 function buildDayTabs() {
-  const base = new Date();
-  base.setHours(0,0,0,0);
+  const now = new Date(); now.setHours(0,0,0,0);
+  const todayMs = now.getTime();
   const container = document.getElementById('res-day-tabs');
-  container.innerHTML = resDates.map((key, i) => {
-    const dt = new Date(base);
-    dt.setDate(base.getDate() + i);
-    const label = i === 0 ? '今日' : i === 1 ? '明日' : (dt.getMonth()+1) + '/' + dt.getDate();
+  container.innerHTML = resDates.map((key) => {
+    // キーの実際の日付からラベルを導出（ズレ防止）
+    const [ky, km, kd] = key.split('/').map(Number);
+    const dt = new Date(ky, km - 1, kd);
+    const diff = Math.round((dt.getTime() - todayMs) / 86400000);
+    const label = diff === 0 ? '今日' : diff === 1 ? '明日' : (dt.getMonth()+1) + '/' + dt.getDate();
     const weekday = WEEKDAYS[dt.getDay()];
     const count = resData[key].length;
     const isActive = key === resSelectedDate ? 'active' : '';
@@ -1122,11 +1160,13 @@ function renderReservations() {
     return matchQ && matchCoach;
   });
 
-  // カウント更新
-  const dateIdx = resDates.indexOf(resSelectedDate);
-  const isToday = dateIdx === 0;
+  // カウント更新（実際の日付比較でラベルを決定）
+  const [sy, sm, sd] = resSelectedDate.split('/').map(Number);
+  const selDateMs = new Date(sy, sm - 1, sd).getTime();
+  const nowMs2 = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+  const diff2 = Math.round((selDateMs - nowMs2) / 86400000);
   document.getElementById('res-count').textContent = all.length;
-  document.getElementById('res-count-lbl').textContent = isToday ? '本日の予約' : (dateIdx === 1 ? '明日の予約' : resDates[dateIdx] + 'の予約');
+  document.getElementById('res-count-lbl').textContent = diff2 === 0 ? '本日の予約' : diff2 === 1 ? '明日の予約' : resSelectedDate + 'の予約';
 
   const timeline = document.getElementById('res-timeline');
 
@@ -1516,7 +1556,11 @@ function openMemberEdit(id) {
   document.getElementById('me-tel-disp').textContent          = m.tel || '';
   // 編集可能フィールド
   document.getElementById('me-status').value       = m.status;
-  document.getElementById('me-coach').value        = m.coach || '';
+  // 担当コーチのドロップダウンを allCoaches から動的生成
+  const coachSel = document.getElementById('me-coach');
+  coachSel.innerHTML = '<option value="">未割当</option>' +
+    allCoaches.filter(c => c.status === '在籍中').map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  coachSel.value = m.coach || '';
   document.getElementById('me-left').value         = m.leftDate || '';
   document.getElementById('me-memo').value         = m.memo || '';
   document.getElementById('me-toggle').checked     = m.canView;
@@ -2493,15 +2537,22 @@ async function saveBasicInfo() {
 
 // ===== PASSWORD CHANGE =====
 async function changePw() {
+  const cur = document.getElementById('pw-cur').value;
   const nw  = document.getElementById('pw-new').value;
   const nw2 = document.getElementById('pw-new2').value;
-  if (!nw || nw.length < 6) { alert('新しいパスワードを6文字以上で入力してください'); return; }
+  if (!cur) { alert('現在のパスワードを入力してください'); return; }
+  if (!nw || nw.length < 8) { alert('パスワードは8文字以上で入力してください'); return; }
+  if (!/^[a-zA-Z0-9]+$/.test(nw)) { alert('パスワードは英数字のみで入力してください'); return; }
   if (nw !== nw2) { alert('パスワードが一致しません'); return; }
+  if (!DEMO_MODE) {
+    const { data: { user: u } } = await sb.auth.getUser();
+    const { error: signInErr } = await sb.auth.signInWithPassword({ email: u.email, password: cur });
+    if (signInErr) { alert('現在のパスワードが正しくありません'); return; }
+  }
   const { error } = await sb.auth.updateUser({ password: nw });
   if (error) { alert('変更失敗: ' + error.message); return; }
   alert('パスワードを変更しました');
-  document.getElementById('pw-new').value  = '';
-  document.getElementById('pw-new2').value = '';
+  ['pw-cur','pw-new','pw-new2'].forEach(id => { document.getElementById(id).value = ''; });
 }
 
 // ===== DB INIT =====
