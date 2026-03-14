@@ -906,7 +906,7 @@ async function loadUserProfile(authUser) {
       birthYear:    parseInt(bd[0]),
       birthMonth:   parseInt(bd[1]),
       birthDay:     parseInt(bd[2]),
-      phone:        profile.phone          || '',
+      phone:        profile.tel            || '',
       style:        profile.style         || 'オーソドックス',
       weight:       profile.weight        || 0,
       targetWeight: profile.target_weight || 0,
@@ -1293,7 +1293,7 @@ async function saveInfo() {
   const { data: { user: authUser } } = await sb.auth.getUser();
   if (!authUser) return;
   const { error } = await sb.from('profiles').update({
-    name, gender, phone, style, weight, target_weight: targetWeight, wins, losses, draws
+    name, gender, tel: phone, style, weight, target_weight: targetWeight, wins, losses, draws
   }).eq('id', authUser.id);
   if (error) { alert('保存に失敗しました: ' + error.message); return; }
   Object.assign(user, { name, gender, phone, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
