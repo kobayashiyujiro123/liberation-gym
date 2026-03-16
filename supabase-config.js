@@ -4,8 +4,8 @@
 //   Settings → API → Project URL / anon public key
 // ============================================================
 
-const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_PUBLIC_KEY';
+const SUPABASE_URL  = 'https://getlmyggtxlfswinctss.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_7UyLKKxbUzyltp4bt014EQ_-2aCT-yr';
 
 // Supabase未設定時はデモモードで動作
 const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT_ID');
