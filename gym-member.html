@@ -506,6 +506,10 @@
         <span class="nav-icon"><i class="fas fa-lock"></i></span>パスワード変更
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
+      <div class="nav-item" id="nav-res-view" onclick="openResView()" style="display:none;">
+        <span class="nav-icon"><i class="fas fa-users"></i></span>予約状況閲覧
+        <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
+      </div>
       <div class="nav-item nav-logout" onclick="doLogout()">
         <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>ログアウト
       </div>
@@ -548,6 +552,11 @@
             <div class="top-card-icon"><i class="fas fa-lock"></i></div>
             <div class="top-card-label">パスワード変更</div>
             <div class="top-card-desc">ログインパスワードの変更</div>
+          </div>
+          <div class="top-card" id="top-card-res-view" onclick="openResView()" style="display:none;">
+            <div class="top-card-icon"><i class="fas fa-users"></i></div>
+            <div class="top-card-label">予約状況閲覧</div>
+            <div class="top-card-desc">全体の予約状況を確認</div>
           </div>
         </div>
       </div>
@@ -669,12 +678,17 @@
             </div>
           </div>
           <div class="edit-row">
-            <label class="edit-label">通常体重 (kg)</label>
-            <input class="edit-input" id="e-weight" type="number" style="width:100px;" />
-          </div>
-          <div class="edit-row">
-            <label class="edit-label">目標体重 (kg)</label>
-            <input class="edit-input" id="e-tweight" type="number" style="width:100px;" />
+            <label class="edit-label">目標</label>
+            <select class="edit-select" id="e-goal">
+              <option value="">選択してください</option>
+              <option>フィットネス</option>
+              <option>ダイエット</option>
+              <option>試合に出たい</option>
+              <option>試合で勝ちたい</option>
+              <option>プロ希望</option>
+              <option>世界ランカー</option>
+              <option>世界チャンピオン</option>
+            </select>
           </div>
           <div style="margin-top:20px;display:flex;gap:12px;align-items:center;">
             <button class="btn-action" onclick="saveInfo()">保存する</button>
@@ -714,6 +728,14 @@
           <p style="font-size:0.88rem;color:var(--text-light);">パスワードが変更されました。</p>
           <button class="btn-action" style="margin-top:24px;" onclick="showApp('top')">トップページへ戻る</button>
         </div>
+      </div>
+
+      <!-- 予約状況閲覧 -->
+      <div class="page" id="app-res-view">
+        <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
+        <div class="week-tabs" id="rv-day-tabs" style="margin-bottom:12px;"></div>
+        <div id="rv-count-label" style="font-size:0.82rem;color:var(--text-light);margin-bottom:10px;"></div>
+        <div id="rv-timeline"></div>
       </div>
 
       <!-- 公式サイトフッター -->
@@ -771,13 +793,7 @@
   </div>
 </div>
 
-<script>
-// Supabase設定を先読み（CDN読み込み前にDEMO_MODEを判定）
-const _SUPA_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const _IS_DEMO  = _SUPA_URL.includes('YOUR_PROJECT_ID');
-</script>
-<!-- DEMO_MODEでなければSupabase CDNを読み込む（大きなファイルのため条件分岐） -->
-<script>if(!_IS_DEMO){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/scr'+'ipt>');}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
 // ===== DATA =====
@@ -809,6 +825,7 @@ const APP_PAGES = {
   'info-edit': { el:'app-info-edit', nav:'nav-info',     title:'ユーザ情報' },
   'pw':        { el:'app-pw',        nav:'nav-pw',       title:'パスワード変更' },
   'pw-done':   { el:'app-pw-done',   nav:'nav-pw',       title:'パスワード変更完了' },
+  'res-view':  { el:'app-res-view',  nav:'nav-res-view', title:'予約状況閲覧' },
 };
 
 function showApp(key) {
@@ -824,6 +841,7 @@ function showApp(key) {
   if (key === 'res')       renderRes();
   if (key === 'info')      renderInfo();
   if (key === 'info-edit') fillEditForm();
+  if (key === 'res-view')  buildRvDayTabs();
   closeSB();
   localStorage.setItem('gym_currentPage', key);
   location.hash = key;
@@ -879,10 +897,154 @@ function enterApp() {
   document.getElementById('app-wrap').classList.add('visible');
   document.getElementById('sb-name').textContent = user.name || '';
   updateAvatarUI(user.photoUrl || null);
+  // 予約状況閲覧権限があればボタンを表示
+  const canView = user.canView || false;
+  document.getElementById('nav-res-view').style.display    = canView ? '' : 'none';
+  document.getElementById('top-card-res-view').style.display = canView ? '' : 'none';
   const hash = location.hash.replace('#', '');
   const page = (hash && APP_PAGES[hash]) ? hash : (localStorage.getItem('gym_currentPage') || 'top');
   showApp(APP_PAGES[page] ? page : 'top');
   loadNotices();
+}
+
+// ===== 予約状況閲覧 =====
+const _RV_MEMBERS = [
+  {name:'水野麻美', gender:'女'},{name:'吉田レマン', gender:'男'},{name:'K4', gender:'男'},
+  {name:'桑田', gender:'男'},{name:'ソジョン', gender:'女'},{name:'中村', gender:'女'},
+  {name:'森', gender:'男'},{name:'中庭', gender:'男'},{name:'山下', gender:'男'},{name:'ソエジ', gender:'男'},
+];
+const _RV_STATUSES = [{label:'確定',badge:'badge-s'},{label:'キャンセル',badge:'badge-d'}];
+const _RV_TIMES = ['09:00','10:00','11:00','13:00','14:00','16:00','18:00','19:00'];
+
+function _rvMakeRng(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = Math.imul(s ^ s >>> 15, 1 | s);
+    s ^= s + Math.imul(s ^ s >>> 7, 61 | s);
+    return ((s ^ s >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function _rvGenData() {
+  // gym-schedule.html と同じシード・同じロジックで生成
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const rng = _rvMakeRng(seed);
+  const data = {};
+  const base = new Date(); base.setHours(0,0,0,0);
+  let id = 100;
+  for (let d = 0; d < 7; d++) {
+    const dt = new Date(base);
+    dt.setDate(base.getDate() + d);
+    const key = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
+    const count = 4 + Math.floor(rng() * 6);
+    data[key] = [];
+    for (let i = 0; i < count; i++) {
+      const st = _RV_STATUSES[Math.floor(rng() * (d === 0 ? _RV_STATUSES.length : 1))];
+      const mb = _RV_MEMBERS[Math.floor(rng() * _RV_MEMBERS.length)];
+      rng(); // cls フィールド分の乱数消費（gym-schedule.html と列を合わせる）
+      const time = _RV_TIMES[Math.floor(rng() * _RV_TIMES.length)];
+      data[key].push({ id: '#' + String(id++).padStart(4,'0'), name: mb.name, gender: mb.gender, time, status: st.label, badge: st.badge });
+    }
+    // 会員側予約をマージ
+    const raw = JSON.parse(localStorage.getItem('demo_reservations') || '[]');
+    const dateKey = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    raw.filter(r => r.date === dateKey).forEach(r => {
+      data[key].push({ id: r.id, name: r.memberName || '—', gender: r.memberGender || '', time: r.time, status: r.status === 'cancelled' ? 'キャンセル' : '確定', badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s' });
+    });
+    data[key].sort((a,b) => a.time.localeCompare(b.time));
+  }
+  return data;
+}
+
+let rvSelectedDate = null;
+
+function openResView() {
+  showApp('res-view');
+  buildRvDayTabs();
+}
+
+function buildRvDayTabs() {
+  const now = new Date();
+  const tabs = document.getElementById('rv-day-tabs');
+  const labels = ['今日','明日'];
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    dates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+  if (!rvSelectedDate || !dates.includes(rvSelectedDate)) rvSelectedDate = dates[0];
+  tabs.innerHTML = dates.map((dt, i) => {
+    const d = new Date(dt + 'T00:00:00');
+    const lbl = i < 2 ? labels[i] : `${d.getMonth()+1}/${d.getDate()}`;
+    return `<button class="week-tab${dt === rvSelectedDate ? ' active' : ''}" onclick="rvSelectDate('${dt}')">${lbl}</button>`;
+  }).join('');
+  renderResView();
+}
+
+function rvSelectDate(dt) {
+  rvSelectedDate = dt;
+  buildRvDayTabs();
+}
+
+async function renderResView() {
+  const timeline = document.getElementById('rv-timeline');
+  const countLabel = document.getElementById('rv-count-label');
+  if (!rvSelectedDate) return;
+
+  let items = [];
+  if (DEMO_MODE) {
+    const resData = _rvGenData();
+    const key = rvSelectedDate.replace(/-/g, '/');
+    items = resData[key] || [];
+  } else {
+    try {
+      const { data } = await sb.from('reservations')
+        .select('time, status, profiles(name, gender)')
+        .eq('date', rvSelectedDate);
+      items = (data || []).map(r => ({
+        time: r.time,
+        name: r.profiles?.name || '—',
+        gender: r.profiles?.gender || '',
+        status: r.status === 'confirmed' ? '確定' : 'キャンセル',
+        badge: r.status === 'confirmed' ? 'badge-s' : 'badge-d',
+      }));
+    } catch(e) { items = []; }
+  }
+
+  items.sort((a, b) => a.time.localeCompare(b.time));
+  countLabel.textContent = `${rvSelectedDate} の予約：${items.length}件`;
+
+  if (!items.length) {
+    timeline.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-light);font-size:0.88rem;">この日の予約はありません</div>';
+    return;
+  }
+
+  // 時間帯グループ化
+  const groups = {};
+  items.forEach(r => { if (!groups[r.time]) groups[r.time] = []; groups[r.time].push(r); });
+
+  timeline.innerHTML = Object.keys(groups).sort().map(time => {
+    const cards = groups[time].map(r => {
+      const isCancel = r.status === 'キャンセル';
+      const isMale = r.gender === '男';
+      const isFemale = r.gender === '女';
+      const avStyle = isCancel ? '' : isMale ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"'
+                    : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
+      const borderStyle = isCancel ? '' : isMale ? 'border-left:3px solid #1565c0;' : isFemale ? 'border-left:3px solid #ba68c8;' : '';
+      const opacity = isCancel ? 'opacity:0.55;' : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;${borderStyle}${opacity}">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;flex-shrink:0;" ${avStyle}>${r.name.slice(0,2)}</div>
+        <div style="flex:1;font-size:0.88rem;font-weight:600;">${escHtml(r.name)}</div>
+        <span class="badge ${r.badge || 'badge-s'}" style="font-size:0.68rem;">${r.status}</span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--primary-dark);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="fas fa-clock"></i>${time}</div>
+      ${cards}
+    </div>`;
+  }).join('');
 }
 
 // ===== HELPERS =====
@@ -908,8 +1070,8 @@ async function loadUserProfile(authUser) {
       birthDay:     parseInt(bd[2]),
       phone:        profile.tel            || '',
       style:        profile.style         || 'オーソドックス',
-      weight:       profile.weight        || 0,
-      targetWeight: profile.target_weight || 0,
+      goal:         profile.goal          || '',
+      canView:      profile.can_view      || false,
       wins, losses, draws,
       fights:       wins + losses + draws,
       totalVisits:  profile.total_visits  || 0,
@@ -931,16 +1093,16 @@ if (DEMO_MODE) {
       if (_p.name         != null) user.name         = _p.name;
       if (_p.gender       != null) user.gender       = _p.gender;
       if (_p.phone        != null) user.phone        = _p.phone;
-      if (_p.style        != null) user.style        = _p.style;
-      if (_p.weight       != null) user.weight       = _p.weight;
-      if (_p.targetWeight != null) user.targetWeight = _p.targetWeight;
+      if (_p.style        != null) user.style   = _p.style;
+      if (_p.goal         != null) user.goal    = _p.goal;
+      if (_p.canView      != null) user.canView = _p.canView;
       if (_p.wins         != null) { user.wins = _p.wins; user.losses = _p.losses; user.draws = _p.draws; user.fights = _p.fights; }
     } else {
       // gym_member_profile が未作成の場合、demo_user から初期化（管理ページへの初回同期）
       const _init = JSON.parse(localStorage.getItem('gym_member_profile') || '{}');
       _init['M001'] = {
         name: user.name, gender: user.gender, phone: user.phone || '', style: user.style,
-        weight: user.weight, targetWeight: user.targetWeight,
+        goal: user.goal || '',
         wins: user.wins || 0, losses: user.losses || 0, draws: user.draws || 0, fights: user.fights || 0,
       };
       localStorage.setItem('gym_member_profile', JSON.stringify(_init));
@@ -969,8 +1131,8 @@ function demoLogin() {
     birthYear: 1990, birthMonth: 3, birthDay: 15,
     phone:        _p.phone        != null ? _p.phone        : '',
     style:        _p.style        != null ? _p.style        : 'オーソドックス',
-    weight:       _p.weight       != null ? _p.weight       : 55,
-    targetWeight: _p.targetWeight != null ? _p.targetWeight : 52,
+    goal:         _p.goal         != null ? _p.goal         : '',
+    canView:      _p.canView      != null ? _p.canView      : false,
     wins:         _p.wins         != null ? _p.wins         : 0,
     losses:       _p.losses       != null ? _p.losses       : 0,
     draws:        _p.draws        != null ? _p.draws        : 0,
@@ -1220,8 +1382,7 @@ function renderInfo() {
     <div class="info-row"><div class="info-key">生年月日</div><div class="info-val">${u.birthYear}年${u.birthMonth}月${u.birthDay}日</div></div>
     <div class="info-row"><div class="info-key">電話番号</div><div class="info-val">${escHtml(u.phone || '—')}</div></div>
     <div class="info-row"><div class="info-key">スタイル</div><div class="info-val">${escHtml(u.style)}</div></div>
-    <div class="info-row"><div class="info-key">通常体重</div><div class="info-val">${u.weight}kg</div></div>
-    <div class="info-row"><div class="info-key">目標体重</div><div class="info-val">${u.targetWeight}kg</div></div>
+    <div class="info-row"><div class="info-key">目標</div><div class="info-val">${escHtml(u.goal || '—')}</div></div>
     <div class="info-row"><div class="info-key">戦績</div><div class="info-val">${u.fights}戦 ${u.wins}勝 ${u.losses}敗 ${u.draws}分</div></div>
     ${startStr ? `<div class="info-row"><div class="info-key">システム利用開始日</div><div class="info-val">${startStr}</div></div>` : ''}
   `;
@@ -1243,8 +1404,7 @@ function fillEditForm() {
   document.getElementById('e-gender').value  = u.gender  || '男';
   document.getElementById('e-phone').value   = u.phone   || '';
   document.getElementById('e-style').value   = u.style   || 'オーソドックス';
-  document.getElementById('e-weight').value  = u.weight  || '';
-  document.getElementById('e-tweight').value = u.targetWeight || '';
+  document.getElementById('e-goal').value = u.goal || '';
   document.getElementById('e-birth-display').textContent = `${u.birthYear}年${u.birthMonth}月${u.birthDay}日`;
   buildSelect100('e-fights', u.fights || 0);
   buildSelect100('e-wins',   u.wins   || 0);
@@ -1260,8 +1420,7 @@ async function saveInfo() {
   const gender       = document.getElementById('e-gender').value;
   const phone        = document.getElementById('e-phone').value.trim();
   const style        = document.getElementById('e-style').value;
-  const weight       = +document.getElementById('e-weight').value  || user.weight;
-  const targetWeight = +document.getElementById('e-tweight').value || user.targetWeight;
+  const goal         = document.getElementById('e-goal').value;
   const wins         = +document.getElementById('e-wins').value;
   const losses       = +document.getElementById('e-losses').value;
   const draws        = +document.getElementById('e-draws').value;
@@ -1270,17 +1429,15 @@ async function saveInfo() {
   const photoUrl = (previewImg && previewImg.style.display !== 'none' && previewImg.src) ? previewImg.src : null;
 
   if (DEMO_MODE) {
-    Object.assign(user, { name, gender, phone, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
+    Object.assign(user, { name, gender, phone, style, goal, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
     localStorage.setItem('demo_user', JSON.stringify(user));
-    // 管理側の会員管理に写真を反映（デモユーザーは M001 に対応）
     const photos = JSON.parse(localStorage.getItem('demo_member_photos') || '{}');
     if (photoUrl) { photos['M001'] = photoUrl; } else { delete photos['M001']; }
     localStorage.setItem('demo_member_photos', JSON.stringify(photos));
-    // gym_member_profile に会員編集フィールドを保存（管理ページとの同期）
     const _pStore = JSON.parse(localStorage.getItem('gym_member_profile') || '{}');
     _pStore['M001'] = {
       ...(_pStore['M001'] || {}),
-      name, gender, phone, style, weight, targetWeight,
+      name, gender, phone, style, goal,
       wins, losses, draws, fights: wins + losses + draws,
     };
     localStorage.setItem('gym_member_profile', JSON.stringify(_pStore));
@@ -1293,10 +1450,11 @@ async function saveInfo() {
   const { data: { user: authUser } } = await sb.auth.getUser();
   if (!authUser) return;
   const { error } = await sb.from('profiles').update({
-    name, gender, tel: phone, style, weight, target_weight: targetWeight, wins, losses, draws
+    name, gender, tel: phone, style, goal, wins, losses, draws,
+    photo_url: photoUrl || null
   }).eq('id', authUser.id);
   if (error) { alert('保存に失敗しました: ' + error.message); return; }
-  Object.assign(user, { name, gender, phone, style, weight, targetWeight, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
+  Object.assign(user, { name, gender, phone, style, goal, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
   document.getElementById('sb-name').textContent = name;
   updateAvatarUI(user.photoUrl || null);
   showApp('info');

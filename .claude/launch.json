@@ -2,11 +2,32 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gym-schedule",
-      "runtimeExecutable": "C:\\Program Files\\Git\\usr\\bin\\perl.exe",
-      "runtimeArgs": ["C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve.pl"],
+      "name": "gym-admin",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-admin.ps1"],
       "port": 6543,
       "autoPort": false
+    },
+    {
+      "name": "gym-member",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-member.ps1"],
+      "port": 6544,
+      "autoPort": false
+    },
+    {
+      "name": "baseball-team",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-baseball.bat"],
+      "port": 7002,
+      "autoPort": false
+    },
+    {
+      "name": "gym-admin-preview",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-admin-preview.ps1"],
+      "port": 6545,
+      "autoPort": true
     }
   ]
 }

@@ -548,12 +548,12 @@
           <thead><tr>
             <th class="sortable" onclick="memberSort('id')" id="mth-id">会員ID<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('name')" id="mth-name">氏名<span class="sort-icon"></span></th>
-            <th class="sortable" onclick="memberSort('email')" id="mth-email">メール<span class="sort-icon"></span></th>
-            <th class="sortable" onclick="memberSort('tel')" id="mth-tel">電話番号<span class="sort-icon"></span></th>
-            <th class="sortable" onclick="memberSort('date')" id="mth-date">入会日<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('visits')" id="mth-visits">利用回数<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('visitsYear')" id="mth-visitsYear">今年<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('visitsMonth')" id="mth-visitsMonth">今月<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="memberSort('email')" id="mth-email">メール<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="memberSort('tel')" id="mth-tel">電話番号<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="memberSort('date')" id="mth-date">入会日<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('status')" id="mth-status">ステータス<span class="sort-icon"></span></th>
             <th></th>
           </tr></thead>
@@ -578,8 +578,7 @@
             <div class="mem-field-row"><div class="mem-field-label">生年月日</div><div class="mem-field-val" id="md-birthday"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">年齢</div><div class="mem-field-val" id="md-age"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">スタイル</div><div class="mem-field-val" id="md-style"></div></div>
-            <div class="mem-field-row"><div class="mem-field-label">通常体重</div><div class="mem-field-val" id="md-weight"></div></div>
-            <div class="mem-field-row"><div class="mem-field-label">目標体重</div><div class="mem-field-val" id="md-target-weight"></div></div>
+            <div class="mem-field-row"><div class="mem-field-label">目標</div><div class="mem-field-val" id="md-goal"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">戦績</div><div class="mem-field-val" id="md-record"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">メール</div><div class="mem-field-val" id="md-email"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">電話番号</div><div class="mem-field-val" id="md-tel"></div></div>
@@ -619,8 +618,7 @@
             <div class="mem-field-row"><div class="mem-field-label">性別</div><div class="mem-field-val" id="me-gender-disp"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">生年月日</div><div class="mem-field-val" id="me-birthday-disp"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">スタイル</div><div class="mem-field-val" id="me-style-disp"></div></div>
-            <div class="mem-field-row"><div class="mem-field-label">通常体重</div><div class="mem-field-val" id="me-weight-disp"></div></div>
-            <div class="mem-field-row"><div class="mem-field-label">目標体重</div><div class="mem-field-val" id="me-target-weight-disp"></div></div>
+            <div class="mem-field-row"><div class="mem-field-label">目標</div><div class="mem-field-val" id="me-goal-disp"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">戦績</div><div class="mem-field-val" id="me-record-disp"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">メール</div><div class="mem-field-val" id="me-email-disp"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">電話番号</div><div class="mem-field-val" id="me-tel-disp"></div></div>
@@ -937,11 +935,7 @@
   </div>
 </div>
 
-<script>
-const _SUPA_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const _IS_DEMO  = _SUPA_URL.includes('YOUR_PROJECT_ID');
-</script>
-<script>if(!_IS_DEMO){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/scr'+'ipt>');}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
 const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録' };
@@ -952,8 +946,13 @@ let currentUserRole = 'admin';
 function applyRoleVisibility(role) {
   currentUserRole = role;
   if (role === 'coach') {
-    // admin-only 要素を非表示
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+  } else if (role === 'viewer') {
+    // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
+    document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-item:not(#nav-reservation)').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.dash-card').forEach(el => el.style.display = 'none');
+    setTimeout(() => show('reservation'), 0);
   }
 }
 
@@ -1003,12 +1002,13 @@ if (DEMO_MODE) {
       return;
     }
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-      const { data: p } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
-      if (!p || (p.role !== 'admin' && p.role !== 'coach')) {
+      const { data: p } = await sb.from('profiles').select('role, can_view').eq('id', session.user.id).single();
+      if (!p || (p.role !== 'admin' && p.role !== 'coach' && !p.can_view)) {
         location.href = 'gym-member.html';
         return;
       }
-      applyRoleVisibility(p.role);
+      const role = p.role === 'admin' ? 'admin' : p.role === 'coach' ? 'coach' : 'viewer';
+      applyRoleVisibility(role);
       await initFromDB();
     }
   });
@@ -1086,6 +1086,12 @@ function genReservations() {
 
 const resData = genReservations();
 const resDates = Object.keys(resData); // 7日分のキー
+
+function saveResDataToStorage() {
+  if (!DEMO_MODE) return;
+  localStorage.setItem('demo_resData', JSON.stringify(resData));
+}
+saveResDataToStorage();
 const _savedResDate = sessionStorage.getItem('resSelectedDate');
 let resSelectedDate = (resDates.includes(_savedResDate) ? _savedResDate : resDates[0]);
 let resPage = 1;
@@ -1306,6 +1312,7 @@ function mergeDemoReservations() {
     });
     resData[adminKey].sort((a, b) => a.time.localeCompare(b.time));
   }
+  saveResDataToStorage();
   renderReservations();
 }
 
@@ -1384,6 +1391,7 @@ function submitAddRes() {
   resData[resSelectedDate] = resData[resSelectedDate] || [];
   resData[resSelectedDate].push({ id, name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo });
   resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
+  saveResDataToStorage();
   closeAddResModal();
   buildDayTabs();
   renderReservations();
@@ -1419,8 +1427,7 @@ function getMemberWithProfile(id) {
   if (p.name         != null) m.name         = p.name;
   if (p.gender       != null) m.gender       = p.gender;
   if (p.style        != null) m.style        = p.style;
-  if (p.weight       != null) m.weight       = p.weight;
-  if (p.targetWeight != null) m.targetWeight = p.targetWeight;
+  if (p.goal         != null) m.goal         = p.goal;
   if (p.wins         != null) m.record = `${p.fights||0}戦 ${p.wins||0}勝 ${p.losses||0}敗 ${p.draws||0}分`;
   if (p.status       != null) { m.status = p.status; m.badge = p.status==='有効'?'badge-s':p.status==='休会'?'badge-w':'badge-d'; }
   if (p.coach        != null) m.coach    = p.coach;
@@ -1438,8 +1445,7 @@ function getMemberWithProfile(id) {
     if (p.name         != null) m.name         = p.name;
     if (p.gender       != null) m.gender       = p.gender;
     if (p.style        != null) m.style        = p.style;
-    if (p.weight       != null) m.weight       = p.weight;
-    if (p.targetWeight != null) m.targetWeight = p.targetWeight;
+    if (p.goal         != null) m.goal         = p.goal;
     if (p.wins         != null) m.record = `${p.fights||0}戦 ${p.wins||0}勝 ${p.losses||0}敗 ${p.draws||0}分`;
     if (p.status       != null) { m.status = p.status; m.badge = p.status==='有効'?'badge-s':p.status==='休会'?'badge-w':'badge-d'; }
     if (p.coach        != null) m.coach    = p.coach;
@@ -1476,7 +1482,7 @@ function getDemoMemberPhoto(memberId) {
 }
 
 function setMemberAvatarEl(el, m) {
-  const photo = getDemoMemberPhoto(m.id);
+  const photo = m.photoUrl || getDemoMemberPhoto(m.id);
   if (photo) {
     el.innerHTML = `<img src="${photo}" alt="${m.name}">`;
     el.className = el.className.replace(/\s*(male|female)\b/g, '');
@@ -1509,9 +1515,8 @@ function openMemberDetail(id, fromView) {
   document.getElementById('md-gender').textContent       = m.gender || '—';
   document.getElementById('md-birthday').textContent     = fmtDate(m.birthday);
   document.getElementById('md-age').textContent          = calcAge(m.birthday);
-  document.getElementById('md-style').textContent        = m.style || '—';
-  document.getElementById('md-weight').textContent       = m.weight ? m.weight + 'kg' : '—';
-  document.getElementById('md-target-weight').textContent= m.targetWeight ? m.targetWeight + 'kg' : '—';
+  document.getElementById('md-style').textContent = m.style || '—';
+  document.getElementById('md-goal').textContent  = m.goal  || '—';
   document.getElementById('md-record').textContent       = m.record || '—';
   document.getElementById('md-started').textContent      = m.date;
   document.getElementById('md-visits').textContent       = m.visits + '回';
@@ -1549,8 +1554,7 @@ function openMemberEdit(id) {
   document.getElementById('me-gender-disp').textContent       = m.gender || '';
   document.getElementById('me-birthday-disp').textContent     = m.birthday || '';
   document.getElementById('me-style-disp').textContent        = m.style || '';
-  document.getElementById('me-weight-disp').textContent       = m.weight ? m.weight + ' kg' : '';
-  document.getElementById('me-target-weight-disp').textContent= m.targetWeight ? m.targetWeight + ' kg' : '';
+  document.getElementById('me-goal-disp').textContent = m.goal || '—';
   document.getElementById('me-record-disp').textContent       = m.record || '';
   document.getElementById('me-email-disp').textContent        = m.email || '';
   document.getElementById('me-tel-disp').textContent          = m.tel || '';
@@ -1587,6 +1591,7 @@ async function saveMemberEdit() {
     coach_name: m.coach,
     left_date:  m.leftDate || null,
     memo:       m.memo,
+    can_view:   m.canView,
   }).eq('id', m.id);
   // 管理編集フィールドを gym_member_profile に保存（会員ページとの同期）
   const _store = getProfileStore();
@@ -1619,7 +1624,8 @@ function memberSort(key) {
 function renderMembers() {
   const q = (document.getElementById('member-search')?.value || '').toLowerCase();
   let filtered = allMembers.filter(m =>
-    m.name.includes(q) || m.email.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)
+    m.name.includes(q) || m.email.toLowerCase().includes(q) ||
+    m.id.toLowerCase().includes(q) || (m.memberNo || '').toLowerCase().includes(q)
   );
 
   // ソート
@@ -1651,14 +1657,14 @@ function renderMembers() {
   const tbody = document.getElementById('member-tbody');
   tbody.innerHTML = pageItems.length ? pageItems.map(m => `
     <tr class="clickable-row${m.gender === '男' ? ' male-row' : m.gender === '女' ? ' female-row' : ''}" onclick="openMemberDetail('${m.id}')">
-      <td>${m.id}</td>
-      <td><div class="m-cell">${(()=>{ const p=getDemoMemberPhoto(m.id); return p ? `<div class="m-av"><img src="${p}" alt="${m.name}"></div>` : `<div class="m-av${m.gender==='男'?' male':m.gender==='女'?' female':''}">${m.name.slice(0,2)}</div>`; })()}${m.name}</div></td>
-      <td>${m.email}</td>
-      <td>${m.tel}</td>
-      <td>${m.date}</td>
+      <td>${DEMO_MODE ? m.id : (m.memberNo || m.id.slice(0,8))}</td>
+      <td><div class="m-cell">${(()=>{ const p=m.photoUrl || getDemoMemberPhoto(m.id); return p ? `<div class="m-av"><img src="${p}" alt="${m.name}"></div>` : `<div class="m-av${m.gender==='男'?' male':m.gender==='女'?' female':''}">${m.name.slice(0,2)}</div>`; })()}${m.name}</div></td>
       <td style="text-align:center;font-weight:600;">${m.visits}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
       <td style="text-align:center;font-weight:600;">${m.visitsYear}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
       <td style="text-align:center;font-weight:600;">${m.visitsMonth}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
+      <td>${m.email}</td>
+      <td>${m.tel}</td>
+      <td>${m.date}</td>
       <td><span class="badge ${m.badge}">${m.status}</span></td>
       <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button><button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button></td>
     </tr>`).join('')
@@ -1697,6 +1703,9 @@ function show(name) {
     const now = new Date();
     if (calYear === undefined) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
     renderCalendar();
+  }
+  if (name === 'birthday') {
+    renderBirthdays();
   }
 }
 
@@ -2183,11 +2192,11 @@ function renderBirthdays() {
 
   todayEl.innerHTML = todayList.length
     ? todayList.map(m => makeBdayCard(m, true)).join('')
-    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>本日が誕生日の会員はいません</div>';
+    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>該当する方はいません</div>';
 
   weekEl.innerHTML = weekList.length
     ? weekList.map(m => makeBdayCard(m, false)).join('')
-    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>一週間以内に誕生日の会員はいません</div>';
+    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>該当する方はいません</div>';
 }
 
 // ===== COACH LOGIC =====
@@ -2629,14 +2638,16 @@ async function initMembersFromDB() {
   data.forEach(p => {
     const wins = p.wins || 0, losses = p.losses || 0, draws = p.draws || 0;
     allMembers.push({
-      id: p.id, name: p.name || '未設定', email: p.email || '', tel: p.tel || '',
+      id: p.id, memberNo: p.member_number ? 'M' + String(p.member_number).padStart(4,'0') : p.id.slice(0,8),
+      name: p.name || '未設定', email: p.email || '', tel: p.tel || '',
       date: p.start_date || (p.created_at || '').slice(0,10),
       status: statusMap[p.status] || '有効', badge: badgeMap[p.status] || 'badge-s',
       visits: p.total_visits || 0, visitsYear: p.year_visits || 0, visitsMonth: p.month_visits || 0,
       gender: p.gender || '', birthday: p.birth_date || '', style: p.style || '',
-      weight: p.weight || 0, targetWeight: p.target_weight || 0,
+      goal: p.goal || '',
       record: wins + '勝' + losses + '敗' + draws + '分',
       coach: p.coach_name || '', memo: p.memo || '', leftDate: p.left_date || '', canView: false,
+      photoUrl: p.photo_url || null,
     });
   });
   memberPage = 1;
