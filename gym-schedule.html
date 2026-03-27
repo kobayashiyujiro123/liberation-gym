@@ -2491,16 +2491,18 @@ async function submitNotice() {
     return;
   }
   try {
+    const btn = document.querySelector('#view-notice .btn-p');
+    if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
     const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 設定する'; }
     if (error) { alert('保存に失敗しました: ' + error.message); return; }
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
-    const id = data ? data.id : 'notice-' + Date.now();
-    allNotices.unshift({ id, title, content, date: dateStr, visible });
     document.getElementById('notice-title').value   = '';
     document.getElementById('notice-content').value = '';
-    renderNotices();
+    document.getElementById('notice-visible-on').checked = true;
+    await initNoticesFromDB();
   } catch(e) {
+    const btn = document.querySelector('#view-notice .btn-p');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 設定する'; }
     alert('エラーが発生しました: ' + e.message);
   }
 }
@@ -2606,7 +2608,8 @@ async function initScheduleFromDB() {
 
 async function initNoticesFromDB() {
   try {
-    const { data } = await sb.from('notices').select('*').order('date', { ascending: false });
+    const { data, error } = await sb.from('notices').select('*').order('date', { ascending: false });
+    if (error) { console.error('notices fetch error:', error.message, error); }
     allNotices.length = 0;
     (data || []).forEach(n => {
       const nd = new Date(n.date + 'T00:00:00');
@@ -2614,28 +2617,31 @@ async function initNoticesFromDB() {
       allNotices.push({ id: n.id, title: n.title, content: n.content, date: dateStr, visible: n.visible });
     });
     renderNotices();
-  } catch(e) { console.warn('initNoticesFromDB failed:', e); }
+  } catch(e) { console.error('initNoticesFromDB failed:', e); renderNotices(); }
 }
 
 async function initCoachesFromDB() {
-  const { data } = await sb.from('coaches').select('*').order('created_at');
-  if (!data || !data.length) return;
-  allCoaches.length = 0;
-  const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
-  const badgeMap  = { active: 'badge-s', on_leave: 'badge-w', resigned: 'badge-d' };
-  const colors = ['linear-gradient(135deg,#4caf50,#1b5e20)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#ff9800,#e65100)','linear-gradient(135deg,#9c27b0,#4a148c)'];
-  data.forEach((c, i) => {
-    allCoaches.push({
-      id: c.id, name: c.name, specialty: c.specialty || '', exp: c.experience || '',
-      classes: 0, rating: 5, status: statusMap[c.status] || '在籍中',
-      badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
-      joined: c.joined_at || '', color: colors[i % colors.length],
+  try {
+    const { data } = await sb.from('coaches').select('*').order('created_at');
+    if (!data || !data.length) return;
+    allCoaches.length = 0;
+    const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
+    const badgeMap  = { active: 'badge-s', on_leave: 'badge-w', resigned: 'badge-d' };
+    const colors = ['linear-gradient(135deg,#4caf50,#1b5e20)','linear-gradient(135deg,#2196f3,#0d47a1)','linear-gradient(135deg,#ff9800,#e65100)','linear-gradient(135deg,#9c27b0,#4a148c)'];
+    data.forEach((c, i) => {
+      allCoaches.push({
+        id: c.id, name: c.name, specialty: c.specialty || '', exp: c.experience || '',
+        classes: 0, rating: 5, status: statusMap[c.status] || '在籍中',
+        badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
+        joined: c.joined_at || '', color: colors[i % colors.length],
+      });
     });
-  });
-  renderCoaches();
+    renderCoaches();
+  } catch(e) { console.error('initCoachesFromDB failed:', e); }
 }
 
 async function initMembersFromDB() {
+  try {
   const { data } = await sb.from('profiles').select('*').order('created_at');
   if (!data || !data.length) return;
   allMembers.length = 0;
@@ -2658,6 +2664,7 @@ async function initMembersFromDB() {
   });
   memberPage = 1;
   renderMembers();
+  } catch(e) { console.error('initMembersFromDB failed:', e); }
 }
 
 async function initReservationsFromDB() {
