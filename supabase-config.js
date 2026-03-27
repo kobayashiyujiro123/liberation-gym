@@ -8,7 +8,7 @@ const SUPABASE_URL  = 'https://getlmyggtxlfswinctss.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_7UyLKKxbUzyltp4bt014EQ_-2aCT-yr';
 
 // Supabase未設定時はデモモードで動作
-const DEMO_MODE = true; // ローカル開発用（本番はfalseに変更）
+const DEMO_MODE = false;
 
 // DEMO_MODEではSupabaseを使わないモックを使用（CDN読み込み不要）
 let sb;
