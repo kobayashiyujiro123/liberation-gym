@@ -1211,12 +1211,18 @@ async function doLogout() {
   if (DEMO_MODE) {
     localStorage.removeItem('demo_user');
   } else {
-    await sb.auth.signOut();
+    // sb.auth.signOut()がハングする場合に備え、直接localStorageのセッションを削除
+    try {
+      const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
+      localStorage.removeItem('sb-' + projectRef + '-auth-token');
+      localStorage.removeItem('sb-' + projectRef + '-auth-token-code-verifier');
+    } catch(e) {}
+    try { sb.auth.signOut().catch(()=>{}); } catch(e) {}
   }
   user = {};
   localStorage.removeItem('gym_currentPage');
   location.hash = '';
-  goTo('page-login');
+  location.href = 'gym-member.html';
 }
 
 // ===== NOTICES =====

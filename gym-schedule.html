@@ -385,7 +385,7 @@
       <i class="nav-icon fas fa-key"></i><span>パスワード変更</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div style="flex:1;min-height:30px;"></div>
-    <div class="nav-item nav-logout">
+    <div class="nav-item nav-logout" onclick="doLogout()">
       <i class="nav-icon fas fa-sign-out-alt"></i><span>ログアウト</span>
     </div>
   </nav>
@@ -2553,6 +2553,19 @@ async function saveBasicInfo() {
     btn.innerHTML = '<i class="fas fa-save"></i> 保存する';
     btn.style.background = '';
   }, 2000);
+}
+
+// ===== LOGOUT =====
+function doLogout() {
+  if (!DEMO_MODE) {
+    try {
+      const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
+      localStorage.removeItem('sb-' + projectRef + '-auth-token');
+      localStorage.removeItem('sb-' + projectRef + '-auth-token-code-verifier');
+    } catch(e) {}
+    try { sb.auth.signOut().catch(()=>{}); } catch(e) {}
+  }
+  location.href = 'gym-member.html';
 }
 
 // ===== PASSWORD CHANGE =====
