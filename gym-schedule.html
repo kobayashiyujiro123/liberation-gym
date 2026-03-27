@@ -998,13 +998,13 @@ if (DEMO_MODE) {
 } else {
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-      location.href = 'gym-member.html';
+      location.href = 'gym-member';
       return;
     }
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       const { data: p } = await sb.from('profiles').select('role, can_view').eq('id', session.user.id).single();
       if (!p || (p.role !== 'admin' && p.role !== 'coach' && !p.can_view)) {
-        location.href = 'gym-member.html';
+        location.href = 'gym-member';
         return;
       }
       const role = p.role === 'admin' ? 'admin' : p.role === 'coach' ? 'coach' : 'viewer';
@@ -2564,7 +2564,7 @@ function doLogout() {
     } catch(e) {}
     try { sb.auth.signOut().catch(()=>{}); } catch(e) {}
   }
-  location.href = 'gym-member.html';
+  location.href = 'gym-member';
 }
 
 // ===== PASSWORD CHANGE =====
