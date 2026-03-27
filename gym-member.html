@@ -1112,8 +1112,7 @@ if (DEMO_MODE) {
 } else {
   sb.auth.onAuthStateChange(async (event, session) => {
     if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-      await loadUserProfile(session.user);
-      // Skip auto-navigate if user is in registration flow
+      try { await loadUserProfile(session.user); } catch(e) { console.warn('loadUserProfile error:', e); }
       const activeReg = document.querySelector('#page-reg2.active, #page-reg3.active');
       if (!activeReg) enterApp();
     }
