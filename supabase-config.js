@@ -5,10 +5,10 @@
 // ============================================================
 
 const SUPABASE_URL  = 'https://getlmyggtxlfswinctss.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_7UyLKKxbUzyltp4bt014EQ_-2aCT-yr';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po';
 
 // Supabase未設定時はデモモードで動作
-const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT_ID'); // 本番モード
+const DEMO_MODE = SUPABASE_URL.includes('YOUR_PROJECT_ID');
 
 // DEMO_MODEではSupabaseを使わないモックを使用（CDN読み込み不要）
 let sb;
