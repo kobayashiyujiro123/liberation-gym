@@ -2493,8 +2493,7 @@ async function submitNotice() {
   const btn = document.querySelector('#view-notice .btn-p');
   try {
     if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
-    const headers = await _noticesApiHeaders();
-    headers['Prefer'] = 'return=minimal';
+    const headers = _noticesApiHeaders({ 'Prefer': 'return=minimal' });
     const res = await fetch(SUPABASE_URL + '/rest/v1/notices', {
       method: 'POST', headers,
       body: JSON.stringify({ title, content, visible, date: new Date().toISOString().slice(0,10) })
@@ -2623,18 +2622,26 @@ async function initScheduleFromDB() {
   } catch(e) { console.warn('initScheduleFromDB failed:', e); }
 }
 
-async function _noticesApiHeaders() {
-  let token = SUPABASE_ANON;
+function _getAccessToken() {
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session && session.access_token) token = session.access_token;
+    const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
+    const raw = localStorage.getItem('sb-' + projectRef + '-auth-token');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.access_token) return parsed.access_token;
+    }
   } catch(e) {}
-  return { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  return SUPABASE_ANON;
+}
+
+function _noticesApiHeaders(extra) {
+  const token = _getAccessToken();
+  return Object.assign({ 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, extra || {});
 }
 
 async function initNoticesFromDB() {
   try {
-    const headers = await _noticesApiHeaders();
+    const headers = _noticesApiHeaders();
     const res = await fetch(SUPABASE_URL + '/rest/v1/notices?select=*&order=date.desc', { headers });
     const data = res.ok ? await res.json() : [];
     allNotices.length = 0;
