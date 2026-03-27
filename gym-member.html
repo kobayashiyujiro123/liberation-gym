@@ -1048,11 +1048,18 @@ function escHtml(s) {
 }
 
 // ===== SESSION =====
-async function loadUserProfile(authUser) {
-  // タイムアウト付きでプロフィール取得（ハング防止）
-  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
-  const query   = sb.from('profiles').select('*').eq('id', authUser.id).single();
-  const { data: profile } = await Promise.race([query, timeout]).catch(() => ({ data: null }));
+async function loadUserProfile(authUser, accessToken) {
+  // Supabase JSクライアントがハングするためraw fetchで直接REST API呼び出し
+  let profile = null;
+  try {
+    const token = accessToken || (await sb.auth.getSession().catch(() => ({data:{session:null}})))?.data?.session?.access_token || SUPABASE_ANON;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*&limit=1`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+    );
+    const rows = res.ok ? await res.json() : [];
+    profile = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  } catch(e) { console.warn('fetchProfile error:', e); }
   if (profile) {
     const bd = profile.birth_date ? profile.birth_date.split('-') : ['1990','01','01'];
     const wins   = profile.wins   || 0;
@@ -1113,7 +1120,7 @@ if (DEMO_MODE) {
   sb.auth.onAuthStateChange(async (event, session) => {
     if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
       let hasProfile = false;
-      try { hasProfile = await loadUserProfile(session.user); } catch(e) { console.warn('loadUserProfile error:', e); }
+      try { hasProfile = await loadUserProfile(session.user, session.access_token); } catch(e) { console.warn('loadUserProfile error:', e); }
       if (hasProfile) {
         // 既存ユーザー：loadUserProfile内でenterApp()呼び済み
         setTimeout(enterApp, 0);
@@ -1162,8 +1169,9 @@ async function doLogin() {
   if (error) { alert('ログインに失敗しました: ' + error.message); return; }
   // ログイン成功：直接プロフィール取得→画面遷移
   if (data && data.user) {
+    const token = data.session?.access_token;
     let hasProfile = false;
-    try { hasProfile = await loadUserProfile(data.user); } catch(e) { console.warn('loadUserProfile error:', e); }
+    try { hasProfile = await loadUserProfile(data.user, token); } catch(e) { console.warn('loadUserProfile error:', e); }
     if (hasProfile) {
       enterApp();
     } else {
