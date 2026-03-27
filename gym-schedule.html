@@ -2490,14 +2490,19 @@ async function submitNotice() {
     renderNotices();
     return;
   }
-  const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
-  if (error) { alert('保存に失敗しました: ' + error.message); return; }
-  const nd = new Date(data.date);
-  const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
-  allNotices.unshift({ id: data.id, title: data.title, content: data.content, date: dateStr, visible: data.visible });
-  document.getElementById('notice-title').value   = '';
-  document.getElementById('notice-content').value = '';
-  renderNotices();
+  try {
+    const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
+    if (error) { alert('保存に失敗しました: ' + error.message); return; }
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+    const id = data ? data.id : 'notice-' + Date.now();
+    allNotices.unshift({ id, title, content, date: dateStr, visible });
+    document.getElementById('notice-title').value   = '';
+    document.getElementById('notice-content').value = '';
+    renderNotices();
+  } catch(e) {
+    alert('エラーが発生しました: ' + e.message);
+  }
 }
 
 async function toggleNoticeVisible(id) {
@@ -2600,15 +2605,16 @@ async function initScheduleFromDB() {
 }
 
 async function initNoticesFromDB() {
-  const { data } = await sb.from('notices').select('*').order('date', { ascending: false });
-  if (!data) return;
-  allNotices.length = 0;
-  data.forEach(n => {
-    const nd = new Date(n.date);
-    const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
-    allNotices.push({ id: n.id, title: n.title, content: n.content, date: dateStr, visible: n.visible });
-  });
-  renderNotices();
+  try {
+    const { data } = await sb.from('notices').select('*').order('date', { ascending: false });
+    allNotices.length = 0;
+    (data || []).forEach(n => {
+      const nd = new Date(n.date + 'T00:00:00');
+      const dateStr = `${nd.getFullYear()}/${String(nd.getMonth()+1).padStart(2,'0')}/${String(nd.getDate()).padStart(2,'0')}`;
+      allNotices.push({ id: n.id, title: n.title, content: n.content, date: dateStr, visible: n.visible });
+    });
+    renderNotices();
+  } catch(e) { console.warn('initNoticesFromDB failed:', e); }
 }
 
 async function initCoachesFromDB() {
