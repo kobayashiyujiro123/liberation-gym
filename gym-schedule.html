@@ -2493,9 +2493,14 @@ async function submitNotice() {
   const btn = document.querySelector('#view-notice .btn-p');
   try {
     if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
-    const { error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) });
+    const headers = await _noticesApiHeaders();
+    headers['Prefer'] = 'return=minimal';
+    const res = await fetch(SUPABASE_URL + '/rest/v1/notices', {
+      method: 'POST', headers,
+      body: JSON.stringify({ title, content, visible, date: new Date().toISOString().slice(0,10) })
+    });
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 設定する'; }
-    if (error) { alert('保存に失敗しました: ' + error.message); return; }
+    if (!res.ok) { const e = await res.json().catch(()=>{}); alert('保存に失敗しました: ' + (e && e.message ? e.message : res.status)); return; }
     document.getElementById('notice-title').value   = '';
     document.getElementById('notice-content').value = '';
     document.getElementById('notice-visible-on').checked = true;
@@ -2605,10 +2610,20 @@ async function initScheduleFromDB() {
   } catch(e) { console.warn('initScheduleFromDB failed:', e); }
 }
 
+async function _noticesApiHeaders() {
+  let token = SUPABASE_ANON;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.access_token) token = session.access_token;
+  } catch(e) {}
+  return { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+}
+
 async function initNoticesFromDB() {
   try {
-    const { data, error } = await sb.from('notices').select('*').order('date', { ascending: false });
-    if (error) { console.error('notices fetch error:', error.message, error); }
+    const headers = await _noticesApiHeaders();
+    const res = await fetch(SUPABASE_URL + '/rest/v1/notices?select=*&order=date.desc', { headers });
+    const data = res.ok ? await res.json() : [];
     allNotices.length = 0;
     (data || []).forEach(n => {
       const nd = new Date(n.date + 'T00:00:00');
