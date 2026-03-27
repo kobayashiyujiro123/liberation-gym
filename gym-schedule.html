@@ -2490,10 +2490,10 @@ async function submitNotice() {
     renderNotices();
     return;
   }
+  const btn = document.querySelector('#view-notice .btn-p');
   try {
-    const btn = document.querySelector('#view-notice .btn-p');
     if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
-    const { data, error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) }).select().single();
+    const { error } = await sb.from('notices').insert({ title, content, visible, date: new Date().toISOString().slice(0,10) });
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 設定する'; }
     if (error) { alert('保存に失敗しました: ' + error.message); return; }
     document.getElementById('notice-title').value   = '';
@@ -2501,7 +2501,6 @@ async function submitNotice() {
     document.getElementById('notice-visible-on').checked = true;
     await initNoticesFromDB();
   } catch(e) {
-    const btn = document.querySelector('#view-notice .btn-p');
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 設定する'; }
     alert('エラーが発生しました: ' + e.message);
   }
