@@ -1049,7 +1049,10 @@ function escHtml(s) {
 
 // ===== SESSION =====
 async function loadUserProfile(authUser) {
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
+  // タイムアウト付きでプロフィール取得（ハング防止）
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
+  const query   = sb.from('profiles').select('*').eq('id', authUser.id).single();
+  const { data: profile } = await Promise.race([query, timeout]).catch(() => ({ data: null }));
   if (profile) {
     const bd = profile.birth_date ? profile.birth_date.split('-') : ['1990','01','01'];
     const wins   = profile.wins   || 0;
@@ -1155,8 +1158,19 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw    = document.getElementById('login-pw').value;
   if (!email || !pw) { alert('メールアドレスとパスワードを入力してください'); return; }
-  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
-  if (error) { alert('ログインに失敗しました: ' + error.message); }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { alert('ログインに失敗しました: ' + error.message); return; }
+  // ログイン成功：直接プロフィール取得→画面遷移
+  if (data && data.user) {
+    let hasProfile = false;
+    try { hasProfile = await loadUserProfile(data.user); } catch(e) { console.warn('loadUserProfile error:', e); }
+    if (hasProfile) {
+      enterApp();
+    } else {
+      regEmail = data.user.email || '';
+      goTo('page-reg3');
+    }
+  }
 }
 
 async function doGoogleLogin() {
