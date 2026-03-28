@@ -1103,6 +1103,18 @@ function genReservations() {
 const resData = {}; // DBから取得（initReservationsFromDB）
 const resDates = []; // DBから取得（initReservationsFromDB）
 
+// ページロード時点でDB取得前から正しい日付タブを表示するため同期的に初期化
+(function _initResDates() {
+  const _pad = n => String(n).padStart(2,'0');
+  const base = new Date(); base.setHours(0,0,0,0);
+  for (let d = 0; d < 7; d++) {
+    const dt = new Date(base); dt.setDate(base.getDate() + d);
+    const key = `${dt.getFullYear()}/${_pad(dt.getMonth()+1)}/${_pad(dt.getDate())}`;
+    resDates.push(key);
+    resData[key] = [];
+  }
+})();
+
 function saveResDataToStorage() {
   if (!DEMO_MODE) return;
   localStorage.setItem('demo_resData', JSON.stringify(resData));
@@ -2936,7 +2948,9 @@ async function initReservationsFromDB() {
         });
       }
     });
-    resSelectedDate = resDates[0];
+    // sessionStorageに保存済みの選択日があれば復元、なければ今日
+    const _saved = sessionStorage.getItem('resSelectedDate');
+    resSelectedDate = (resDates.includes(_saved) ? _saved : resDates[0]);
     buildDayTabs();
     renderReservations();
   } catch(e) { console.warn('initReservationsFromDB failed:', e); }
