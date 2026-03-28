@@ -1099,8 +1099,8 @@ function genReservations() {
   return data;
 }
 
-const resData = genReservations();
-const resDates = Object.keys(resData); // 7日分のキー
+const resData = {}; // DBから取得（initReservationsFromDB）
+const resDates = []; // DBから取得（initReservationsFromDB）
 
 function saveResDataToStorage() {
   if (!DEMO_MODE) return;
@@ -1145,7 +1145,7 @@ function selectResDay(dateKey) {
 function initResCoachTabs() {
   const wrap = document.getElementById('res-coach-tabs');
   if (!wrap) return;
-  const tabs = ['全て', ...COACHES];
+  const tabs = ['全て', ...allCoaches.filter(c => c.status === '在籍中').map(c => c.name)];
   wrap.innerHTML = tabs.map(name =>
     `<button class="res-coach-tab${name === '全て' ? ' active' : ''}" onclick="setResCoachFilter('${name}')">${name === '全て' ? '<i class="fas fa-users" style="margin-right:5px;"></i>' : '<i class="fas fa-user" style="margin-right:5px;"></i>'}${name}</button>`
   ).join('');
@@ -2204,10 +2204,7 @@ function renderBirthdays() {
 }
 
 // ===== COACH LOGIC =====
-const allCoaches = [
-  { id:'C001', name:'トミッキー', specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#4caf50,#1b5e20)'},
-  { id:'C002', name:'鈴木さん',   specialty:'', exp:'', classes:0, rating:5, status:'在籍中', badge:'badge-s', email:'', tel:'', joined:'', color:'linear-gradient(135deg,#2196f3,#0d47a1)'},
-];
+const allCoaches = []; // DBから取得（initCoachesFromDB）
 
 let currentCoachId = null;
 const COACH_PER_PAGE = 5;
@@ -2701,6 +2698,7 @@ async function initCoachesFromDB() {
       });
     });
     renderCoaches();
+    initResCoachTabs(); // 予約管理のコーチフィルタタブも更新
   } catch(e) { console.error('initCoachesFromDB failed:', e); }
 }
 
