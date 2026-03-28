@@ -296,6 +296,34 @@
     .week-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     @media (max-width: 600px) { .week-grid { grid-template-columns: repeat(3,1fr); } }
+
+    /* ===== 予約状況閲覧（管理側と統一） ===== */
+    .rv-day-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .rv-day-tab { padding: 8px 16px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; color: var(--text-light); transition: all 0.15s; text-align: center; line-height: 1.4; }
+    .rv-day-tab:hover { border-color: var(--primary); color: var(--primary); }
+    .rv-day-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .rv-day-tab .day-label { font-weight: 700; font-size: 0.88rem; display: block; }
+    .rv-day-tab .day-sub { font-size: 0.72rem; opacity: 0.8; }
+    .rv-day-tab.active .day-sub { opacity: 0.85; }
+    .rv-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin: 14px 0 18px; }
+    .rv-stat-ico { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: rgba(251,140,0,0.12); color: #fb8c00; }
+    .rv-stat-val { font-family: 'Oswald', sans-serif; font-size: 1.6rem; line-height: 1; }
+    .rv-stat-lbl { font-size: 0.74rem; color: var(--text-light); margin-top: 2px; }
+    .rv-time-group { margin-bottom: 20px; }
+    .rv-time-group-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .rv-time-badge { background: var(--primary); color: #fff; font-family: 'Oswald', sans-serif; font-size: 1rem; font-weight: 500; padding: 4px 14px; border-radius: 20px; letter-spacing: 1px; flex-shrink: 0; }
+    .rv-time-group-line { flex: 1; height: 1px; background: var(--border); }
+    .rv-time-group-count { font-size: 0.75rem; color: var(--text-light); flex-shrink: 0; }
+    .rv-card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+    .rv-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--primary-light); }
+    .rv-card.status-cancel { background: rgba(229,57,53,0.04); border-color: rgba(229,57,53,0.3); border-left: 4px solid var(--danger); }
+    .rv-card.status-cancel .rv-card-name { text-decoration: line-through; color: var(--text-light); }
+    .rv-card.status-cancel .rv-card-avatar { background: #bdbdbd !important; }
+    .rv-card-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .rv-card-body { flex: 1; min-width: 0; }
+    .rv-card-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rv-card-meta { font-size: 0.76rem; color: var(--text-light); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .rv-card-meta span { display: flex; align-items: center; gap: 3px; }
   </style>
 </head>
 <body>
@@ -728,8 +756,14 @@
       <!-- 予約状況閲覧 -->
       <div class="page" id="app-res-view">
         <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
-        <div class="week-tabs" id="rv-day-tabs" style="margin-bottom:12px;"></div>
-        <div id="rv-count-label" style="font-size:0.82rem;color:var(--text-light);margin-bottom:10px;"></div>
+        <div class="rv-day-tabs" id="rv-day-tabs"></div>
+        <div class="rv-stat-card">
+          <div class="rv-stat-ico"><i class="fas fa-clock"></i></div>
+          <div>
+            <div class="rv-stat-val" id="rv-count">0</div>
+            <div class="rv-stat-lbl" id="rv-count-lbl">本日の予約</div>
+          </div>
+        </div>
         <div id="rv-timeline"></div>
       </div>
 
@@ -954,157 +988,212 @@ function enterApp() {
 }
 
 // ===== 予約状況閲覧 =====
+// DEMOモード用ダミーデータ
 const _RV_MEMBERS = [
-  {name:'水野麻美', gender:'女'},{name:'吉田レマン', gender:'男'},{name:'K4', gender:'男'},
-  {name:'桑田', gender:'男'},{name:'ソジョン', gender:'女'},{name:'中村', gender:'女'},
-  {name:'森', gender:'男'},{name:'中庭', gender:'男'},{name:'山下', gender:'男'},{name:'ソエジ', gender:'男'},
+  {name:'水野麻美',gender:'女'},{name:'吉田レマン',gender:'男'},{name:'K4',gender:'男'},
+  {name:'桑田',gender:'男'},{name:'ソジョン',gender:'女'},{name:'中村',gender:'女'},
+  {name:'森',gender:'男'},{name:'中庭',gender:'男'},{name:'山下',gender:'男'},{name:'ソエジ',gender:'男'},
 ];
-const _RV_STATUSES = [{label:'確定',badge:'badge-s'},{label:'キャンセル',badge:'badge-d'}];
-const _RV_TIMES = ['09:00','10:00','11:00','13:00','14:00','16:00','18:00','19:00'];
-
-function _rvMakeRng(seed) {
-  let s = seed >>> 0;
-  return function() {
-    s = Math.imul(s ^ s >>> 15, 1 | s);
-    s ^= s + Math.imul(s ^ s >>> 7, 61 | s);
-    return ((s ^ s >>> 14) >>> 0) / 4294967296;
-  };
-}
-
-function _rvGenData() {
-  // gym-schedule.html と同じシード・同じロジックで生成
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  const rng = _rvMakeRng(seed);
-  const data = {};
-  const base = new Date(); base.setHours(0,0,0,0);
-  let id = 100;
-  for (let d = 0; d < 7; d++) {
-    const dt = new Date(base);
-    dt.setDate(base.getDate() + d);
-    const key = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
-    const count = 4 + Math.floor(rng() * 6);
-    data[key] = [];
-    for (let i = 0; i < count; i++) {
-      const st = _RV_STATUSES[Math.floor(rng() * (d === 0 ? _RV_STATUSES.length : 1))];
-      const mb = _RV_MEMBERS[Math.floor(rng() * _RV_MEMBERS.length)];
-      rng(); // cls フィールド分の乱数消費（gym-schedule.html と列を合わせる）
-      const time = _RV_TIMES[Math.floor(rng() * _RV_TIMES.length)];
-      data[key].push({ id: '#' + String(id++).padStart(4,'0'), name: mb.name, gender: mb.gender, time, status: st.label, badge: st.badge });
+function _rvMakeRng(seed){let s=seed>>>0;return function(){s=Math.imul(s^s>>>15,1|s);s^=s+Math.imul(s^s>>>7,61|s);return((s^s>>>14)>>>0)/4294967296;};}
+function _rvGenData(){
+  const today=new Date();const seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();
+  const rng=_rvMakeRng(seed);const data={};const base=new Date();base.setHours(0,0,0,0);let id=100;
+  const coaches=['小林'];
+  for(let d=0;d<7;d++){
+    const dt=new Date(base);dt.setDate(base.getDate()+d);
+    const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    const count=4+Math.floor(rng()*6);data[key]=[];
+    for(let i=0;i<count;i++){
+      const cancelled=d===0&&rng()<0.2;
+      const mb=_RV_MEMBERS[Math.floor(rng()*_RV_MEMBERS.length)];
+      rng();
+      const time=['15:00','16:00','17:00','18:00','19:00','20:00'][Math.floor(rng()*6)];
+      const coach=coaches[Math.floor(rng()*coaches.length)];
+      data[key].push({id:'#'+String(id++).padStart(4,'0'),name:mb.name,gender:mb.gender,time,coach,memo:'',status:cancelled?'キャンセル':'確定',badge:cancelled?'badge-d':'badge-s'});
     }
-    // 会員側予約をマージ
-    const raw = JSON.parse(localStorage.getItem('demo_reservations') || '[]');
-    const dateKey = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-    raw.filter(r => r.date === dateKey).forEach(r => {
-      data[key].push({ id: r.id, name: r.memberName || '—', gender: r.memberGender || '', time: r.time, status: r.status === 'cancelled' ? 'キャンセル' : '確定', badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s' });
+    const raw=JSON.parse(localStorage.getItem('demo_reservations')||'[]');
+    raw.filter(r=>r.date===key).forEach(r=>{
+      data[key].push({id:r.id,name:r.memberName||'—',gender:r.memberGender||'',time:r.time,coach:'',memo:r.memo||'',status:r.status==='cancelled'?'キャンセル':'確定',badge:r.status==='cancelled'?'badge-d':'badge-s'});
     });
-    data[key].sort((a,b) => a.time.localeCompare(b.time));
+    data[key].sort((a,b)=>a.time.localeCompare(b.time));
   }
   return data;
 }
 
+// rvData: 7日分をまとめて保持（DB取得後に格納）
+const rvData = {}; // key: YYYY-MM-DD
+let rvDates = [];
 let rvSelectedDate = null;
 
 function openResView() {
   showApp('res-view');
-  buildRvDayTabs();
+  loadRvData();
 }
 
-function buildRvDayTabs() {
-  const now = new Date();
-  const tabs = document.getElementById('rv-day-tabs');
-  const labels = ['今日','明日'];
-  const dates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    dates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+async function loadRvData() {
+  // タブを先に描画（ローディング状態）
+  _buildRvDates();
+  buildRvDayTabs();
+
+  if (DEMO_MODE) {
+    const gen = _rvGenData();
+    Object.keys(rvData).forEach(k => delete rvData[k]);
+    Object.assign(rvData, gen);
+    buildRvDayTabs();
+    renderResView();
+    return;
   }
-  if (!rvSelectedDate || !dates.includes(rvSelectedDate)) rvSelectedDate = dates[0];
-  tabs.innerHTML = dates.map((dt, i) => {
-    const d = new Date(dt + 'T00:00:00');
-    const lbl = i < 2 ? labels[i] : `${d.getMonth()+1}/${d.getDate()}`;
-    return `<button class="week-tab${dt === rvSelectedDate ? ' active' : ''}" onclick="rvSelectDate('${dt}')">${lbl}</button>`;
-  }).join('');
+
+  // DB から 7日分一括取得
+  try {
+    const startStr = rvDates[0];
+    const endStr   = rvDates[rvDates.length - 1];
+    const token = _getToken();
+    // 予約取得（全カラム）
+    const resResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+    );
+    const resRows = resResp.ok ? await resResp.json() : [];
+
+    // 全プロフィール取得（名前・性別）
+    const pResp = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?select=id,name,gender,coach_name`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+    );
+    const profiles = pResp.ok ? await pResp.json() : [];
+    const profileMap = {};
+    profiles.forEach(p => { profileMap[p.id] = p; });
+
+    // rvData に格納
+    Object.keys(rvData).forEach(k => delete rvData[k]);
+    rvDates.forEach(d => { rvData[d] = []; });
+    resRows.forEach(r => {
+      const dateKey = r.date; // YYYY-MM-DD
+      if (!rvData[dateKey]) return;
+      const p = profileMap[r.user_id] || {};
+      // user_idなし手動追加: memoの __name__: プレフィックスから名前を復元
+      let displayName = p.name || '';
+      let displayMemo = r.memo || '';
+      if (!displayName && displayMemo.startsWith('__name__:')) {
+        const nl = displayMemo.indexOf('\n');
+        displayName = displayMemo.slice('__name__:'.length, nl > 0 ? nl : undefined);
+        displayMemo = nl > 0 ? displayMemo.slice(nl + 1) : '';
+      }
+      if (!displayName) displayName = '不明';
+      rvData[dateKey].push({
+        id: r.id,
+        name: displayName,
+        gender: p.gender || '男',
+        time: r.time,
+        coach: r.coach || p.coach_name || '',
+        memo: displayMemo,
+        status: r.status === 'cancelled' ? 'キャンセル' : '確定',
+        badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+      });
+    });
+  } catch(e) {
+    console.warn('loadRvData failed:', e);
+  }
+
+  buildRvDayTabs();
   renderResView();
+}
+
+function _buildRvDates() {
+  rvDates = [];
+  const base = new Date(); base.setHours(0,0,0,0);
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(base); dt.setDate(base.getDate() + i);
+    rvDates.push(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`);
+  }
+  if (!rvSelectedDate || !rvDates.includes(rvSelectedDate)) rvSelectedDate = rvDates[0];
+}
+
+const WEEKDAYS_RV = ['日','月','火','水','木','金','土'];
+
+function buildRvDayTabs() {
+  if (!rvDates.length) _buildRvDates();
+  const base = new Date(); base.setHours(0,0,0,0);
+  const tabs = document.getElementById('rv-day-tabs');
+  tabs.innerHTML = rvDates.map((dt, i) => {
+    const d = new Date(dt + 'T00:00:00');
+    const dow = WEEKDAYS_RV[d.getDay()];
+    const label = i === 0 ? `今日` : i === 1 ? `明日` : `${d.getMonth()+1}/${d.getDate()}`;
+    const isActive = dt === rvSelectedDate ? ' active' : '';
+    const count = (rvData[dt] || []).length;
+    return `<div class="rv-day-tab${isActive}" onclick="rvSelectDate('${dt}')">
+      <span class="day-label">${label}（${dow}）</span>
+      <span class="day-sub">${count}件</span>
+    </div>`;
+  }).join('');
 }
 
 function rvSelectDate(dt) {
   rvSelectedDate = dt;
   buildRvDayTabs();
+  renderResView();
 }
 
-async function renderResView() {
+function renderResView() {
   const timeline = document.getElementById('rv-timeline');
-  const countLabel = document.getElementById('rv-count-label');
+  const countEl  = document.getElementById('rv-count');
+  const countLbl = document.getElementById('rv-count-lbl');
   if (!rvSelectedDate) return;
 
-  let items = [];
-  if (DEMO_MODE) {
-    const resData = _rvGenData();
-    const key = rvSelectedDate.replace(/-/g, '/');
-    items = resData[key] || [];
-  } else {
-    try {
-      // reservationsをJOINなしで取得（FKなし）
-      const { data: resRows } = await _restAPI('GET', 'reservations', `date=eq.${rvSelectedDate}&select=user_id,time,status`);
-      if (resRows && resRows.length) {
-        // user_idの一覧を取得してprofilesを別途フェッチ
-        const userIds = [...new Set(resRows.map(r => r.user_id))];
-        const idFilter = userIds.map(id => `id=eq.${id}`).join(',');
-        const { data: profileRows } = await _restAPI('GET', 'profiles', `or=(${idFilter})&select=id,name,gender`);
-        const profileMap = {};
-        (profileRows || []).forEach(p => { profileMap[p.id] = p; });
-        items = resRows.map(r => {
-          const p = profileMap[r.user_id] || {};
-          return {
-            time: r.time,
-            name: p.name || '—',
-            gender: p.gender || '',
-            status: r.status === 'cancelled' ? 'キャンセル' : '確定',
-            badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s',
-          };
-        });
-      }
-    } catch(e) { items = []; }
-  }
+  const items = (rvData[rvSelectedDate] || []).slice().sort((a,b) => a.time.localeCompare(b.time));
 
-  items.sort((a, b) => a.time.localeCompare(b.time));
-  countLabel.textContent = `${rvSelectedDate} の予約：${items.length}件`;
+  // カウント表示（管理側と同形式）
+  const [y,m,d] = rvSelectedDate.split('-').map(Number);
+  const selMs = new Date(y, m-1, d).getTime();
+  const nowMs = (() => { const x=new Date(); x.setHours(0,0,0,0); return x.getTime(); })();
+  const diff  = Math.round((selMs - nowMs) / 86400000);
+  countEl.textContent = items.length;
+  countLbl.textContent = diff === 0 ? '本日の予約' : diff === 1 ? '明日の予約' : `${m}/${d}の予約`;
 
   if (!items.length) {
     timeline.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-light);"><i class="fas fa-calendar-times" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:0.4;"></i>この日の予約はありません</div>';
     return;
   }
 
-  // 時間帯グループ化
+  // 時間帯グループ化（管理側と同じ描画）
   const groups = {};
   items.forEach(r => { if (!groups[r.time]) groups[r.time] = []; groups[r.time].push(r); });
 
   timeline.innerHTML = Object.keys(groups).sort().map(time => {
-    const cards = groups[time].map(r => {
+    const gItems = groups[time];
+    const cards = gItems.map(r => {
       const isCancel = r.status === 'キャンセル';
-      const isMale = r.gender === '男';
+      const isMale   = r.gender === '男';
       const isFemale = r.gender === '女';
-      const avBg = isCancel ? '#bdbdbd' : isMale ? 'linear-gradient(135deg,#64b5f6,#1565c0)' : isFemale ? 'linear-gradient(135deg,#f06292,#ba68c8)' : 'linear-gradient(135deg,var(--primary-light),var(--primary-dark))';
-      const borderColor = isCancel ? 'rgba(229,57,53,0.35)' : isMale ? '#1565c0' : isFemale ? '#ba68c8' : 'var(--primary)';
-      const nameStyle = isCancel ? 'text-decoration:line-through;color:#999;' : '';
-      const opacity = isCancel ? 'opacity:0.65;' : '';
-      return `<div style="background:#fff;border:1px solid #e0e0e0;border-left:4px solid ${borderColor};border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;${opacity}">
-        <div style="width:38px;height:38px;border-radius:50%;background:${avBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.76rem;font-weight:700;flex-shrink:0;">${r.name.slice(0,2)}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:0.88rem;${nameStyle}">${escHtml(r.name)}</div>
+      const avStyle  = isCancel ? '' : isMale
+        ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"'
+        : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
+      const cardMod  = isCancel ? ' status-cancel' : isMale
+        ? '" style="border-left-color:#1565c0;' : isFemale ? '" style="border-left-color:#ba68c8;' : '"';
+      // border-left-color を class外で上書きするため、classとstyleを分けて組み立てる
+      const borderStyle = isCancel ? '' : isMale
+        ? 'border-left-color:#1565c0;' : isFemale ? 'border-left-color:#ba68c8;' : '';
+      return `<div class="rv-card${isCancel ? ' status-cancel' : ''}" style="${borderStyle}">
+        <div class="rv-card-avatar" ${avStyle}>${escHtml(r.name).slice(0,2)}</div>
+        <div class="rv-card-body">
+          <div class="rv-card-name">${escHtml(r.name)}</div>
+          <div class="rv-card-meta">
+            ${r.coach ? `<span><i class="fas fa-user-tie"></i>${escHtml(r.coach)}</span>` : ''}
+            <span><span class="badge ${r.badge}" style="font-size:0.68rem;padding:1px 7px;">${r.status}</span></span>
+          </div>
+          ${r.memo ? `<div style="font-size:0.72rem;color:var(--text-light);margin-top:3px;"><i class="fas fa-sticky-note" style="margin-right:4px;opacity:0.6;"></i>${escHtml(r.memo)}</div>` : ''}
         </div>
-        <span class="badge ${r.badge || 'badge-s'}" style="font-size:0.68rem;padding:2px 8px;">${r.status}</span>
       </div>`;
     }).join('');
-    return `<div style="margin-bottom:18px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="background:var(--primary);color:#fff;padding:3px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;flex-shrink:0;">${time}</div>
-        <div style="flex:1;height:1px;background:#e0e0e0;"></div>
-        <div style="font-size:0.75rem;color:var(--text-light);">${groups[time].length}名</div>
+
+    return `<div class="rv-time-group">
+      <div class="rv-time-group-header">
+        <div class="rv-time-badge">${time}</div>
+        <div class="rv-time-group-line"></div>
+        <div class="rv-time-group-count">${gItems.length}件</div>
       </div>
-      ${cards}
+      <div class="rv-card-list">${cards}</div>
     </div>`;
   }).join('');
 }
