@@ -879,10 +879,8 @@
       <span id="add-res-date-label" style="font-size:0.88rem;font-weight:400;color:var(--text-light);"></span>
     </div>
     <div style="margin-bottom:12px;">
-      <label class="form-label">会員名 <span style="color:var(--danger);font-weight:400;">*</span></label>
-      <select id="add-res-member" class="form-ctrl" onchange="onAddResMemberChange()">
-        <option value="">-- 会員を選択 --</option>
-      </select>
+      <label class="form-label">お名前 <span style="color:var(--danger);font-weight:400;">*</span></label>
+      <input id="add-res-name" class="form-ctrl" type="text" placeholder="山田 太郎" />
     </div>
     <div style="display:flex;gap:12px;margin-bottom:12px;">
       <div style="flex:1;">
@@ -1394,14 +1392,7 @@ function openAddResModal() {
   const timeSel = document.getElementById('add-res-time');
   const times = getScheduleTimesForDate(resSelectedDate);
   timeSel.innerHTML = times.map(t => `<option value="${t}">${t}</option>`).join('');
-  // 会員ドロップダウンを allMembers で構築
-  const memberSel = document.getElementById('add-res-member');
-  memberSel.innerHTML = '<option value="">-- 会員を選択 --</option>' +
-    allMembers
-      .filter(m => m.status !== '退会')
-      .map(m => `<option value="${m.id}" data-gender="${m.gender || '男'}">${m.name}</option>`)
-      .join('');
-  memberSel.value = '';
+  document.getElementById('add-res-name').value   = '';
   document.getElementById('add-res-gender').value = '男';
   document.getElementById('add-res-memo').value   = '';
   // 選択中の日付ラベルを設定
@@ -1411,15 +1402,7 @@ function openAddResModal() {
   document.getElementById('add-res-date-label').textContent =
     `${dt.getMonth()+1}/${dt.getDate()}（${WEEKDAYS[dt.getDay()]}）`;
   document.getElementById('add-res-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('add-res-member').focus(), 50);
-}
-
-function onAddResMemberChange() {
-  const sel = document.getElementById('add-res-member');
-  const opt = sel.options[sel.selectedIndex];
-  if (opt && opt.dataset.gender) {
-    document.getElementById('add-res-gender').value = opt.dataset.gender;
-  }
+  setTimeout(() => document.getElementById('add-res-name').focus(), 50);
 }
 
 function closeAddResModal() {
@@ -1427,11 +1410,8 @@ function closeAddResModal() {
 }
 
 async function submitAddRes() {
-  const memberSel = document.getElementById('add-res-member');
-  const userId = memberSel.value;
-  if (!userId) { memberSel.focus(); return; }
-  const selectedOpt = memberSel.options[memberSel.selectedIndex];
-  const name   = selectedOpt.textContent.trim();
+  const name = document.getElementById('add-res-name').value.trim();
+  if (!name) { document.getElementById('add-res-name').focus(); return; }
   const gender = document.getElementById('add-res-gender').value;
   const time   = document.getElementById('add-res-time').value;
   const memo   = document.getElementById('add-res-memo').value.trim();
@@ -1448,8 +1428,15 @@ async function submitAddRes() {
     return;
   }
 
-  // 本番: Supabase にINSERT
+  // 本番: 名前でallMembersを検索してuser_idを取得、なければnull
+  const matched = allMembers.find(m => m.name && m.name.trim() === name);
+  const userId  = matched ? matched.id : null;
+  // user_idがない場合は名前をmemoの先頭に埋め込む（DBのnameカラムがないため）
   const dateStr = resSelectedDate.replace(/\//g, '-'); // YYYY/MM/DD → YYYY-MM-DD
+  const memoValue = userId
+    ? (memo || null)
+    : (`__name__:${name}` + (memo ? '\n' + memo : ''));
+
   const token = _getAccessToken();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations`, {
     method: 'POST',
@@ -1465,7 +1452,7 @@ async function submitAddRes() {
       time:       time,
       class_name: CLASSES[0],
       status:     'confirmed',
-      memo:       memo || null,
+      memo:       memoValue,
     }),
   });
   if (!res.ok) {
@@ -2904,12 +2891,21 @@ async function initReservationsFromDB() {
         const member = memberMap[r.user_id] || {};
         // coachはreservationsのcoach列を優先し、なければメンバーの担当コーチ名で補完
         const coachName = r.coach || member.coach || '';
+        // user_idなし手動追加の場合: memoの "__name__:xxx" プレフィックスから名前を復元
+        let displayName = member.name || '';
+        let displayMemo = r.memo || '';
+        if (!displayName && displayMemo.startsWith('__name__:')) {
+          const nl = displayMemo.indexOf('\n');
+          displayName = displayMemo.slice('__name__:'.length, nl > 0 ? nl : undefined);
+          displayMemo = nl > 0 ? displayMemo.slice(nl + 1) : '';
+        }
+        if (!displayName) displayName = '不明';
         resData[key].push({
-          id: r.id, name: member.name || '不明', gender: member.gender || '男',
+          id: r.id, name: displayName, gender: member.gender || '男',
           cls: r.class_name, time: r.time, coach: coachName,
           status: isCancelled ? 'キャンセル' : '確定',
           badge: isCancelled ? 'badge-d' : 'badge-s',
-          memo: r.memo || '',
+          memo: displayMemo,
         });
       }
     });
