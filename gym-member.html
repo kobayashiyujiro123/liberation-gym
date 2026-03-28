@@ -912,7 +912,23 @@ function handlePhotoChange(input) {
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以内にしてください。'); input.value = ''; return; }
   const reader = new FileReader();
-  reader.onload = e => setEditPhotoPreview(e.target.result);
+  reader.onload = e => {
+    // Canvasでリサイズ・圧縮してからプレビュー設定（DB保存サイズを削減）
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      setEditPhotoPreview(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = e.target.result;
+  };
   reader.readAsDataURL(file);
 }
 

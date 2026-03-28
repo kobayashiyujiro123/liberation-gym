@@ -1358,15 +1358,22 @@ function getScheduleTimesForDate(dateKey) {
   // dateKey は YYYY/MM/DD 形式 → YYYY-MM-DD に変換
   const sdKey = dateKey.replace(/\//g, '-');
 
-  // 1. 個別に保存されたスロットデータを優先
-  const stored = JSON.parse(localStorage.getItem('gym_scheduleData') || '{}');
-  const slots = stored[sdKey];
-  if (slots && Object.keys(slots).length > 0) {
-    return Object.keys(slots).sort();
+  // 1. スロットデータを優先（非DEMOはin-memory scheduleData、DEMOはlocalStorage）
+  const slotSrc = DEMO_MODE
+    ? JSON.parse(localStorage.getItem('gym_scheduleData') || '{}')[sdKey]
+    : scheduleData[sdKey];
+  if (slotSrc && typeof slotSrc === 'object' && Object.keys(slotSrc).length > 0) {
+    return Object.keys(slotSrc).sort();
   }
 
-  // 2. 営業時間設定から自動生成（スケジュールカレンダーと同じロジック）
-  const bh = JSON.parse(localStorage.getItem('gym_businessHours') || '{}');
+  // 2. 営業時間設定から自動生成（非DEMOはDOM値、DEMOはlocalStorage）
+  const bh = {};
+  if (DEMO_MODE) {
+    Object.assign(bh, JSON.parse(localStorage.getItem('gym_businessHours') || '{}'));
+  } else {
+    ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end']
+      .forEach(k => { const el = document.getElementById(k); if (el) bh[k] = el.value; });
+  }
   const [y, mo, d] = sdKey.split('-').map(Number);
   const dow = new Date(y, mo - 1, d).getDay();
   const isWeekend = (dow === 0 || dow === 6);
