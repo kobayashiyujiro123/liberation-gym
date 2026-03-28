@@ -1649,7 +1649,7 @@ function renderInfo() {
   document.getElementById('info-total-visits').textContent  = u.totalVisits || 0;
   document.getElementById('info-year-visits').textContent   = u.yearVisits  || 0;
   document.getElementById('info-month-visits').textContent  = u.monthVisits || 0;
-  document.getElementById('info-start-note').textContent    = startStr ? `※${startStr}～の利用回数です。` : '';
+  document.getElementById('info-start-note').textContent    = startStr ? `※${startStr}～のご利用回数です。` : 'このユーザのシステム利用開始日～のご利用回数です。';
   document.getElementById('info-table').innerHTML = `
     <div class="info-row"><div class="info-key">氏名</div><div class="info-val">${escHtml(u.name)}</div></div>
     <div class="info-row"><div class="info-key">性別</div><div class="info-val">${escHtml(u.gender)}</div></div>
