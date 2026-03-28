@@ -2700,11 +2700,24 @@ async function initNoticesFromDB() {
 async function initCoachesFromDB() {
   try {
     const token = _getAccessToken();
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/coaches?select=*&order=created_at.asc`, {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
-    });
-    const data = res.ok ? await res.json() : null;
+    const [coachRes, memberRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/coaches?select=*&order=created_at.asc`, {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=coach_name&role=not.in.(admin,coach)&coach_name=not.is.null`, {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+      })
+    ]);
+    const data = coachRes.ok ? await coachRes.json() : null;
     if (!data || !data.length) return;
+    // 担当会員数をcoach_nameでカウント
+    const coachCountMap = {};
+    if (memberRes.ok) {
+      const members = await memberRes.json();
+      members.forEach(p => {
+        if (p.coach_name) coachCountMap[p.coach_name] = (coachCountMap[p.coach_name] || 0) + 1;
+      });
+    }
     allCoaches.length = 0;
     const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
     const badgeMap  = { active: 'badge-s', on_leave: 'badge-w', resigned: 'badge-d' };
@@ -2712,7 +2725,7 @@ async function initCoachesFromDB() {
     data.forEach((c, i) => {
       allCoaches.push({
         id: c.id, name: c.name, specialty: c.specialty || '', exp: c.experience || '',
-        classes: 0, rating: 5, status: statusMap[c.status] || '在籍中',
+        classes: coachCountMap[c.name] || 0, rating: 5, status: statusMap[c.status] || '在籍中',
         badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
         joined: c.joined_at || '', color: colors[i % colors.length],
       });
@@ -2768,18 +2781,21 @@ async function initReservationsFromDB() {
     const data = res.ok ? await res.json() : null;
     if (!data) return;
 
-    // 全プロフィール（role問わず）でuser_id→{name,gender}のマップを構築
+    // 全プロフィール（role問わず）でuser_id→{name,gender,coach_name}のマップを構築
     const memberMap = {};
-    allMembers.forEach(m => { memberMap[m.id] = { name: m.name, gender: m.gender }; });
+    allMembers.forEach(m => { memberMap[m.id] = { name: m.name, gender: m.gender, coach: m.coach }; });
     // allMembersにいないユーザー（admin/coachなど）も補完
     try {
       const pRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=id,name,gender`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=id,name,gender,coach_name`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
       );
       if (pRes.ok) {
         const allProfiles = await pRes.json();
-        allProfiles.forEach(p => { if (!memberMap[p.id]) memberMap[p.id] = { name: p.name, gender: p.gender }; });
+        allProfiles.forEach(p => {
+          if (!memberMap[p.id]) memberMap[p.id] = { name: p.name, gender: p.gender, coach: p.coach_name || '' };
+          else if (!memberMap[p.id].coach) memberMap[p.id].coach = p.coach_name || '';
+        });
       }
     } catch(e) {}
 
@@ -2799,9 +2815,11 @@ async function initReservationsFromDB() {
       if (resData[key]) {
         const isCancelled = r.status === 'cancelled';
         const member = memberMap[r.user_id] || {};
+        // coachはreservationsのcoach列を優先し、なければメンバーの担当コーチ名で補完
+        const coachName = r.coach || member.coach || '';
         resData[key].push({
           id: r.id, name: member.name || '不明', gender: member.gender || '男',
-          cls: r.class_name, time: r.time, coach: r.coach || '',
+          cls: r.class_name, time: r.time, coach: coachName,
           status: isCancelled ? 'キャンセル' : '確定',
           badge: isCancelled ? 'badge-d' : 'badge-s',
           memo: r.memo || '',
