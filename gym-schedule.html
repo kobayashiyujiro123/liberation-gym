@@ -1300,7 +1300,6 @@ function saveResEdit(id) {
 }
 
 buildDayTabs();
-initResCoachTabs();
 renderReservations();
 
 // ===== DEMO: 会員側予約の反映 =====
@@ -2625,6 +2624,7 @@ async function initFromDB() {
   ]);
   await initReservationsFromDB();
   renderBirthdays();
+  initResCoachTabs(); // コーチDB読み込み後にフィルタタブを構築
 }
 
 async function initScheduleFromDB() {
