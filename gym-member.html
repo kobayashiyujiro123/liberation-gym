@@ -1110,6 +1110,7 @@ async function loadUserProfile(authUser, accessToken) {
       style:        profile.style         || 'オーソドックス',
       goal:         profile.goal          || '',
       canView:      profile.can_view      || false,
+      role:         profile.role          || 'member',
       wins, losses, draws,
       fights:       wins + losses + draws,
       totalVisits:  profile.total_visits  || 0,
@@ -1161,6 +1162,7 @@ if (DEMO_MODE) {
         _saveSession({ access_token: hashToken, refresh_token: hp.get('refresh_token')||'', expires_in: parseInt(hp.get('expires_in')||'3600'), user: uData });
         let hasProfile = false;
         try { hasProfile = await loadUserProfile(uData, hashToken); } catch(e) {}
+        if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
         if (hasProfile) setTimeout(enterApp, 0);
         else { regEmail = uData.email || ''; goTo('page-reg3'); }
         return;
@@ -1171,6 +1173,7 @@ if (DEMO_MODE) {
     if (sess && sess.user) {
       let hasProfile = false;
       try { hasProfile = await loadUserProfile(sess.user, sess.access_token); } catch(e) {}
+      if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
       if (hasProfile) setTimeout(enterApp, 0);
       else { regEmail = sess.user.email || ''; goTo('page-reg3'); }
     }
@@ -1214,6 +1217,7 @@ async function doLogin() {
   _saveSession(data);
   let hasProfile = false;
   try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) {}
+  if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
   if (hasProfile) enterApp();
   else { regEmail = data.user?.email || ''; goTo('page-reg3'); }
 }
