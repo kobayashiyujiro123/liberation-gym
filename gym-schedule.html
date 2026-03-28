@@ -1853,6 +1853,7 @@ function openCalModal(dateStr) {
 }
 
 
+// スケジュール（スロット・休日・メモ）のみ保存。基本情報は含まない。
 async function saveScheduleToStorage() {
   if (DEMO_MODE) {
     const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
@@ -1868,11 +1869,6 @@ async function saveScheduleToStorage() {
     const token = _getAccessToken();
     const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
     const base = SUPABASE_URL + '/rest/v1/';
-
-    // Business hours → gym_settings (upsert)
-    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
-    const settings = biKeys.map(key => { const el = document.getElementById(key); return el ? { key, value: el.value } : null; }).filter(Boolean);
-    if (settings.length) await fetch(base + 'gym_settings', { method:'POST', headers: {...h, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(settings) });
 
     // Holidays → gym_holidays (全件再sync)
     await fetch(base + 'gym_holidays?date=gte.2000-01-01', { method:'DELETE', headers: h });
@@ -1898,6 +1894,19 @@ async function saveScheduleToStorage() {
       if (slots.length) await fetch(base + 'schedule_slots', { method:'POST', headers: h, body: JSON.stringify(slots) });
     }
   } catch(e) { console.warn('DB save failed:', e); }
+}
+
+// 基本情報（営業時間・定員など）のみ保存。「保存する」ボタン押下時のみ呼ぶ。
+async function saveBasicInfoToDB() {
+  if (DEMO_MODE) return;
+  try {
+    const token = _getAccessToken();
+    const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    const base = SUPABASE_URL + '/rest/v1/';
+    const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
+    const settings = biKeys.map(key => { const el = document.getElementById(key); return el ? { key, value: el.value } : null; }).filter(Boolean);
+    if (settings.length) await fetch(base + 'gym_settings', { method:'POST', headers: {...h, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(settings) });
+  } catch(e) { console.warn('Basic info save failed:', e); }
 }
 
 function saveCalModal() {
@@ -2555,7 +2564,7 @@ async function deleteNotice(id) {
 const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register'];
 
 async function saveBasicInfo() {
-  await saveScheduleToStorage();
+  await saveBasicInfoToDB();
   const btn = document.querySelector('#view-basicinfo .btn-p');
   btn.innerHTML = '<i class="fas fa-check"></i> 保存しました';
   btn.style.background = 'var(--success)';
