@@ -1596,13 +1596,18 @@ async function saveMemberEdit() {
   m.memo     = document.getElementById('me-memo').value;
   m.canView  = document.getElementById('me-toggle').checked;
   const statusRevMap = { '有効': 'active', '休会': 'suspended', '退会': 'withdrawn' };
-  await sb.from('profiles').update({
-    status:     statusRevMap[m.status] || 'active',
-    coach_name: m.coach,
-    left_date:  m.leftDate || null,
-    memo:       m.memo,
-    can_view:   m.canView,
-  }).eq('id', m.id);
+  const token = _getAdminToken();
+  await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${m.id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
+      status:     statusRevMap[m.status] || 'active',
+      coach_name: m.coach,
+      left_date:  m.leftDate || null,
+      memo:       m.memo,
+      can_view:   m.canView,
+    })
+  });
   // 管理編集フィールドを gym_member_profile に保存（会員ページとの同期）
   const _store = getProfileStore();
   _store[currentMemberId] = {
@@ -2448,10 +2453,12 @@ async function saveCoachEdit() {
   c.email  = document.getElementById('ce-email').value.trim();
   c.tel    = document.getElementById('ce-tel').value.trim();
   const statusRevMap = { '在籍中': 'active', '休暇中': 'on_leave', '退職': 'resigned' };
-  await sb.from('coaches').update({
-    status: statusRevMap[c.status] || 'active',
-    email: c.email, tel: c.tel,
-  }).eq('id', c.id);
+  const token = _getAdminToken();
+  await fetch(`${SUPABASE_URL}/rest/v1/coaches?id=eq.${c.id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ status: statusRevMap[c.status] || 'active', email: c.email, tel: c.tel })
+  });
   openCoachDetail(currentCoachId);
 }
 
