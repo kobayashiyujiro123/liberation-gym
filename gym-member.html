@@ -1232,7 +1232,7 @@ async function sendVerification() {
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
   const { ok, data } = await _authAPI('POST', 'otp', {
     email: regEmail, create_user: true,
-    options: { emailRedirectTo: window.location.origin + '/gym-member' }
+    redirect_to: window.location.origin + '/gym-member'
   });
   if (!ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   document.getElementById('reg2-email').textContent = regEmail;
@@ -1243,7 +1243,7 @@ async function resendVerification() {
   if (!regEmail) { goTo('page-reg1'); return; }
   const { ok, data } = await _authAPI('POST', 'otp', {
     email: regEmail, create_user: true,
-    options: { emailRedirectTo: window.location.origin + '/gym-member' }
+    redirect_to: window.location.origin + '/gym-member'
   });
   if (!ok) { alert('再送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   alert('メールを再送信しました。');
