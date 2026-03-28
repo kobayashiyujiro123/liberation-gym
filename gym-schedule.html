@@ -1722,6 +1722,13 @@ function show(name) {
   if (name === 'birthday') {
     renderBirthdays();
   }
+  // 会員管理・コーチ管理を開くたびにDBから最新データを再取得
+  if (name === 'members') {
+    initMembersFromDB();
+  }
+  if (name === 'coach') {
+    initCoachesFromDB();
+  }
 }
 
 // ── CALENDAR ────────────────────────────────────────────

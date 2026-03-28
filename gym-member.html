@@ -1057,7 +1057,7 @@ async function renderResView() {
   countLabel.textContent = `${rvSelectedDate} の予約：${items.length}件`;
 
   if (!items.length) {
-    timeline.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-light);font-size:0.88rem;">この日の予約はありません</div>';
+    timeline.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-light);"><i class="fas fa-calendar-times" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:0.4;"></i>この日の予約はありません</div>';
     return;
   }
 
@@ -1070,18 +1070,24 @@ async function renderResView() {
       const isCancel = r.status === 'キャンセル';
       const isMale = r.gender === '男';
       const isFemale = r.gender === '女';
-      const avStyle = isCancel ? '' : isMale ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"'
-                    : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
-      const borderStyle = isCancel ? '' : isMale ? 'border-left:3px solid #1565c0;' : isFemale ? 'border-left:3px solid #ba68c8;' : '';
-      const opacity = isCancel ? 'opacity:0.55;' : '';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;${borderStyle}${opacity}">
-        <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;flex-shrink:0;" ${avStyle}>${r.name.slice(0,2)}</div>
-        <div style="flex:1;font-size:0.88rem;font-weight:600;">${escHtml(r.name)}</div>
-        <span class="badge ${r.badge || 'badge-s'}" style="font-size:0.68rem;">${r.status}</span>
+      const avBg = isCancel ? '#bdbdbd' : isMale ? 'linear-gradient(135deg,#64b5f6,#1565c0)' : isFemale ? 'linear-gradient(135deg,#f06292,#ba68c8)' : 'linear-gradient(135deg,var(--primary-light),var(--primary-dark))';
+      const borderColor = isCancel ? 'rgba(229,57,53,0.35)' : isMale ? '#1565c0' : isFemale ? '#ba68c8' : 'var(--primary)';
+      const nameStyle = isCancel ? 'text-decoration:line-through;color:#999;' : '';
+      const opacity = isCancel ? 'opacity:0.65;' : '';
+      return `<div style="background:#fff;border:1px solid #e0e0e0;border-left:4px solid ${borderColor};border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;${opacity}">
+        <div style="width:38px;height:38px;border-radius:50%;background:${avBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.76rem;font-weight:700;flex-shrink:0;">${r.name.slice(0,2)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:0.88rem;${nameStyle}">${escHtml(r.name)}</div>
+        </div>
+        <span class="badge ${r.badge || 'badge-s'}" style="font-size:0.68rem;padding:2px 8px;">${r.status}</span>
       </div>`;
     }).join('');
-    return `<div style="margin-bottom:14px;">
-      <div style="font-size:0.78rem;font-weight:700;color:var(--primary-dark);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="fas fa-clock"></i>${time}</div>
+    return `<div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="background:var(--primary);color:#fff;padding:3px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;flex-shrink:0;">${time}</div>
+        <div style="flex:1;height:1px;background:#e0e0e0;"></div>
+        <div style="font-size:0.75rem;color:var(--text-light);">${groups[time].length}名</div>
+      </div>
       ${cards}
     </div>`;
   }).join('');
