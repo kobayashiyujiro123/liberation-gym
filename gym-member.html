@@ -796,6 +796,41 @@ const WD = ['日','月','火','水','木','金','土'];
 let user = {};
 let regEmail = '';
 let cancelTarget = null;
+
+// ===== SESSION & API HELPERS (Supabase JSクライアントの代替) =====
+const _AUTH_KEY = 'gym_auth_v1';
+let _gymSession = null;
+function _saveSession(json) {
+  _gymSession = { access_token: json.access_token, refresh_token: json.refresh_token||'', expires_at: Math.floor(Date.now()/1000)+(json.expires_in||3600), user: json.user||null };
+  localStorage.setItem(_AUTH_KEY, JSON.stringify(_gymSession));
+}
+function _getSession() {
+  if (_gymSession && _gymSession.expires_at > Math.floor(Date.now()/1000)+30) return _gymSession;
+  try { const s=JSON.parse(localStorage.getItem(_AUTH_KEY)||'null'); if(s&&s.access_token&&s.expires_at>Math.floor(Date.now()/1000)+30){_gymSession=s;return s;} } catch(e){}
+  return null;
+}
+function _getToken() {
+  const s=_getSession(); if(s) return s.access_token;
+  try { const ref=SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1]||''; const raw=localStorage.getItem('sb-'+ref+'-auth-token'); if(raw){const p=JSON.parse(raw);if(p?.access_token)return p.access_token;} } catch(e){}
+  return SUPABASE_ANON;
+}
+function _clearSession() {
+  _gymSession=null; localStorage.removeItem(_AUTH_KEY);
+  try { const ref=SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1]||''; localStorage.removeItem('sb-'+ref+'-auth-token'); localStorage.removeItem('sb-'+ref+'-auth-token-code-verifier'); } catch(e){}
+}
+async function _authAPI(method, path, body, tok) {
+  const r=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method,headers:{'apikey':SUPABASE_ANON,'Authorization':`Bearer ${tok||_getToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  return {ok:r.ok,status:r.status,data:await r.json().catch(()=>({}))};
+}
+async function _restAPI(method, table, qs, body) {
+  const url=`${SUPABASE_URL}/rest/v1/${table}${qs?'?'+qs:''}`;
+  const headers={'apikey':SUPABASE_ANON,'Authorization':`Bearer ${_getToken()}`,'Content-Type':'application/json','Prefer':'return=minimal'};
+  if(method==='GET') delete headers['Prefer'];
+  const r=await fetch(url,{method,headers,...(body?{body:JSON.stringify(body)}:{})});
+  if(r.status===204||r.status===201) return {data:null,error:null};
+  const json=await r.json().catch(()=>({}));
+  return r.ok?{data:json,error:null}:{data:null,error:json};
+}
 let currentWeekOffset = 0;
 // デモモード用インメモリ予約データ（localStorageから復元）
 const demoReservations = DEMO_MODE ? (JSON.parse(localStorage.getItem('demo_reservations') || '[]')) : [];
@@ -995,9 +1030,7 @@ async function renderResView() {
     items = resData[key] || [];
   } else {
     try {
-      const { data } = await sb.from('reservations')
-        .select('time, status, profiles(name, gender)')
-        .eq('date', rvSelectedDate);
+      const { data } = await _restAPI('GET', 'reservations', `date=eq.${rvSelectedDate}&select=time,status,profiles(name,gender)`);
       items = (data || []).map(r => ({
         time: r.time,
         name: r.profiles?.name || '—',
@@ -1052,7 +1085,7 @@ async function loadUserProfile(authUser, accessToken) {
   // Supabase JSクライアントがハングするためraw fetchで直接REST API呼び出し
   let profile = null;
   try {
-    const token = accessToken || (await sb.auth.getSession().catch(() => ({data:{session:null}})))?.data?.session?.access_token || SUPABASE_ANON;
+    const token = accessToken || _getToken();
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*&limit=1`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
@@ -1117,23 +1150,31 @@ if (DEMO_MODE) {
     setTimeout(enterApp, 0);
   }
 } else {
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-      let hasProfile = false;
-      try { hasProfile = await loadUserProfile(session.user, session.access_token); } catch(e) { console.warn('loadUserProfile error:', e); }
-      if (hasProfile) {
-        // 既存ユーザー：loadUserProfile内でenterApp()呼び済み
-        setTimeout(enterApp, 0);
-      } else {
-        // 新規ユーザー（マジックリンク経由）：プロフィール設定へ
-        const activeReg = document.querySelector('#page-reg3.active');
-        if (!activeReg) {
-          regEmail = session.user.email || '';
-          goTo('page-reg3');
-        }
+  (async function _initSession() {
+    // マジックリンクコールバック: URLハッシュにaccess_tokenがあれば処理
+    const hp = new URLSearchParams(location.hash.replace(/^#/,''));
+    const hashToken = hp.get('access_token');
+    if (hashToken) {
+      history.replaceState(null, '', location.pathname);
+      const { ok, data: uData } = await _authAPI('GET', 'user', null, hashToken);
+      if (ok && uData.id) {
+        _saveSession({ access_token: hashToken, refresh_token: hp.get('refresh_token')||'', expires_in: parseInt(hp.get('expires_in')||'3600'), user: uData });
+        let hasProfile = false;
+        try { hasProfile = await loadUserProfile(uData, hashToken); } catch(e) {}
+        if (hasProfile) setTimeout(enterApp, 0);
+        else { regEmail = uData.email || ''; goTo('page-reg3'); }
+        return;
       }
     }
-  });
+    // 保存済みセッション確認
+    const sess = _getSession();
+    if (sess && sess.user) {
+      let hasProfile = false;
+      try { hasProfile = await loadUserProfile(sess.user, sess.access_token); } catch(e) {}
+      if (hasProfile) setTimeout(enterApp, 0);
+      else { regEmail = sess.user.email || ''; goTo('page-reg3'); }
+    }
+  })();
 }
 
 function demoLogin() {
@@ -1165,20 +1206,16 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw    = document.getElementById('login-pw').value;
   if (!email || !pw) { alert('メールアドレスとパスワードを入力してください'); return; }
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-  if (error) { alert('ログインに失敗しました: ' + error.message); return; }
-  // ログイン成功：直接プロフィール取得→画面遷移
-  if (data && data.user) {
-    const token = data.session?.access_token;
-    let hasProfile = false;
-    try { hasProfile = await loadUserProfile(data.user, token); } catch(e) { console.warn('loadUserProfile error:', e); }
-    if (hasProfile) {
-      enterApp();
-    } else {
-      regEmail = data.user.email || '';
-      goTo('page-reg3');
-    }
+  const { ok, data } = await _authAPI('POST', 'token?grant_type=password', { email, password: pw });
+  if (!ok || !data.access_token) {
+    alert('ログインに失敗しました: ' + (data.error_description || data.error || '認証エラー'));
+    return;
   }
+  _saveSession(data);
+  let hasProfile = false;
+  try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) {}
+  if (hasProfile) enterApp();
+  else { regEmail = data.user?.email || ''; goTo('page-reg3'); }
 }
 
 async function doGoogleLogin() {
@@ -1189,28 +1226,22 @@ async function doGoogleLogin() {
 async function sendVerification() {
   regEmail = document.getElementById('reg-email').value.trim();
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
-  const { error } = await sb.auth.signInWithOtp({
-    email: regEmail,
-    options: {
-      shouldCreateUser: true,
-      emailRedirectTo: window.location.origin + '/gym-member'
-    }
+  const { ok, data } = await _authAPI('POST', 'otp', {
+    email: regEmail, create_user: true,
+    options: { emailRedirectTo: window.location.origin + '/gym-member' }
   });
-  if (error) { alert('送信に失敗しました: ' + error.message); return; }
+  if (!ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   document.getElementById('reg2-email').textContent = regEmail;
   goTo('page-reg2');
 }
 
 async function resendVerification() {
   if (!regEmail) { goTo('page-reg1'); return; }
-  const { error } = await sb.auth.signInWithOtp({
-    email: regEmail,
-    options: {
-      shouldCreateUser: true,
-      emailRedirectTo: window.location.origin + '/gym-member'
-    }
+  const { ok, data } = await _authAPI('POST', 'otp', {
+    email: regEmail, create_user: true,
+    options: { emailRedirectTo: window.location.origin + '/gym-member' }
   });
-  if (error) { alert('再送信に失敗しました: ' + error.message); return; }
+  if (!ok) { alert('再送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   alert('メールを再送信しました。');
 }
 
@@ -1228,11 +1259,11 @@ async function completeReg() {
   const m          = String(document.getElementById('reg-month').value).padStart(2,'0');
   const d          = String(document.getElementById('reg-day').value).padStart(2,'0');
   const birth_date = `${y}-${m}-${d}`;
-  const { error: pwErr } = await sb.auth.updateUser({ password: pw });
-  if (pwErr) { alert('エラー: ' + pwErr.message); return; }
-  const { data: { user: u } } = await sb.auth.getUser();
-  if (u) {
-    await sb.from('profiles').update({ name, gender, birth_date }).eq('id', u.id);
+  const { ok: pwOk, data: pwData } = await _authAPI('PUT', 'user', { password: pw });
+  if (!pwOk) { alert('エラー: ' + (pwData.error_description || pwData.error || 'パスワード設定失敗')); return; }
+  const sess = _getSession();
+  if (sess && sess.user) {
+    await _restAPI('PATCH', 'profiles', `id=eq.${sess.user.id}`, { name, gender, birth_date });
     user.name = name;
   }
   goTo('page-reg4');
@@ -1241,8 +1272,8 @@ async function completeReg() {
 async function sendReset() {
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { alert('メールアドレスを入力してください'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email);
-  if (error) { alert('送信に失敗しました: ' + error.message); return; }
+  const { ok, data: rd } = await _authAPI('POST', 'recover', { email });
+  if (!ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); return; }
   document.getElementById('reset-email-disp').textContent = email;
   goTo('page-pw-reset2');
 }
@@ -1251,13 +1282,12 @@ async function doLogout() {
   if (DEMO_MODE) {
     localStorage.removeItem('demo_user');
   } else {
-    // sb.auth.signOut()がハングする場合に備え、直接localStorageのセッションを削除
-    try {
-      const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
-      localStorage.removeItem('sb-' + projectRef + '-auth-token');
-      localStorage.removeItem('sb-' + projectRef + '-auth-token-code-verifier');
-    } catch(e) {}
-    try { sb.auth.signOut().catch(()=>{}); } catch(e) {}
+    const tok = _getToken();
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${tok}` }
+    }).catch(() => {});
+    _clearSession();
   }
   user = {};
   localStorage.removeItem('gym_currentPage');
@@ -1287,14 +1317,7 @@ function renderNoticeList(notices) {
   }).join('');
 }
 
-function _getAccessToken() {
-  try {
-    const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
-    const raw = localStorage.getItem('sb-' + projectRef + '-auth-token');
-    if (raw) { const p = JSON.parse(raw); if (p && p.access_token) return p.access_token; }
-  } catch(e) {}
-  return SUPABASE_ANON;
-}
+function _getAccessToken() { return _getToken(); }
 
 async function loadNotices() {
   if (DEMO_MODE) {
@@ -1331,10 +1354,7 @@ async function renderRes() {
     data = demoReservations.filter(r => r.date >= todayStr);
   } else {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
-    const res = await sb.from('reservations')
-      .select('*').eq('user_id', user.id)
-      .gte('date', todayStr)
-      .order('date', { ascending: true });
+    const res = await _restAPI('GET', 'reservations', `user_id=eq.${user.id}&date=gte.${todayStr}&order=date.asc`);
     if (res.error || !res.data || !res.data.length) {
       el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
       return;
@@ -1407,8 +1427,7 @@ async function doCancel() {
     renderRes();
     return;
   }
-  const { error } = await sb.from('reservations')
-    .update({ status: 'cancelled' }).eq('id', cancelTarget.id);
+  const { error } = await _restAPI('PATCH', 'reservations', `id=eq.${cancelTarget.id}`, { status: 'cancelled' });
   if (error) { alert('キャンセルに失敗しました'); return; }
   closeModal();
   renderRes();
@@ -1504,13 +1523,13 @@ async function saveInfo() {
     return;
   }
 
-  const { data: { user: authUser } } = await sb.auth.getUser();
-  if (!authUser) return;
-  const { error } = await sb.from('profiles').update({
+  const sess = _getSession();
+  if (!sess || !sess.user) { alert('セッションが切れています。再ログインしてください'); return; }
+  const { error } = await _restAPI('PATCH', 'profiles', `id=eq.${sess.user.id}`, {
     name, gender, tel: phone, style, goal, wins, losses, draws,
     photo_url: photoUrl || null
-  }).eq('id', authUser.id);
-  if (error) { alert('保存に失敗しました: ' + error.message); return; }
+  });
+  if (error) { alert('保存に失敗しました: ' + JSON.stringify(error)); return; }
   Object.assign(user, { name, gender, phone, style, goal, wins, losses, draws, fights: wins + losses + draws, photoUrl: photoUrl || null });
   document.getElementById('sb-name').textContent = name;
   updateAvatarUI(user.photoUrl || null);
@@ -1529,12 +1548,13 @@ async function changePw() {
   if (nw !== nw2) { err.style.display='block'; return; }
   err.style.display = 'none';
   if (!DEMO_MODE) {
-    const { data: { user: u } } = await sb.auth.getUser();
-    const { error: signInErr } = await sb.auth.signInWithPassword({ email: u.email, password: cur });
-    if (signInErr) { alert('現在のパスワードが正しくありません'); return; }
+    const sess = _getSession();
+    if (!sess || !sess.user) { alert('セッションが切れています。再ログインしてください'); return; }
+    const { ok: verOk } = await _authAPI('POST', 'token?grant_type=password', { email: sess.user.email, password: cur });
+    if (!verOk) { alert('現在のパスワードが正しくありません'); return; }
   }
-  const { error } = await sb.auth.updateUser({ password: nw });
-  if (error) { alert('パスワード変更に失敗しました: ' + error.message); return; }
+  const { ok: pwOk, data: pwRes } = await _authAPI('PUT', 'user', { password: nw });
+  if (!pwOk) { alert('パスワード変更に失敗しました: ' + (pwRes.error_description || pwRes.error || 'エラー')); return; }
   ['pw-cur','pw-new','pw-new2'].forEach(id => { document.getElementById(id).value=''; });
   showApp('pw-done');
 }
@@ -1665,7 +1685,7 @@ async function renderMemberWeekly(weekOffset) {
     });
   } else {
     try {
-      const { data: allRes } = await sb.from('reservations').select('date,time').eq('status','confirmed');
+      const { data: allRes } = await _restAPI('GET', 'reservations', 'status=eq.confirmed&select=date,time');
       (allRes || []).forEach(r => {
         const key = r.date + '_' + r.time;
         resCounts[key] = (resCounts[key] || 0) + 1;
@@ -1824,10 +1844,10 @@ async function submitBkModal() {
     document.getElementById('bk-success-overlay').classList.add('open');
     return;
   }
-  const { data: { user: authUser } } = await sb.auth.getUser();
-  if (!authUser) { alert('ログインが必要です'); return; }
-  const { error } = await sb.from('reservations').insert({
-    user_id:    authUser.id,
+  const sess = _getSession();
+  if (!sess || !sess.user) { alert('ログインが必要です'); return; }
+  const { error } = await _restAPI('POST', 'reservations', null, {
+    user_id:    sess.user.id,
     date:       bkDate,
     time:       time,
     class_name: cls,
