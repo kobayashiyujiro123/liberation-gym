@@ -1030,14 +1030,26 @@ async function renderResView() {
     items = resData[key] || [];
   } else {
     try {
-      const { data } = await _restAPI('GET', 'reservations', `date=eq.${rvSelectedDate}&select=time,status,profiles(name,gender)`);
-      items = (data || []).map(r => ({
-        time: r.time,
-        name: r.profiles?.name || '—',
-        gender: r.profiles?.gender || '',
-        status: r.status === 'confirmed' ? '確定' : 'キャンセル',
-        badge: r.status === 'confirmed' ? 'badge-s' : 'badge-d',
-      }));
+      // reservationsをJOINなしで取得（FKなし）
+      const { data: resRows } = await _restAPI('GET', 'reservations', `date=eq.${rvSelectedDate}&select=user_id,time,status`);
+      if (resRows && resRows.length) {
+        // user_idの一覧を取得してprofilesを別途フェッチ
+        const userIds = [...new Set(resRows.map(r => r.user_id))];
+        const idFilter = userIds.map(id => `id=eq.${id}`).join(',');
+        const { data: profileRows } = await _restAPI('GET', 'profiles', `or=(${idFilter})&select=id,name,gender`);
+        const profileMap = {};
+        (profileRows || []).forEach(p => { profileMap[p.id] = p; });
+        items = resRows.map(r => {
+          const p = profileMap[r.user_id] || {};
+          return {
+            time: r.time,
+            name: p.name || '—',
+            gender: p.gender || '',
+            status: r.status === 'cancelled' ? 'キャンセル' : '確定',
+            badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+          };
+        });
+      }
     } catch(e) { items = []; }
   }
 
