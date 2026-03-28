@@ -2707,7 +2707,7 @@ async function initCoachesFromDB() {
 async function initMembersFromDB() {
   try {
   const token = _getAdminToken();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.asc`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&order=created_at.asc`, {
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
   });
   const data = res.ok ? await res.json() : null;
