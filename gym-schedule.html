@@ -1398,18 +1398,7 @@ function submitAddRes() {
 }
 
 // ===== MEMBER PAGINATION =====
-const allMembers = [
-  { id:'M001', name:'水野麻美',  email:'hanako@example.com',   tel:'090-1234-5678', date:'2024/04/01', status:'有効', badge:'badge-s', visits: 42, visitsYear: 28, visitsMonth:  5, gender:'女', birthday:'1990-03-15', style:'オーソドックス', weight:55, targetWeight:52, record:'なし',         coach:'', memo:'まじめに取り組んでいる', leftDate:'', canView:false },
-  { id:'M002', name:'吉田レマン',email:'ichiro@example.com',   tel:'090-2345-6789', date:'2024/06/15', status:'有効', badge:'badge-s', visits: 28, visitsYear: 18, visitsMonth:  3, gender:'男', birthday:'1985-03-09', style:'アグレッシブ',   weight:72, targetWeight:68, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
-  { id:'M003', name:'K4',        email:'daisuke@example.com',  tel:'090-4567-8901', date:'2023/11/10', status:'有効', badge:'badge-s', visits: 87, visitsYear: 35, visitsMonth:  8, gender:'男', birthday:'1978-01-30', style:'パワー系',       weight:85, targetWeight:80, record:'大会出場歴あり', coach:'鈴木さん', memo:'頑張り屋さん',             leftDate:'', canView:false },
-  { id:'M004', name:'桑田',      email:'kuwata@example.com',   tel:'090-1111-2222', date:'2024/03/10', status:'有効', badge:'badge-s', visits: 45, visitsYear: 22, visitsMonth:  4, gender:'男', birthday:'1992-07-20', style:'オーソドックス', weight:70, targetWeight:67, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
-  { id:'M005', name:'ソジョン',  email:'sojong@example.com',   tel:'090-5678-9012', date:'2025/01/05', status:'有効', badge:'badge-s', visits:  3, visitsYear:  3, visitsMonth:  2, gender:'女', birthday:'2000-05-12', style:'',               weight:48, targetWeight:46, record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M006', name:'中村',      email:'nakamura@example.com', tel:'090-7890-1234', date:'2024/09/01', status:'有効', badge:'badge-s', visits: 33, visitsYear: 20, visitsMonth:  4, gender:'女', birthday:'1993-04-18', style:'オーソドックス', weight:53, targetWeight:50, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
-  { id:'M007', name:'森',        email:'mori@example.com',     tel:'090-2222-3333', date:'2024/05/20', status:'有効', badge:'badge-s', visits: 51, visitsYear: 26, visitsMonth:  5, gender:'男', birthday:'1989-11-03', style:'アグレッシブ',   weight:74, targetWeight:70, record:'なし',         coach:'トミッキー', memo:'',                       leftDate:'', canView:false },
-  { id:'M008', name:'中庭',      email:'nakaniva@example.com', tel:'090-3333-4444', date:'2024/07/15', status:'有効', badge:'badge-s', visits: 38, visitsYear: 19, visitsMonth:  3, gender:'男', birthday:'1994-02-28', style:'パワー系',       weight:80, targetWeight:76, record:'なし',         coach:'', memo:'',                       leftDate:'', canView:false },
-  { id:'M009', name:'山下',      email:'yamashita@example.com',tel:'090-4444-5555', date:'2023/12/01', status:'有効', badge:'badge-s', visits: 62, visitsYear: 30, visitsMonth:  6, gender:'男', birthday:'1986-09-14', style:'オーソドックス', weight:68, targetWeight:65, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
-  { id:'M010', name:'ソエジ',    email:'soeji@example.com',    tel:'090-5555-6666', date:'2024/10/08', status:'有効', badge:'badge-s', visits: 20, visitsYear: 15, visitsMonth:  4, gender:'男', birthday:'1997-06-30', style:'アグレッシブ',   weight:72, targetWeight:69, record:'なし',         coach:'鈴木さん', memo:'',                       leftDate:'', canView:false },
-];
+const allMembers = []; // DBから取得（initMembersFromDB）
 
 // ===== PROFILE SYNC (gym_member_profile localStorage) =====
 function getProfileStore() {
@@ -2623,16 +2612,13 @@ async function initScheduleFromDB() {
 }
 
 function _getAccessToken() {
-  try {
-    const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
-    const raw = localStorage.getItem('sb-' + projectRef + '-auth-token');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.access_token) return parsed.access_token;
-    }
-  } catch(e) {}
+  // 新セッション形式（gym_auth_v1）を優先
+  try { const s=JSON.parse(localStorage.getItem('gym_auth_v1')||'null'); if(s&&s.access_token&&s.expires_at>Math.floor(Date.now()/1000)+30) return s.access_token; } catch(e){}
+  // 旧Supabase形式
+  try { const ref=SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1]||''; const raw=localStorage.getItem('sb-'+ref+'-auth-token'); if(raw){const p=JSON.parse(raw);if(p?.access_token)return p.access_token;} } catch(e){}
   return SUPABASE_ANON;
 }
+const _getAdminToken = _getAccessToken;
 
 function _noticesApiHeaders(extra) {
   const token = _getAccessToken();
@@ -2676,8 +2662,12 @@ async function initCoachesFromDB() {
 
 async function initMembersFromDB() {
   try {
-  const { data } = await sb.from('profiles').select('*').order('created_at');
-  if (!data || !data.length) return;
+  const token = _getAdminToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.asc`, {
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+  });
+  const data = res.ok ? await res.json() : null;
+  if (!data || !data.length) { renderMembers(); return; }
   allMembers.length = 0;
   const statusMap = { active: '有効', suspended: '休会', withdrawn: '退会' };
   const badgeMap  = { active: 'badge-s', suspended: 'badge-w', withdrawn: 'badge-d' };
