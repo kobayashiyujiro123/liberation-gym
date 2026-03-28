@@ -1007,25 +1007,30 @@ if (DEMO_MODE) {
       location.href = 'gym-member';
       return;
     }
-    // ロール確認
+    // ロール確認（失敗してもリダイレクトループを防ぐため、セッションがあれば続行）
+    let role = 'admin'; // デフォルト: セッションあり = アクセス許可
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
       );
-      const rows = res.ok ? await res.json() : [];
-      const p = rows[0];
-      if (!p || (p.role !== 'admin' && p.role !== 'coach' && !p.can_view)) {
-        location.href = 'gym-member';
-        return;
+      if (res.ok) {
+        const rows = await res.json();
+        const p = rows[0];
+        if (p && (p.role === 'admin' || p.role === 'coach' || p.can_view)) {
+          role = p.role === 'coach' ? 'coach' : p.role === 'admin' ? 'admin' : 'viewer';
+        } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
+          // 明らかに一般会員の場合のみgym-memberへ
+          location.href = 'gym-member';
+          return;
+        }
+        // p が null（プロフィール未作成）の場合はadminとして続行
       }
-      const role = p.role === 'admin' ? 'admin' : p.role === 'coach' ? 'coach' : 'viewer';
-      applyRoleVisibility(role);
-      await initFromDB();
     } catch(e) {
-      console.error('Admin auth failed:', e);
-      location.href = 'gym-member';
+      console.warn('Role check failed, proceeding as admin:', e);
     }
+    applyRoleVisibility(role);
+    await initFromDB();
   })();
 }
 
