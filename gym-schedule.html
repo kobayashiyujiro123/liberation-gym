@@ -1282,13 +1282,37 @@ function toggleResEdit(id) {
   }
 }
 
-function saveResEdit(id) {
+async function saveResEdit(id) {
   const card = document.getElementById(`res-card-${id}`);
   const select = card?.querySelector('.res-edit-panel select');
   if (!select) return;
-  const newStatus = select.value;
+  const newStatus = select.value; // '確定' or 'キャンセル'
 
-  // resData から対象レコードを検索して更新
+  // 日本語ラベル → DB値にマッピング
+  const dbStatusMap = { '確定': 'confirmed', 'キャンセル': 'cancelled' };
+  const dbStatus = dbStatusMap[newStatus] || 'confirmed';
+
+  if (!DEMO_MODE) {
+    // Supabase に PATCH
+    const token = _getAccessToken();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ status: dbStatus }),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      alert('ステータスの更新に失敗しました: ' + err);
+      return;
+    }
+  }
+
+  // ローカル resData も即時更新
   const badgeMap = { '確定': 'badge-s', 'キャンセル': 'badge-d' };
   for (const key of Object.keys(resData)) {
     const r = resData[key].find(x => x.id === id);
@@ -1298,6 +1322,7 @@ function saveResEdit(id) {
       break;
     }
   }
+  toggleResEdit(id); // 編集パネルを閉じる
   renderReservations();
 }
 
