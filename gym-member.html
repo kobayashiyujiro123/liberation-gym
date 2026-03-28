@@ -1230,22 +1230,28 @@ async function doGoogleLogin() {
 async function sendVerification() {
   regEmail = document.getElementById('reg-email').value.trim();
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
-  const { ok, data } = await _authAPI('POST', 'otp', {
-    email: regEmail, create_user: true,
-    redirect_to: window.location.origin + '/gym-member'
+  const redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${_getToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: regEmail, create_user: true })
   });
-  if (!ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   document.getElementById('reg2-email').textContent = regEmail;
   goTo('page-reg2');
 }
 
 async function resendVerification() {
   if (!regEmail) { goTo('page-reg1'); return; }
-  const { ok, data } = await _authAPI('POST', 'otp', {
-    email: regEmail, create_user: true,
-    redirect_to: window.location.origin + '/gym-member'
+  const redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${_getToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: regEmail, create_user: true })
   });
-  if (!ok) { alert('再送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { alert('再送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
   alert('メールを再送信しました。');
 }
 
