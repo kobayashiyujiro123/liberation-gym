@@ -879,8 +879,10 @@
       <span id="add-res-date-label" style="font-size:0.88rem;font-weight:400;color:var(--text-light);"></span>
     </div>
     <div style="margin-bottom:12px;">
-      <label class="form-label">お名前 <span style="color:var(--danger);font-weight:400;">*</span></label>
-      <input id="add-res-name" class="form-ctrl" type="text" placeholder="山田 太郎" />
+      <label class="form-label">会員名 <span style="color:var(--danger);font-weight:400;">*</span></label>
+      <select id="add-res-member" class="form-ctrl" onchange="onAddResMemberChange()">
+        <option value="">-- 会員を選択 --</option>
+      </select>
     </div>
     <div style="display:flex;gap:12px;margin-bottom:12px;">
       <div style="flex:1;">
@@ -1389,10 +1391,17 @@ function getScheduleTimesForDate(dateKey) {
 }
 
 function openAddResModal() {
-  const sel = document.getElementById('add-res-time');
+  const timeSel = document.getElementById('add-res-time');
   const times = getScheduleTimesForDate(resSelectedDate);
-  sel.innerHTML = times.map(t => `<option value="${t}">${t}</option>`).join('');
-  document.getElementById('add-res-name').value   = '';
+  timeSel.innerHTML = times.map(t => `<option value="${t}">${t}</option>`).join('');
+  // 会員ドロップダウンを allMembers で構築
+  const memberSel = document.getElementById('add-res-member');
+  memberSel.innerHTML = '<option value="">-- 会員を選択 --</option>' +
+    allMembers
+      .filter(m => m.status !== '退会')
+      .map(m => `<option value="${m.id}" data-gender="${m.gender || '男'}">${m.name}</option>`)
+      .join('');
+  memberSel.value = '';
   document.getElementById('add-res-gender').value = '男';
   document.getElementById('add-res-memo').value   = '';
   // 選択中の日付ラベルを設定
@@ -1402,24 +1411,76 @@ function openAddResModal() {
   document.getElementById('add-res-date-label').textContent =
     `${dt.getMonth()+1}/${dt.getDate()}（${WEEKDAYS[dt.getDay()]}）`;
   document.getElementById('add-res-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('add-res-name').focus(), 50);
+  setTimeout(() => document.getElementById('add-res-member').focus(), 50);
+}
+
+function onAddResMemberChange() {
+  const sel = document.getElementById('add-res-member');
+  const opt = sel.options[sel.selectedIndex];
+  if (opt && opt.dataset.gender) {
+    document.getElementById('add-res-gender').value = opt.dataset.gender;
+  }
 }
 
 function closeAddResModal() {
   document.getElementById('add-res-overlay').classList.remove('open');
 }
 
-function submitAddRes() {
-  const name = document.getElementById('add-res-name').value.trim();
-  if (!name) { document.getElementById('add-res-name').focus(); return; }
+async function submitAddRes() {
+  const memberSel = document.getElementById('add-res-member');
+  const userId = memberSel.value;
+  if (!userId) { memberSel.focus(); return; }
+  const selectedOpt = memberSel.options[memberSel.selectedIndex];
+  const name   = selectedOpt.textContent.trim();
   const gender = document.getElementById('add-res-gender').value;
   const time   = document.getElementById('add-res-time').value;
   const memo   = document.getElementById('add-res-memo').value.trim();
-  const id = '#' + String(Date.now()).slice(-6);
+
+  if (DEMO_MODE) {
+    const id = '#' + String(Date.now()).slice(-6);
+    resData[resSelectedDate] = resData[resSelectedDate] || [];
+    resData[resSelectedDate].push({ id, name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo });
+    resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
+    saveResDataToStorage();
+    closeAddResModal();
+    buildDayTabs();
+    renderReservations();
+    return;
+  }
+
+  // 本番: Supabase にINSERT
+  const dateStr = resSelectedDate.replace(/\//g, '-'); // YYYY/MM/DD → YYYY-MM-DD
+  const token = _getAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+    },
+    body: JSON.stringify({
+      user_id:    userId,
+      date:       dateStr,
+      time:       time,
+      class_name: CLASSES[0],
+      status:     'confirmed',
+      memo:       memo || null,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    alert('予約の追加に失敗しました: ' + err);
+    return;
+  }
+  const [inserted] = await res.json();
+  // ローカルの resData にも反映（画面即時更新）
   resData[resSelectedDate] = resData[resSelectedDate] || [];
-  resData[resSelectedDate].push({ id, name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo });
+  resData[resSelectedDate].push({
+    id: inserted?.id || ('#' + String(Date.now()).slice(-6)),
+    name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo,
+  });
   resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
-  saveResDataToStorage();
   closeAddResModal();
   buildDayTabs();
   renderReservations();
