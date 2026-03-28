@@ -1281,6 +1281,7 @@ function toggleResEdit(id) {
     const panel = document.createElement('div');
     panel.className = 'res-edit-panel';
     panel.style.cssText = 'width:100%;padding:10px 14px 10px;border-top:1px solid var(--border);margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;';
+    panel.onclick = e => e.stopPropagation(); // カード全体のonclickへの伝播を防止
     panel.innerHTML = `
       <span style="font-size:0.78rem;color:var(--text-light);">ステータス変更：</span>
       <select style="font-size:0.78rem;padding:4px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;">
