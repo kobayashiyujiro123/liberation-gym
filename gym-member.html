@@ -1244,6 +1244,25 @@ async function loadUserProfile(authUser, accessToken) {
     };
     return true;
   }
+  // profiles 行が存在しない場合（登録途中など）: 最低限の行を作成して管理側に表示されるようにする
+  try {
+    const token = accessToken || _getToken();
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        id:    authUser.id,
+        email: authUser.email || '',
+        role:  'member',
+        status: 'active',
+      }),
+    });
+  } catch(e) { console.warn('profiles upsert error:', e); }
   return false;
 }
 
@@ -1397,7 +1416,27 @@ async function completeReg() {
   if (!pwOk) { alert('エラー: ' + (pwData.error_description || pwData.error || 'パスワード設定失敗')); return; }
   const sess = _getSession();
   if (sess && sess.user) {
-    await _restAPI('PATCH', 'profiles', `id=eq.${sess.user.id}`, { name, gender, birth_date });
+    // PATCH ではなく UPSERT（行がなければINSERT、あればUPDATE）
+    // → 新規登録時に profiles 行が存在しなくても正しく作成される
+    const token = _getToken();
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        id:         sess.user.id,
+        email:      regEmail || sess.user.email || '',
+        name,
+        gender,
+        birth_date,
+        role:       'member',
+        status:     'active',
+      }),
+    });
     user.name = name;
   }
   goTo('page-reg4');
