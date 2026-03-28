@@ -2763,9 +2763,20 @@ async function initReservationsFromDB() {
     const data = res.ok ? await res.json() : null;
     if (!data) return;
 
-    // allMembersからuser_id→{name,gender}のマップを構築
+    // 全プロフィール（role問わず）でuser_id→{name,gender}のマップを構築
     const memberMap = {};
     allMembers.forEach(m => { memberMap[m.id] = { name: m.name, gender: m.gender }; });
+    // allMembersにいないユーザー（admin/coachなど）も補完
+    try {
+      const pRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=id,name,gender`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      if (pRes.ok) {
+        const allProfiles = await pRes.json();
+        allProfiles.forEach(p => { if (!memberMap[p.id]) memberMap[p.id] = { name: p.name, gender: p.gender }; });
+      }
+    } catch(e) {}
 
     // Rebuild resData
     Object.keys(resData).forEach(k => delete resData[k]);
