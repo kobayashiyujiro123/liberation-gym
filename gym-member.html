@@ -1219,7 +1219,9 @@ async function loadUserProfile(authUser, accessToken) {
   if (profile) {
     // name が未設定 = completeReg() 未完了（管理側表示用に行だけ作った状態）→ 登録フォームへ
     if (!profile.name) return false;
-    const bd = profile.birth_date ? profile.birth_date.split('-') : ['1990','01','01'];
+    const bd = (profile.birth_date && profile.birth_date.includes('-'))
+      ? profile.birth_date.split('-') : ['1990','01','01'];
+    const _by = parseInt(bd[0])||1990, _bm = parseInt(bd[1])||1, _bd2 = parseInt(bd[2])||1;
     const wins   = profile.wins   || 0;
     const losses = profile.losses || 0;
     const draws  = profile.draws  || 0;
@@ -1228,9 +1230,9 @@ async function loadUserProfile(authUser, accessToken) {
       name:         profile.name          || '',
       email:        profile.email         || authUser.email,
       gender:       profile.gender        || '男',
-      birthYear:    parseInt(bd[0]),
-      birthMonth:   parseInt(bd[1]),
-      birthDay:     parseInt(bd[2]),
+      birthYear:    _by,
+      birthMonth:   _bm,
+      birthDay:     _bd2,
       phone:        profile.tel            || '',
       style:        profile.style         || 'オーソドックス',
       goal:         profile.goal          || '',
@@ -1450,7 +1452,26 @@ async function completeReg() {
         status:     'active',
       }),
     });
-    user.name = name;
+    // userオブジェクト全体を更新（マイページ遷移後にundefinedにならないよう）
+    const bdy = parseInt(y), bdm = parseInt(m.replace(/^0/,'')), bdd = parseInt(d.replace(/^0/,''));
+    user.id         = sess.user.id;
+    user.email      = regEmail || sess.user.email || '';
+    user.name       = name;
+    user.gender     = gender;
+    user.birthYear  = bdy;
+    user.birthMonth = bdm;
+    user.birthDay   = bdd;
+    user.role       = user.role  || 'member';
+    user.totalVisits  = user.totalVisits  || 0;
+    user.yearVisits   = user.yearVisits   || 0;
+    user.monthVisits  = user.monthVisits  || 0;
+    user.wins   = user.wins   || 0;
+    user.losses = user.losses || 0;
+    user.draws  = user.draws  || 0;
+    user.fights = user.fights || 0;
+    user.style  = user.style  || 'オーソドックス';
+    user.goal   = user.goal   || '';
+    user.phone  = user.phone  || '';
   }
   goTo('page-reg4');
 }
