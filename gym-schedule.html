@@ -996,13 +996,25 @@ if (DEMO_MODE) {
     }
   });
 } else {
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+  (async function _initAdminSession() {
+    // gym_auth_v1 セッションを読み取る
+    let sess = null;
+    try {
+      const s = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null');
+      if (s && s.access_token && s.expires_at > Math.floor(Date.now()/1000) + 30) sess = s;
+    } catch(e) {}
+    if (!sess || !sess.user) {
       location.href = 'gym-member';
       return;
     }
-    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-      const { data: p } = await sb.from('profiles').select('role, can_view').eq('id', session.user.id).single();
+    // ロール確認
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
+      );
+      const rows = res.ok ? await res.json() : [];
+      const p = rows[0];
       if (!p || (p.role !== 'admin' && p.role !== 'coach' && !p.can_view)) {
         location.href = 'gym-member';
         return;
@@ -1010,8 +1022,11 @@ if (DEMO_MODE) {
       const role = p.role === 'admin' ? 'admin' : p.role === 'coach' ? 'coach' : 'viewer';
       applyRoleVisibility(role);
       await initFromDB();
+    } catch(e) {
+      console.error('Admin auth failed:', e);
+      location.href = 'gym-member';
     }
-  });
+  })();
 }
 
 
@@ -2550,8 +2565,17 @@ function doLogout() {
       const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] || '';
       localStorage.removeItem('sb-' + projectRef + '-auth-token');
       localStorage.removeItem('sb-' + projectRef + '-auth-token-code-verifier');
+      localStorage.removeItem('gym_auth_v1');
     } catch(e) {}
-    try { sb.auth.signOut().catch(()=>{}); } catch(e) {}
+    // バックグラウンドでサーバー側もログアウト
+    try {
+      const sess = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null');
+      const token = sess?.access_token || SUPABASE_ANON;
+      fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` },
+      }).catch(() => {});
+    } catch(e) {}
   }
   location.href = 'gym-member';
 }
@@ -2566,12 +2590,25 @@ async function changePw() {
   if (!/^[a-zA-Z0-9]+$/.test(nw)) { alert('パスワードは英数字のみで入力してください'); return; }
   if (nw !== nw2) { alert('パスワードが一致しません'); return; }
   if (!DEMO_MODE) {
-    const { data: { user: u } } = await sb.auth.getUser();
-    const { error: signInErr } = await sb.auth.signInWithPassword({ email: u.email, password: cur });
-    if (signInErr) { alert('現在のパスワードが正しくありません'); return; }
+    let sess = null;
+    try { sess = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null'); } catch(e) {}
+    if (!sess || !sess.user) { alert('セッションが切れています。再ログインしてください'); return; }
+    // 現在のパスワードで再認証
+    const verRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sess.user.email, password: cur }),
+    });
+    if (!verRes.ok) { alert('現在のパスワードが正しくありません'); return; }
+    // パスワード更新
+    const updRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: nw }),
+    });
+    const updData = await updRes.json().catch(() => ({}));
+    if (!updRes.ok) { alert('変更失敗: ' + (updData.message || updData.error || '不明なエラー')); return; }
   }
-  const { error } = await sb.auth.updateUser({ password: nw });
-  if (error) { alert('変更失敗: ' + error.message); return; }
   alert('パスワードを変更しました');
   ['pw-cur','pw-new','pw-new2'].forEach(id => { document.getElementById(id).value = ''; });
 }
@@ -2590,19 +2627,22 @@ async function initFromDB() {
 
 async function initScheduleFromDB() {
   try {
+    const token = _getAccessToken();
+    const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` };
+    const base = SUPABASE_URL + '/rest/v1/';
     const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
-      sb.from('schedule_slots').select('*'),
-      sb.from('day_notes').select('*'),
-      sb.from('gym_holidays').select('*'),
-      sb.from('gym_settings').select('*'),
+      fetch(base + 'schedule_slots?select=*', { headers: h }).then(r => r.ok ? r.json() : []),
+      fetch(base + 'day_notes?select=*', { headers: h }).then(r => r.ok ? r.json() : []),
+      fetch(base + 'gym_holidays?select=*', { headers: h }).then(r => r.ok ? r.json() : []),
+      fetch(base + 'gym_settings?select=*', { headers: h }).then(r => r.ok ? r.json() : []),
     ]);
-    (slotsRes.data || []).forEach(s => {
+    (slotsRes || []).forEach(s => {
       if (!scheduleData[s.date]) scheduleData[s.date] = {};
       scheduleData[s.date][s.time] = s.class_name;
     });
-    (notesRes.data || []).forEach(n => { dayNotes[n.date] = n.note; });
-    (holRes.data || []).forEach(h => { holidays.add(h.date); });
-    (settingsRes.data || []).forEach(s => {
+    (notesRes || []).forEach(n => { dayNotes[n.date] = n.note; });
+    (holRes || []).forEach(h => { holidays.add(h.date); });
+    (settingsRes || []).forEach(s => {
       const el = document.getElementById(s.key);
       if (el) el.value = s.value;
     });
@@ -2642,7 +2682,11 @@ async function initNoticesFromDB() {
 
 async function initCoachesFromDB() {
   try {
-    const { data } = await sb.from('coaches').select('*').order('created_at');
+    const token = _getAccessToken();
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/coaches?select=*&order=created_at.asc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+    });
+    const data = res.ok ? await res.json() : null;
     if (!data || !data.length) return;
     allCoaches.length = 0;
     const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
@@ -2695,11 +2739,14 @@ async function initReservationsFromDB() {
   try {
     const today = new Date(); today.setHours(0,0,0,0);
     const endDate = new Date(today); endDate.setDate(today.getDate() + 6);
-    const { data } = await sb.from('reservations')
-      .select('*, profiles(name, gender)')
-      .gte('date', today.toISOString().slice(0,10))
-      .lte('date', endDate.toISOString().slice(0,10))
-      .order('date').order('time');
+    const startStr = today.toISOString().slice(0,10);
+    const endStr   = endDate.toISOString().slice(0,10);
+    const token = _getAccessToken();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/reservations?select=*,profiles(name,gender)&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }
+    );
+    const data = res.ok ? await res.json() : null;
     if (!data) return;
 
     // Rebuild resData
