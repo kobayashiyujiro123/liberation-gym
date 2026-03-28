@@ -1178,6 +1178,12 @@ function openMemberDetailByResName(name) {
 }
 
 function renderReservations() {
+  if (!resSelectedDate) {
+    // DBロード前はタイムラインを空表示
+    const timeline = document.getElementById('res-timeline');
+    if (timeline) timeline.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times" style="font-size:1.5rem;margin-bottom:8px;display:block;color:var(--border)"></i>データ読み込み中...</div>';
+    return;
+  }
   const q = (document.getElementById('res-search')?.value || '').toLowerCase();
   const all = resData[resSelectedDate] || [];
   const filtered = all.filter(r => {
