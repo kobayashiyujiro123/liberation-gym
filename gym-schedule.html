@@ -1869,24 +1869,28 @@ async function saveScheduleToStorage() {
     return;
   }
   try {
-    // Business hours → gym_settings
+    const token = _getAccessToken();
+    const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    const base = SUPABASE_URL + '/rest/v1/';
+
+    // Business hours → gym_settings (upsert)
     const biKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end','bi-capacity','bi-reserve-limit','bi-cancel-limit'];
     const settings = biKeys.map(key => { const el = document.getElementById(key); return el ? { key, value: el.value } : null; }).filter(Boolean);
-    if (settings.length) await sb.from('gym_settings').upsert(settings, { onConflict: 'key' });
+    if (settings.length) await fetch(base + 'gym_settings', { method:'POST', headers: {...h, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(settings) });
 
     // Holidays → gym_holidays (全件再sync)
-    await sb.from('gym_holidays').delete().gte('date', '2000-01-01');
+    await fetch(base + 'gym_holidays?date=gte.2000-01-01', { method:'DELETE', headers: h });
     const holArr = [...holidays].map(date => ({ date }));
-    if (holArr.length) await sb.from('gym_holidays').insert(holArr);
+    if (holArr.length) await fetch(base + 'gym_holidays', { method:'POST', headers: h, body: JSON.stringify(holArr) });
 
     // Day notes → day_notes (upsert)
     const notes = Object.entries(dayNotes).map(([date, note]) => ({ date, note }));
-    if (notes.length) await sb.from('day_notes').upsert(notes, { onConflict: 'date' });
+    if (notes.length) await fetch(base + 'day_notes', { method:'POST', headers: {...h, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(notes) });
 
     // Schedule slots → schedule_slots (変更日付のみ再sync)
     const dates = Object.keys(scheduleData);
     if (dates.length) {
-      await sb.from('schedule_slots').delete().in('date', dates);
+      await fetch(base + `schedule_slots?date=in.(${dates.join(',')})`, { method:'DELETE', headers: h });
       const slots = [];
       for (const [date, times] of Object.entries(scheduleData)) {
         if (times && typeof times === 'object' && !Array.isArray(times)) {
@@ -1895,7 +1899,7 @@ async function saveScheduleToStorage() {
           }
         }
       }
-      if (slots.length) await sb.from('schedule_slots').insert(slots);
+      if (slots.length) await fetch(base + 'schedule_slots', { method:'POST', headers: h, body: JSON.stringify(slots) });
     }
   } catch(e) { console.warn('DB save failed:', e); }
 }
@@ -2751,12 +2755,17 @@ async function initReservationsFromDB() {
     const startStr = today.toISOString().slice(0,10);
     const endStr   = endDate.toISOString().slice(0,10);
     const token = _getAccessToken();
+    // joinなしで予約取得（外部キー未設定のため）
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/reservations?select=*,profiles(name,gender)&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
+      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }
     );
     const data = res.ok ? await res.json() : null;
     if (!data) return;
+
+    // allMembersからuser_id→{name,gender}のマップを構築
+    const memberMap = {};
+    allMembers.forEach(m => { memberMap[m.id] = { name: m.name, gender: m.gender }; });
 
     // Rebuild resData
     Object.keys(resData).forEach(k => delete resData[k]);
@@ -2773,11 +2782,13 @@ async function initReservationsFromDB() {
       const key = dt.toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'/');
       if (resData[key]) {
         const isCancelled = r.status === 'cancelled';
+        const member = memberMap[r.user_id] || {};
         resData[key].push({
-          id: r.id, name: r.profiles?.name || '不明', gender: r.profiles?.gender || '男',
-          cls: r.class_name, time: r.time, coach: '',
+          id: r.id, name: member.name || '不明', gender: member.gender || '男',
+          cls: r.class_name, time: r.time, coach: r.coach || '',
           status: isCancelled ? 'キャンセル' : '確定',
           badge: isCancelled ? 'badge-d' : 'badge-s',
+          memo: r.memo || '',
         });
       }
     });
