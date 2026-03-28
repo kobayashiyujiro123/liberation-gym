@@ -1217,6 +1217,8 @@ async function loadUserProfile(authUser, accessToken) {
     profile = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
   } catch(e) { console.warn('fetchProfile error:', e); }
   if (profile) {
+    // name が未設定 = completeReg() 未完了（管理側表示用に行だけ作った状態）→ 登録フォームへ
+    if (!profile.name) return false;
     const bd = profile.birth_date ? profile.birth_date.split('-') : ['1990','01','01'];
     const wins   = profile.wins   || 0;
     const losses = profile.losses || 0;
@@ -1414,6 +1416,17 @@ async function completeReg() {
   const birth_date = `${y}-${m}-${d}`;
   const { ok: pwOk, data: pwData } = await _authAPI('PUT', 'user', { password: pw });
   if (!pwOk) { alert('エラー: ' + (pwData.error_description || pwData.error || 'パスワード設定失敗')); return; }
+  // パスワード変更後は新しいアクセストークンが返る場合がある
+  // user オブジェクトが含まれない場合は既存セッションの user を引き継ぐ
+  if (pwData && pwData.access_token) {
+    const _existing = _getSession();
+    _saveSession({
+      access_token:  pwData.access_token,
+      refresh_token: pwData.refresh_token || (_existing && _existing.refresh_token) || '',
+      expires_in:    pwData.expires_in    || 3600,
+      user:          pwData.user          || (_existing && _existing.user) || null,
+    });
+  }
   const sess = _getSession();
   if (sess && sess.user) {
     // PATCH ではなく UPSERT（行がなければINSERT、あればUPDATE）
