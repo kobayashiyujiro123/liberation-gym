@@ -2684,6 +2684,11 @@ async function initScheduleFromDB() {
       const el = document.getElementById(s.key);
       if (el) el.value = s.value;
     });
+    // localStorageにも営業時間設定を同期（旧コードとの互換性確保）
+    const _bhKeys = ['bi-weekday-start','bi-weekday-end','bi-weekend-start','bi-weekend-end','bi-holiday-start','bi-holiday-end'];
+    const _bh = {};
+    _bhKeys.forEach(k => { const el = document.getElementById(k); if (el) _bh[k] = el.value; });
+    if (Object.keys(_bh).length > 0) localStorage.setItem('gym_businessHours', JSON.stringify(_bh));
     if (calYear === undefined) { const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); }
     renderCalendar();
   } catch(e) { console.warn('initScheduleFromDB failed:', e); }
