@@ -1255,6 +1255,20 @@ async function loadUserProfile(authUser, accessToken) {
       startDate:    profile.start_date || (profile.created_at ? profile.created_at.slice(0,10) : null),
       photoUrl:     profile.photo_url     || null,
     };
+    // 利用回数を予約実績から算出（date+time が現在以前の確定予約のみカウント）
+    try {
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const resRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${encodeURIComponent(authUser.id)}&status=eq.confirmed&date=lte.${todayStr}&select=date,time`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      const resRows = resRes.ok ? await resRes.json() : [];
+      const _vc = _calcVisitsFromReservations(resRows);
+      user.totalVisits  = _vc.total;
+      user.yearVisits   = _vc.year;
+      user.monthVisits  = _vc.month;
+    } catch(e) { console.warn('visit count error:', e); }
     return true;
   }
   // profiles 行が存在しない場合（登録途中など）: 最低限の行を作成して管理側に表示されるようにする
@@ -1304,6 +1318,9 @@ if (DEMO_MODE) {
       };
       localStorage.setItem('gym_member_profile', JSON.stringify(_init));
     }
+    // 利用回数を予約実績から再算出
+    const _vc2 = _calcVisitsFromReservations(demoReservations);
+    user.totalVisits = _vc2.total; user.yearVisits = _vc2.year; user.monthVisits = _vc2.month;
     setTimeout(enterApp, 0);
   }
 } else {
@@ -1358,9 +1375,28 @@ if (DEMO_MODE) {
   })();
 }
 
+function _calcVisitsFromReservations(rows) {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const nowTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  let total = 0, year = 0, month = 0;
+  for (const r of rows) {
+    if (r.status && r.status !== 'confirmed') continue;
+    if (r.date > todayStr) continue;
+    if (r.date === todayStr && r.time > nowTime) continue;
+    total++;
+    const [ry, rm] = r.date.split('-').map(Number);
+    if (ry === curYear) { year++; if (rm === curMonth) month++; }
+  }
+  return { total, year, month };
+}
+
 function demoLogin() {
   // gym_member_profile に保存済みのデータがあれば優先使用（管理ページとの同期）
   const _p = (JSON.parse(localStorage.getItem('gym_member_profile') || '{}'))['M001'] || {};
+  const _vc = _calcVisitsFromReservations(demoReservations);
   user = {
     id: 'demo',
     name:         _p.name         != null ? _p.name         : '水野麻美',
@@ -1375,7 +1411,7 @@ function demoLogin() {
     losses:       _p.losses       != null ? _p.losses       : 0,
     draws:        _p.draws        != null ? _p.draws        : 0,
     fights:       _p.fights       != null ? _p.fights       : 0,
-    totalVisits: 42, yearVisits: 28, monthVisits: 5,
+    totalVisits: _vc.total, yearVisits: _vc.year, monthVisits: _vc.month,
     startDate: '2024-04-01',
   };
   localStorage.setItem('demo_user', JSON.stringify(user));
