@@ -1258,7 +1258,7 @@ async function loadUserProfile(authUser, accessToken) {
     // 利用回数を予約実績から算出（date+time が現在以前の確定予約のみカウント）
     try {
       const now = new Date();
-      const todayStr = now.toISOString().slice(0, 10);
+      const todayStr = _localDateStr(now);
       const resRes = await fetch(
         `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${encodeURIComponent(authUser.id)}&status=eq.confirmed&date=lte.${todayStr}&select=date,time`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
@@ -1375,17 +1375,21 @@ if (DEMO_MODE) {
   })();
 }
 
+function _localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function _calcVisitsFromReservations(rows, startDate) {
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const nowTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const todayStr = _localDateStr(now);
+  const nowTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
   const curYear = now.getFullYear();
   const curMonth = now.getMonth() + 1;
   let total = 0, year = 0, month = 0;
   for (const r of rows) {
     if (r.status && r.status !== 'confirmed') continue;
     if (r.date > todayStr) continue;
-    if (r.date === todayStr && r.time > nowTime) continue;
+    if (r.date === todayStr && (r.time || '00:00') > nowTime) continue;
     if (startDate && r.date < startDate) continue;
     total++;
     const [ry, rm] = r.date.split('-').map(Number);
