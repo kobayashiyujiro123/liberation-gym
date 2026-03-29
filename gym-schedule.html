@@ -536,6 +536,9 @@
     <!-- MEMBERS LIST -->
     <div class="view" id="view-members">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+      <div style="display:flex;justify-content:flex-end;padding:0 0 10px;">
+        <button onclick="openInviteModal()" style="padding:9px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.86rem;font-weight:600;"><i class="fas fa-user-plus" style="margin-right:6px;"></i>新規会員招待</button>
+      </div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="member-search" placeholder="会員名・メールで検索..." oninput="renderMembers()" /></div>
       </div>
@@ -2994,6 +2997,87 @@ function restoreFromHash() {
 }
 window.addEventListener('hashchange', restoreFromHash);
 setTimeout(() => { restoreFromHash(); }, 0);
+
+// ===== 新規会員招待 =====
+function openInviteModal() {
+  document.getElementById('invite-email-input').value = '';
+  document.getElementById('invite-error').style.display = 'none';
+  document.getElementById('invite-form-area').style.display = '';
+  document.getElementById('invite-result-area').style.display = 'none';
+  document.getElementById('invite-modal').style.display = 'flex';
+}
+function closeInviteModal() {
+  document.getElementById('invite-modal').style.display = 'none';
+}
+async function generateInvite() {
+  const email = document.getElementById('invite-email-input').value.trim();
+  const errEl = document.getElementById('invite-error');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'メールアドレスを正しく入力してください';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  const token = _getAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/pending_invites`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+    },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    errEl.textContent = '招待リンクの生成に失敗しました。もう一度お試しください。';
+    errEl.style.display = 'block';
+    return;
+  }
+  const rows = await res.json();
+  const row = rows[0];
+  const inviteUrl = `${location.origin}/gym-member?invite=${row.token}`;
+  document.getElementById('invite-url-display').value = inviteUrl;
+  document.getElementById('invite-form-area').style.display = 'none';
+  document.getElementById('invite-result-area').style.display = '';
+}
+function copyInviteUrl() {
+  const urlInput = document.getElementById('invite-url-display');
+  navigator.clipboard.writeText(urlInput.value).then(() => {
+    const btn = document.getElementById('invite-copy-btn');
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+  });
+}
 </script>
+
+<!-- 招待リンク生成モーダル -->
+<div id="invite-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:600;align-items:center;justify-content:center;" onclick="closeInviteModal()">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:440px;" onclick="event.stopPropagation()">
+    <div style="font-size:1.05rem;font-weight:700;margin-bottom:16px;"><i class="fas fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>新規会員招待リンク生成</div>
+    <div id="invite-form-area">
+      <p style="font-size:0.83rem;color:#666;margin-bottom:14px;">招待したい会員のメールアドレスを入力してください。<br>24時間有効・何度でもクリック可能なURLを生成します。</p>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.84rem;font-weight:500;display:block;margin-bottom:5px;">メールアドレス</label>
+        <input id="invite-email-input" type="email" placeholder="member@example.com" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:0.88rem;box-sizing:border-box;" />
+      </div>
+      <div id="invite-error" style="color:#e53935;font-size:0.82rem;margin-bottom:8px;display:none;"></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button onclick="closeInviteModal()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:0.86rem;">キャンセル</button>
+        <button onclick="generateInvite()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-weight:600;font-size:0.86rem;">URLを生成する</button>
+      </div>
+    </div>
+    <div id="invite-result-area" style="display:none;">
+      <p style="font-size:0.83rem;color:#555;margin-bottom:10px;">✅ 招待URLを生成しました。以下のURLを会員に送付してください。</p>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+        <input id="invite-url-display" readonly style="flex:1;padding:9px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.75rem;background:#f5f5f5;" />
+        <button onclick="copyInviteUrl()" id="invite-copy-btn" style="padding:9px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap;"><i class="fas fa-copy"></i></button>
+      </div>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:14px;">有効期限：24時間 ／ 何度でもクリック可能</p>
+      <button onclick="openInviteModal()" style="width:100%;padding:9px;border:1px solid var(--primary);border-radius:8px;background:#fff;color:var(--primary);cursor:pointer;font-size:0.85rem;margin-bottom:6px;">別のメールアドレスで生成する</button>
+      <button onclick="closeInviteModal()" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:0.85rem;">閉じる</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

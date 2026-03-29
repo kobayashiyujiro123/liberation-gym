@@ -820,6 +820,7 @@
 const WD = ['日','月','火','水','木','金','土'];
 let user = {};
 let regEmail = '';
+let inviteToken = null;
 let cancelTarget = null;
 
 // ===== SESSION & API HELPERS (Supabase JSクライアントの代替) =====
@@ -1317,6 +1318,26 @@ if (DEMO_MODE) {
   }
 } else {
   (async function _initSession() {
+    // 招待リンク: ?invite=<token> の処理（ハッシュより先に確認）
+    const _inviteParam = new URLSearchParams(location.search).get('invite');
+    if (_inviteParam) {
+      history.replaceState(null, '', location.pathname);
+      const _invRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/pending_invites?token=eq.${encodeURIComponent(_inviteParam)}&select=*`,
+        { headers: { 'apikey': SUPABASE_ANON } }
+      );
+      const _invList = await _invRes.json().catch(() => []);
+      const _inv = _invList[0];
+      if (_inv && !_inv.completed_at && new Date(_inv.expires_at) > new Date()) {
+        inviteToken = _inviteParam;
+        regEmail = _inv.email;
+        goTo('page-reg3');
+      } else {
+        alert('このリンクは無効または期限切れです。管理者にお問い合わせください。');
+        goTo('page-login');
+      }
+      return;
+    }
     // マジックリンクコールバック: URLハッシュにaccess_tokenがあれば処理
     const hp = new URLSearchParams(location.hash.replace(/^#/,''));
     const hashToken = hp.get('access_token');
@@ -1436,18 +1457,38 @@ async function completeReg() {
   const m          = String(document.getElementById('reg-month').value).padStart(2,'0');
   const d          = String(document.getElementById('reg-day').value).padStart(2,'0');
   const birth_date = `${y}-${m}-${d}`;
-  const { ok: pwOk, data: pwData } = await _authAPI('PUT', 'user', { password: pw });
-  if (!pwOk) { alert('エラー: ' + (pwData.error_description || pwData.error || 'パスワード設定失敗')); return; }
-  // パスワード変更後は新しいアクセストークンが返る場合がある
-  // user オブジェクトが含まれない場合は既存セッションの user を引き継ぐ
-  if (pwData && pwData.access_token) {
-    const _existing = _getSession();
-    _saveSession({
-      access_token:  pwData.access_token,
-      refresh_token: pwData.refresh_token || (_existing && _existing.refresh_token) || '',
-      expires_in:    pwData.expires_in    || 3600,
-      user:          pwData.user          || (_existing && _existing.user) || null,
-    });
+  if (inviteToken) {
+    // 招待フロー: signUp でアカウント作成（メール確認なし）
+    const { ok: signUpOk, data: signUpData } = await _authAPI('POST', 'signup', { email: regEmail, password: pw });
+    if (!signUpOk) { alert('エラー: ' + (signUpData.error_description || signUpData.error || 'アカウント作成に失敗しました')); return; }
+    if (!signUpData.access_token) {
+      alert('アカウントを作成しました。ログイン画面からログインしてください。');
+      inviteToken = null;
+      goTo('page-login');
+      return;
+    }
+    _saveSession(signUpData);
+    // 招待トークンを使用済みにする
+    const _usedToken = inviteToken;
+    inviteToken = null;
+    fetch(`${SUPABASE_URL}/rest/v1/pending_invites?token=eq.${encodeURIComponent(_usedToken)}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${signUpData.access_token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ completed_at: new Date().toISOString() }),
+    }).catch(() => {});
+  } else {
+    // 既存フロー（マジックリンク後）: PUT /user でパスワード設定
+    const { ok: pwOk, data: pwData } = await _authAPI('PUT', 'user', { password: pw });
+    if (!pwOk) { alert('エラー: ' + (pwData.error_description || pwData.error || 'パスワード設定失敗')); return; }
+    if (pwData && pwData.access_token) {
+      const _existing = _getSession();
+      _saveSession({
+        access_token:  pwData.access_token,
+        refresh_token: pwData.refresh_token || (_existing && _existing.refresh_token) || '',
+        expires_in:    pwData.expires_in    || 3600,
+        user:          pwData.user          || (_existing && _existing.user) || null,
+      });
+    }
   }
   const sess = _getSession();
   if (sess && sess.user) {
