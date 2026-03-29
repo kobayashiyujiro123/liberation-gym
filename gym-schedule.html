@@ -746,7 +746,6 @@
         <div class="coach-profile-card">
           <div class="coach-profile-av" id="cd-avatar"></div>
           <div class="coach-profile-info">
-            <div class="coach-profile-id" id="cd-id"></div>
             <div class="coach-profile-name" id="cd-name"></div>
             <div id="cd-status-badge" style="margin-top:8px;"></div>
           </div>
@@ -845,7 +844,6 @@
       </div>
       <div class="form-card" style="max-width:700px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div class="form-group"><label class="form-label">コーチID</label><input class="form-ctrl" id="ce-id" readonly style="background:#f8f9fa;color:var(--text-light);" /></div>
           <div class="form-group"><label class="form-label">ステータス</label>
             <select class="form-ctrl" id="ce-status">
               <option>在籍中</option><option>休暇中</option><option>退職</option>
@@ -2506,7 +2504,6 @@ function openCoachDetail(id) {
 
   document.getElementById('cd-avatar').style.background = c.color;
   document.getElementById('cd-avatar').textContent = c.name.slice(0,2);
-  document.getElementById('cd-id').textContent = c.id;
   document.getElementById('cd-name').textContent = c.name;
   document.getElementById('cd-status-badge').innerHTML = `<span class="badge ${c.badge}">${c.status}</span>`;
   document.getElementById('cd-classes').textContent = c.classes + ' 名';
