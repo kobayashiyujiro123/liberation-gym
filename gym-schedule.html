@@ -542,7 +542,6 @@
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
           <thead><tr>
-            <th class="sortable" onclick="memberSort('id')" id="mth-id">会員ID<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('name')" id="mth-name">氏名<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('visits')" id="mth-visits">利用回数<span class="sort-icon"></span></th>
             <th class="sortable" onclick="memberSort('visitsYear')" id="mth-visitsYear">今年<span class="sort-icon"></span></th>
@@ -1767,7 +1766,6 @@ function renderMembers() {
   const tbody = document.getElementById('member-tbody');
   tbody.innerHTML = pageItems.length ? pageItems.map(m => `
     <tr class="clickable-row${m.gender === '男' ? ' male-row' : m.gender === '女' ? ' female-row' : ''}" onclick="openMemberDetail('${m.id}')">
-      <td>${DEMO_MODE ? m.id : (m.memberNo || m.id.slice(0,8))}</td>
       <td><div class="m-cell">${(()=>{ const p=m.photoUrl || getDemoMemberPhoto(m.id); return p ? `<div class="m-av"><img src="${p}" alt="${m.name}"></div>` : `<div class="m-av${m.gender==='男'?' male':m.gender==='女'?' female':''}">${m.name.slice(0,2)}</div>`; })()}${m.name}</div></td>
       <td style="text-align:center;font-weight:600;">${m.visits}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
       <td style="text-align:center;font-weight:600;">${m.visitsYear}<span style="font-size:0.72rem;font-weight:400;color:var(--text-light);margin-left:2px;">回</span></td>
