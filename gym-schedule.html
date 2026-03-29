@@ -2875,25 +2875,54 @@ async function initCoachesFromDB() {
   } catch(e) { console.error('initCoachesFromDB failed:', e); }
 }
 
+function _calcAdminVisits(rows, startDate) {
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const nowTime  = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const curYear  = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  let total = 0, year = 0, month = 0;
+  for (const r of rows) {
+    if (r.date > todayStr) continue;
+    if (r.date === todayStr && (r.time || '00:00') > nowTime) continue;
+    if (startDate && r.date < startDate) continue;
+    total++;
+    const [ry, rm] = r.date.split('-').map(Number);
+    if (ry === curYear) { year++; if (rm === curMonth) month++; }
+  }
+  return { total, year, month };
+}
+
 async function initMembersFromDB() {
   try {
   const token = _getAdminToken();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&order=created_at.asc`, {
-    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
-  });
-  const data = res.ok ? await res.json() : null;
+  const [profilesRes, reservationsRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&order=created_at.asc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+    }),
+    fetch(`${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+    }),
+  ]);
+  const data = profilesRes.ok ? await profilesRes.json() : null;
   if (!data || !data.length) { renderMembers(); return; }
+  // 会員ごとの確定済み予約をグループ化
+  const resData = reservationsRes.ok ? await reservationsRes.json() : [];
+  const resByUser = {};
+  resData.forEach(r => { (resByUser[r.user_id] = resByUser[r.user_id] || []).push(r); });
   allMembers.length = 0;
   const statusMap = { active: '有効', suspended: '休会', withdrawn: '退会' };
   const badgeMap  = { active: 'badge-s', suspended: 'badge-w', withdrawn: 'badge-d' };
   data.forEach(p => {
     const wins = p.wins || 0, losses = p.losses || 0, draws = p.draws || 0;
+    const startDate = p.start_date || (p.created_at || '').slice(0,10);
+    const vc = _calcAdminVisits(resByUser[p.id] || [], startDate);
     allMembers.push({
       id: p.id, memberNo: p.member_number ? 'M' + String(p.member_number).padStart(4,'0') : p.id.slice(0,8),
       name: p.name || '未設定', email: p.email || '', tel: p.tel || '',
-      date: p.start_date || (p.created_at || '').slice(0,10),
+      date: startDate,
       status: statusMap[p.status] || '有効', badge: badgeMap[p.status] || 'badge-s',
-      visits: p.total_visits || 0, visitsYear: p.year_visits || 0, visitsMonth: p.month_visits || 0,
+      visits: vc.total, visitsYear: vc.year, visitsMonth: vc.month,
       gender: p.gender || '', birthday: p.birth_date || '', style: p.style || '',
       goal: p.goal || '',
       record: wins + '勝' + losses + '敗' + draws + '分',
