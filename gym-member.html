@@ -1605,8 +1605,14 @@ async function submitNewPw() {
 async function sendReset() {
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { alert('メールアドレスを入力してください'); return; }
-  const { ok, data: rd } = await _authAPI('POST', 'recover', { email, redirect_to: window.location.origin + '/gym-member' });
-  if (!ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); return; }
+  const _redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
+  const _res = await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${_redirectTo}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const rd = await _res.json().catch(() => ({}));
+  if (!_res.ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); return; }
   document.getElementById('reset-email-disp').textContent = email;
   goTo('page-pw-reset2');
 }
