@@ -766,10 +766,6 @@
             <div class="coach-detail-label"><i class="fas fa-phone"></i> 電話番号</div>
             <div class="coach-detail-val" id="cd-tel"></div>
           </div>
-          <div class="coach-detail-card">
-            <div class="coach-detail-label"><i class="fas fa-calendar-check"></i> 入社日</div>
-            <div class="coach-detail-val" id="cd-joined"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -2516,7 +2512,6 @@ function openCoachDetail(id) {
   document.getElementById('cd-classes').textContent = c.classes + ' 名';
   document.getElementById('cd-email').textContent = c.email;
   document.getElementById('cd-tel').textContent = c.tel;
-  document.getElementById('cd-joined').textContent = c.joined;
 
   // topbar title
   document.getElementById('heading').textContent = c.name + ' — 詳細';
