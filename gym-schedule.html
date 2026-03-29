@@ -3037,16 +3037,24 @@ async function generateInvite() {
   const rows = await res.json();
   const row = rows[0];
   const inviteUrl = `${location.origin}/gym-member?invite=${row.token}`;
+  const inviteMsg = `発信者：リバレーションボクシング\n\nリバレーションボクシング予約システムのご利用ありがとうございます。\n以下のURLから会員登録を進めてください。\n※URLは24時間有効です。\n24時間以内に登録を行ってください。\n\n${inviteUrl}`;
   document.getElementById('invite-url-display').value = inviteUrl;
+  document.getElementById('invite-msg-display').value = inviteMsg;
   document.getElementById('invite-form-area').style.display = 'none';
   document.getElementById('invite-result-area').style.display = '';
 }
 function copyInviteUrl() {
-  const urlInput = document.getElementById('invite-url-display');
-  navigator.clipboard.writeText(urlInput.value).then(() => {
+  navigator.clipboard.writeText(document.getElementById('invite-url-display').value).then(() => {
     const btn = document.getElementById('invite-copy-btn');
     btn.innerHTML = '<i class="fas fa-check"></i>';
     setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+  });
+}
+function copyInviteMsg() {
+  navigator.clipboard.writeText(document.getElementById('invite-msg-display').value).then(() => {
+    const btn = document.getElementById('invite-msg-copy-btn');
+    btn.textContent = 'コピー済み ✓';
+    setTimeout(() => { btn.textContent = 'メッセージをコピー'; }, 2000);
   });
 }
 </script>
@@ -3068,14 +3076,23 @@ function copyInviteUrl() {
       </div>
     </div>
     <div id="invite-result-area" style="display:none;">
-      <p style="font-size:0.83rem;color:#555;margin-bottom:10px;">✅ 招待URLを生成しました。以下のURLを会員に送付してください。</p>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-        <input id="invite-url-display" readonly style="flex:1;padding:9px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.75rem;background:#f5f5f5;" />
-        <button onclick="copyInviteUrl()" id="invite-copy-btn" style="padding:9px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap;"><i class="fas fa-copy"></i></button>
+      <p style="font-size:0.83rem;color:#388e3c;font-weight:600;margin-bottom:12px;">✅ 招待メッセージを生成しました</p>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.78rem;color:#888;display:block;margin-bottom:4px;">招待URL（24時間有効・何度でもクリック可）</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="invite-url-display" readonly style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.72rem;background:#f5f5f5;" />
+          <button onclick="copyInviteUrl()" id="invite-copy-btn" style="padding:8px 12px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;flex-shrink:0;"><i class="fas fa-copy"></i></button>
+        </div>
       </div>
-      <p style="font-size:0.78rem;color:#888;margin-bottom:14px;">有効期限：24時間 ／ 何度でもクリック可能</p>
-      <button onclick="openInviteModal()" style="width:100%;padding:9px;border:1px solid var(--primary);border-radius:8px;background:#fff;color:var(--primary);cursor:pointer;font-size:0.85rem;margin-bottom:6px;">別のメールアドレスで生成する</button>
-      <button onclick="closeInviteModal()" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:0.85rem;">閉じる</button>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.78rem;color:#888;display:block;margin-bottom:4px;">送信メッセージ（そのままコピーして送付）</label>
+        <textarea id="invite-msg-display" readonly rows="8" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:0.78rem;background:#f5f5f5;resize:none;line-height:1.7;box-sizing:border-box;"></textarea>
+        <button onclick="copyInviteMsg()" id="invite-msg-copy-btn" style="width:100%;margin-top:6px;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-weight:600;font-size:0.88rem;">メッセージをコピー</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openInviteModal()" style="flex:1;padding:9px;border:1px solid var(--primary);border-radius:8px;background:#fff;color:var(--primary);cursor:pointer;font-size:0.84rem;">別のアドレスで生成</button>
+        <button onclick="closeInviteModal()" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:0.84rem;">閉じる</button>
+      </div>
     </div>
   </div>
 </div>
