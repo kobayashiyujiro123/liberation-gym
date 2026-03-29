@@ -483,6 +483,21 @@
   </div>
 </div>
 
+<div class="auth-wrap auth-page" id="page-pw-new">
+  <div class="auth-card">
+    <div class="auth-title">新しいパスワードを設定</div>
+    <div class="auth-field">
+      <label class="auth-label">新しいパスワード</label>
+      <input class="auth-input" id="new-pw1" type="password" placeholder="8桁以上の英数字" />
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">新しいパスワード（確認）</label>
+      <input class="auth-input" id="new-pw2" type="password" placeholder="8桁以上の英数字" />
+    </div>
+    <button class="btn-primary" onclick="submitNewPw()">パスワードを設定する</button>
+  </div>
+</div>
+
 <!-- =========== APP (ログイン後) =========== -->
 <div class="app-wrap" id="app-wrap">
 
@@ -1350,6 +1365,12 @@ if (DEMO_MODE) {
     const hashToken = hp.get('access_token');
     if (hashToken) {
       history.replaceState(null, '', location.pathname);
+      // パスワードリセットリンクからの遷移
+      if (hp.get('type') === 'recovery') {
+        _saveSession({ access_token: hashToken, refresh_token: hp.get('refresh_token')||'', expires_in: parseInt(hp.get('expires_in')||'3600'), user: null });
+        goTo('page-pw-new');
+        return;
+      }
       const { ok, data: uData } = await _authAPI('GET', 'user', null, hashToken);
       if (ok && uData.id) {
         _saveSession({ access_token: hashToken, refresh_token: hp.get('refresh_token')||'', expires_in: parseInt(hp.get('expires_in')||'3600'), user: uData });
@@ -1569,10 +1590,22 @@ async function completeReg() {
   goTo('page-reg4');
 }
 
+async function submitNewPw() {
+  const pw1 = document.getElementById('new-pw1').value;
+  const pw2 = document.getElementById('new-pw2').value;
+  if (!pw1 || pw1.length < 8) { alert('パスワードは8文字以上で入力してください'); return; }
+  if (!/^[a-zA-Z0-9]+$/.test(pw1)) { alert('パスワードは英数字のみで入力してください'); return; }
+  if (pw1 !== pw2) { alert('パスワードが一致しません'); return; }
+  const { ok, data } = await _authAPI('PUT', 'user', { password: pw1 });
+  if (!ok) { alert('設定に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
+  alert('パスワードを設定しました。ログイン画面からログインしてください。');
+  goTo('page-login');
+}
+
 async function sendReset() {
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { alert('メールアドレスを入力してください'); return; }
-  const { ok, data: rd } = await _authAPI('POST', 'recover', { email });
+  const { ok, data: rd } = await _authAPI('POST', 'recover', { email, redirect_to: window.location.origin + '/gym-member' });
   if (!ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); return; }
   document.getElementById('reset-email-disp').textContent = email;
   goTo('page-pw-reset2');
