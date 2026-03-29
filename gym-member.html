@@ -1744,10 +1744,26 @@ function formatStartDate(sd) {
   return sd.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$1年$2月$3日');
 }
 
-function renderInfo() {
+async function renderInfo() {
   const u = user;
   updateAvatarUI(u.photoUrl || null);
   const startStr = formatStartDate(u.startDate);
+  // 利用回数をページ表示のたびに最新の予約データから再計算
+  if (DEMO_MODE) {
+    const _vc = _calcVisitsFromReservations(demoReservations, u.startDate);
+    u.totalVisits = _vc.total; u.yearVisits = _vc.year; u.monthVisits = _vc.month;
+  } else {
+    try {
+      const todayStr = _localDateStr(new Date());
+      const resRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${encodeURIComponent(u.id)}&status=eq.confirmed&date=lte.${todayStr}&select=date,time`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${_getToken()}` } }
+      );
+      const resRows = resRes.ok ? await resRes.json() : [];
+      const _vc = _calcVisitsFromReservations(resRows, u.startDate);
+      u.totalVisits = _vc.total; u.yearVisits = _vc.year; u.monthVisits = _vc.month;
+    } catch(e) { console.warn('visit count error:', e); }
+  }
   document.getElementById('info-total-visits').textContent  = u.totalVisits || 0;
   document.getElementById('info-year-visits').textContent   = u.yearVisits  || 0;
   document.getElementById('info-month-visits').textContent  = u.monthVisits || 0;
