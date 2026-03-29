@@ -28,6 +28,13 @@
       "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-admin-preview.ps1"],
       "port": 6545,
       "autoPort": true
+    },
+    {
+      "name": "gym-preview",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\kobay\\Downloads\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\.claude\\serve-preview2.ps1"],
+      "port": 6548,
+      "autoPort": false
     }
   ]
 }

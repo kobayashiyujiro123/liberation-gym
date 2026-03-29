@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>白金台ジャンキース | 草野球チーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:   #00A2B1;
+      --teal-dark: #008f9d;
+      --navy:   #192533;
+      --navy-mid: #1e3a5f;
+      --gray-bg: #F2F2F2;
+      --white:  #FFFFFF;
+      --text:   #222222;
+      --text-gray: #666666;
+      --max-w: 1200px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, rgba(0,162,177,0.18) 0%, rgba(25,37,51,0.72) 50%, rgba(0,77,90,0.18) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,162,177,0.18);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 50px; height: 50px;
+      background: transparent;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      flex-shrink: 0;
+      border: none;
+    }
+    .logo-badge img {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 7px rgba(0,162,177,0.45));
+      transition: filter 0.3s;
+    }
+    .logo:hover .logo-badge img {
+      filter: drop-shadow(0 0 14px rgba(0,162,177,0.75));
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .nav-link {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.55);
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .nav-login {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: var(--white);
+      font-weight: 700;
+      padding: 7px 20px;
+      margin-left: 8px;
+    }
+    .nav-login:hover {
+      background: var(--teal-dark);
+      border-color: var(--teal-dark);
+    }
+
+    /* ─── HERO LOGO OVERLAY ─── */
+    .hero-logo-overlay {
+      position: fixed;
+      top: 20px;
+      left: 32px;
+      z-index: 200;
+      width: 90px;
+      height: 90px;
+      display: block;
+      text-decoration: none;
+      filter: drop-shadow(0 0 12px rgba(0,162,177,0.55));
+      transition: filter 0.3s, transform 0.3s;
+    }
+    .hero-logo-overlay img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+    }
+    .hero-logo-overlay:hover {
+      filter: drop-shadow(0 0 22px rgba(0,162,177,0.85));
+      transform: scale(1.06);
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      min-height: 560px;
+      overflow: hidden;
+      background: var(--navy);
+    }
+    /* 背景写真 */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+      filter: blur(18px) brightness(0.15);
+      transform: scale(1.1);
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(12, 18, 35, 0.80);
+    }
+    /* 統合スライダー */
+    .hero-slider-wrap {
+      position: absolute;
+      top: 46%;
+      left: 0; right: 0;
+      transform: translateY(-50%);
+      height: 60%;
+      overflow: hidden;
+      z-index: 5;
+    }
+    .hero-slider-inner {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      will-change: transform;
+    }
+    .hero-slide-card {
+      flex-shrink: 0;
+      flex-grow: 0;
+      height: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 0 2px rgba(255,255,255,0.12);
+      opacity: 0.55;
+      transition: opacity 0.4s;
+    }
+    .hero-slide-card.is-active {
+      opacity: 1;
+    }
+    .hero-slide-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .frame-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 7px;
+      z-index: 10;
+    }
+    .frame-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .frame-dot.active { background: var(--white); }
+    .hero-text {
+      position: absolute;
+      bottom: 60px;
+      left: 48px;
+      color: var(--white);
+    }
+    .hero-text h1 {
+      font-size: clamp(36px, 5vw, 62px);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+    .hero-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.18);
+      border: none;
+      color: var(--white);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .hero-arrow:hover { background: rgba(255,255,255,0.35); }
+    .hero-arrow-left  { left: 16px; }
+    .hero-arrow-right { right: 16px; }
+    .hero-dots {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+    .hero-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .hero-dot.active { background: var(--white); }
+
+    /* ─── GAP ─── */
+    .section-gap {
+      height: 40px;
+      background: var(--gray-bg);
+    }
+
+    /* ─── MISSION ─── */
+    .mission {
+      display: flex;
+      min-height: 600px;
+      background: linear-gradient(to right, #00008C, #00A2B1);
+      width: 100%;
+    }
+    .mission-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 72px 64px;
+      position: relative;
+    }
+    .mission-left::after {
+      display: none;
+    }
+    .mission-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .mission-title {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.5;
+      margin-bottom: 36px;
+    }
+    .btn-outline-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--white);
+      color: var(--white);
+      text-decoration: none;
+      padding: 10px 28px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      transition: all 0.2s;
+      align-self: flex-start;
+    }
+    .btn-outline-white:hover {
+      background: rgba(255,255,255,0.12);
+    }
+    .mission-right {
+      width: 44%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 40px 48px 40px 24px;
+    }
+    .mission-photo {
+      width: 100%;
+      height: 500px;
+      border-radius: 20px;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    }
+
+    /* ─── NEWS ─── */
+    .news {
+      background: #00A2B1;
+      padding: 72px 0 56px;
+    }
+    .news .section-heading-en { color: var(--white); }
+    .news .section-heading-jp { color: rgba(255,255,255,0.7); }
+    .news .tabs { border-bottom-color: rgba(255,255,255,0.3); }
+    .news .tab { color: rgba(255,255,255,0.65); }
+    .news .tab.active { color: var(--white); border-bottom-color: var(--white); }
+    .news .tab:hover:not(.active) { color: var(--white); }
+    .news .news-article { color: var(--white); border-bottom-color: rgba(255,255,255,0.2); }
+    .news .news-date { color: rgba(255,255,255,0.7); }
+    .news .news-title { color: var(--white); }
+    .news .news-article:hover .news-title { color: rgba(255,255,255,0.8); }
+    .news .btn-outline-dark { border-color: var(--white); color: var(--white); }
+    .news .btn-outline-dark:hover { background: rgba(255,255,255,0.15); color: var(--white); }
+    .news-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .section-heading-en {
+      font-family: 'Oswald', sans-serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 2px;
+    }
+    .section-heading-jp {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1.5px solid #ddd;
+      margin-bottom: 28px;
+    }
+    .tab {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-gray);
+      cursor: pointer;
+      border-bottom: 2.5px solid transparent;
+      margin-bottom: -1.5px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--text);
+      font-weight: 700;
+    }
+    .tab:hover:not(.active) { color: var(--text); }
+    .news-article {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #ddd;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .news-date {
+      font-size: 12px;
+      color: var(--text-gray);
+      white-space: nowrap;
+      min-width: 90px;
+    }
+    .news-badge {
+      display: inline-block;
+      background: var(--navy);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 2px;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    .news-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .view-all-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 36px;
+    }
+    .btn-outline-dark {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--text);
+      color: var(--text);
+      text-decoration: none;
+      padding: 10px 32px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      transition: all 0.2s;
+    }
+    .btn-outline-dark:hover {
+      background: var(--text);
+      color: var(--white);
+    }
+
+    /* ─── MATCHES ─── */
+    .matches {
+      background: var(--gray-bg);
+      padding: 72px 0 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .matches::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1600&q=30') center/cover no-repeat;
+      opacity: 0.12;
+    }
+    .matches-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 48px;
+      position: relative;
+    }
+    .matches .section-heading-en { color: var(--teal); }
+    .matches .section-heading-jp { color: var(--navy); }
+    .matches .tabs {
+      border-bottom-color: #ccc;
+    }
+    .matches .tab {
+      color: var(--navy);
+      opacity: 0.5;
+      border-bottom-color: transparent;
+    }
+    .matches .tab.active {
+      color: var(--teal);
+      opacity: 1;
+      border-bottom-color: var(--teal);
+    }
+    .matches .tab:hover:not(.active) {
+      color: var(--navy);
+      opacity: 0.8;
+    }
+    .matches .matches-col-title { color: var(--navy); }
+    .matches .no-matches { color: var(--text-gray); }
+    .matches .btn-outline-white-teal {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .matches .btn-outline-white-teal:hover {
+      background: var(--teal);
+      color: var(--white);
+    }
+    .matches-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 12px;
+    }
+    .matches-col-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .no-matches {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+    }
+    .score-card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+    .score-card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .score-badge {
+      background: var(--navy);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.5px;
+    }
+    .score-date {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .score-type {
+      font-size: 11px;
+      color: var(--text-gray);
+      margin-left: auto;
+    }
+    .score-teams {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .score-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .score-team-logo {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 900;
+      font-family: 'Oswald', sans-serif;
+    }
+    .score-team-logo.gray {
+      background: #ccc;
+    }
+    .score-team-logo.logo-img {
+      background: transparent;
+      padding: 0;
+    }
+    .score-team-logo.logo-img img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+    .score-num {
+      font-size: 32px;
+      font-weight: 900;
+      font-family: 'Oswald', sans-serif;
+      color: var(--text);
+    }
+    .score-team-name {
+      font-size: 11px;
+      color: var(--text-gray);
+      text-align: center;
+    }
+    .score-vs {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-gray);
+    }
+    .matches .view-all-wrap { margin-top: 40px; }
+    .btn-outline-white-teal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--white);
+      color: var(--white);
+      text-decoration: none;
+      padding: 10px 32px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      transition: all 0.2s;
+    }
+    .btn-outline-white-teal:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* ─── CALENDAR ─── */
+    .calendar {
+      background: linear-gradient(to right, #00008C, #00A2B1);
+      padding: 80px 0 72px;
+    }
+    .calendar-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .calendar .section-heading-en { color: var(--white); }
+    .calendar .section-heading-jp { color: rgba(255,255,255,0.7); }
+    /* ─── CALENDAR grid ─── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .cal-arrow {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--white);
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .cal-arrow:hover { background: rgba(255,255,255,0.2); }
+    .cal-month {
+      font-family: 'Oswald', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 2px;
+      flex: 1;
+      text-align: center;
+    }
+    .cal-today-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.55);
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .cal-today-btn:hover { border-color: rgba(255,255,255,0.7); color: var(--white); }
+    .cal-grid {
+      background: rgba(18,28,52,0.78);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .cal-header-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: rgba(0,0,0,0.18);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .cal-header-cell {
+      text-align: center;
+      padding: 11px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.38);
+    }
+    .cal-header-cell.sun { color: rgba(255,110,110,0.65); }
+    .cal-header-cell.sat { color: rgba(110,180,255,0.65); }
+    .cal-body {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-cell {
+      min-height: 72px;
+      padding: 9px 8px 7px;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell.other-month { opacity: 0.22; }
+    .cal-cell.sunday .cal-day  { color: rgba(255,130,130,0.95); }
+    .cal-cell.saturday .cal-day { color: rgba(140,200,255,0.95); }
+    .cal-day {
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.95);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+    }
+    .cal-cell.today .cal-day {
+      background: var(--teal);
+      color: var(--white);
+    }
+    .cal-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 5px;
+      padding: 0 1px;
+    }
+    .cal-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cal-dot.game   { background: var(--teal); }
+    .cal-dot.result { background: rgba(255,255,255,0.5); }
+    .cal-dot.event  { background: #f59e0b; }
+    .cal-legend {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .cal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.48);
+    }
+    .cal-legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ─── SNS BAR ─── */
+    .sns-bar {
+      background: var(--white);
+      border-top: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .sns-bar-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+    }
+    .sns-bar-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 18px 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      border-right: 1px solid #e0e0e0;
+      transition: background 0.2s, color 0.2s;
+    }
+    .sns-bar-item:first-child { border-left: 1px solid #e0e0e0; }
+    .sns-bar-item:hover { background: var(--gray-bg); color: var(--teal); }
+    .sns-bar-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .sns-bar-ext {
+      width: 12px; height: 12px;
+      opacity: 0.4;
+      flex-shrink: 0;
+    }
+
+    /* ─── MEMBERS ─── */
+    .members {
+      background: var(--gray-bg);
+      padding: 72px 0 64px;
+    }
+    .members .section-heading-en { color: var(--teal); }
+    .members .section-heading-jp { color: var(--text); }
+    .member-cards .member-card:nth-child(n+9) { display: none; }
+    .members .btn-outline-white-teal {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .members .btn-outline-white-teal:hover {
+      background: var(--teal);
+      color: var(--white);
+    }
+    .members-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .member-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .member-card {
+      background: var(--white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .member-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 36px rgba(0,162,177,0.15);
+    }
+    .member-card-top {
+      position: relative;
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5a 100%);
+      padding: 28px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .member-number {
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .member-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .member-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(0,162,177,0.12);
+      border: 2px solid rgba(0,162,177,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .member-avatar svg {
+      width: 50px;
+      height: 50px;
+      fill: rgba(0,162,177,0.7);
+    }
+    .member-card-body {
+      padding: 14px 16px 18px;
+      text-align: center;
+    }
+    .member-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .member-position {
+      font-size: 12px;
+      color: var(--text-gray);
+      background: rgba(0,162,177,0.08);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    /* BLOG legacy stub (removed) */
+    .blog-card-date {
+      font-size: 12px;
+      color: var(--text-gray);
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    .blog-card-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .blog-card-more {
+      font-size: 12px;
+      color: var(--teal);
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ─── TEAM INFO (dark card) ─── */
+    .team-info-wrap {
+      background: var(--gray-bg);
+      padding: 48px;
+    }
+    .team-info-card {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      background: var(--navy);
+      border-radius: 16px;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .team-info-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.4;
+    }
+    .team-info-sns-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .sns-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .sns-link:hover { color: var(--white); border-color: rgba(255,255,255,0.5); }
+    .sponsors-card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+    }
+    .sponsors-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .sponsors-sub {
+      font-size: 13px;
+      color: var(--text-gray);
+    }
+    .sponsors-logos {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .sponsor-item {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 12px;
+      color: #aaa;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    /* ─── CONTACT FORM ─── */
+    .team-info-top {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 52px;
+      align-items: start;
+    }
+    .contact-form-heading {
+      font-family: 'Oswald', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .contact-form-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 22px;
+    }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1px;
+    }
+    .form-input, .form-select, .form-textarea {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--white);
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: rgba(255,255,255,0.2);
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--teal);
+      background: rgba(0,162,177,0.09);
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+    .form-select option { background: var(--navy); color: var(--white); }
+    .form-textarea {
+      resize: vertical;
+      min-height: 108px;
+      line-height: 1.6;
+    }
+    .form-submit {
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      align-self: flex-start;
+      transition: background 0.2s, transform 0.15s;
+      font-family: inherit;
+    }
+    .form-submit:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .form-submit:active { transform: translateY(0); }
+    .form-success {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #86efac;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: #00A2B1;
+      padding: 20px 48px;
+      text-align: center;
+    }
+    .footer-copy {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* ─── HAMBURGER ─── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px; height: 36px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      padding: 4px;
+      z-index: 200;
+    }
+    .hamburger span {
+      display: block;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: all 0.3s;
+      transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ─── MOBILE DRAWER ─── */
+    .mobile-drawer {
+      position: fixed;
+      top: 0; right: -100%;
+      width: min(280px, 80vw);
+      height: 100vh;
+      background: var(--navy);
+      z-index: 150;
+      transition: right 0.35s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      padding: 80px 32px 40px;
+      gap: 4px;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.3);
+    }
+    .mobile-drawer.open { right: 0; }
+    .mobile-drawer-link {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition: color 0.2s;
+    }
+    .mobile-drawer-link:hover { color: var(--teal); }
+    .mobile-drawer-login {
+      margin-top: 20px;
+      background: var(--teal);
+      color: var(--white);
+      text-align: center;
+      padding: 12px;
+      border-radius: 24px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 140;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      /* Header */
+      .header { padding: 0 16px; }
+      .hamburger { display: flex; }
+      nav { display: none; }
+
+      /* Hero */
+      .hero-text { left: 20px; bottom: 56px; }
+      .hero-text h1 { font-size: clamp(28px, 9vw, 44px); }
+      .hero-arrow { width: 36px; height: 36px; font-size: 16px; }
+
+      /* Hero logo */
+      .hero-logo-overlay { width: 64px; height: 64px; top: 56px; left: 16px; }
+      .hero-logo-overlay svg { width: 64px; height: 64px; }
+
+      /* Gap */
+      .section-gap { height: 24px; }
+
+      /* Mission */
+      .mission { flex-direction: column; }
+      .mission-right { width: 100%; min-height: 220px; }
+      .mission-left { padding: 40px 20px; }
+      .mission-title { font-size: 22px; margin-bottom: 24px; }
+
+      /* News */
+      .news { padding: 48px 0 40px; }
+      .news-inner { padding: 0 16px; }
+      .section-heading-en { font-size: 28px; }
+      .news-article { flex-wrap: wrap; gap: 8px; }
+      .news-date { min-width: auto; font-size: 11px; }
+      .news-title { font-size: 13px; flex: 1 0 100%; }
+
+      /* Matches */
+      .matches { padding: 48px 0 40px; }
+      .matches-inner { padding: 0 16px; }
+      .matches-cols { grid-template-columns: 1fr; gap: 24px; }
+      .score-num { font-size: 26px; }
+
+      /* Calendar */
+      .calendar { padding: 48px 0 40px; }
+      .calendar-inner { padding: 0 16px; }
+      .cal-layout { grid-template-columns: 1fr; gap: 20px; }
+      .cal-nav { gap: 10px; margin-bottom: 14px; padding: 10px 14px; }
+      .cal-month { font-size: 17px; min-width: 120px; }
+      .cal-header-cell { font-size: 9px; padding: 10px 2px; letter-spacing: 0; }
+      .cal-cell { min-height: 54px; padding: 5px 4px 4px; }
+      .cal-day { font-size: 11px; width: 22px; height: 22px; }
+      .cal-cell.today .cal-day { width: 22px; height: 22px; font-size: 11px; }
+      .cal-event { font-size: 8px; padding: 1px 5px; margin-top: 2px; border-radius: 10px; }
+      .cal-legend { justify-content: flex-start; margin-top: 14px; }
+      .cal-sidebar { padding: 18px 16px; }
+
+      /* Members */
+      .members { padding: 48px 0 40px; }
+      .members-inner { padding: 0 16px; }
+      .member-cards { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+      /* Team info + Contact */
+      .team-info-wrap { padding: 20px 12px; }
+      .team-info-card { padding: 24px 16px; border-radius: 12px; }
+      .team-info-top { grid-template-columns: 1fr; gap: 28px; }
+      .team-info-name { font-size: 18px; }
+      .form-row { grid-template-columns: 1fr; }
+      .sponsors-logos { gap: 10px; }
+      .sponsor-item { font-size: 10px; padding: 8px 12px; }
+
+      /* Footer */
+      .footer { padding: 16px; }
+    }
+
+    @media (max-width: 480px) {
+      .cal-header-cell { font-size: 8px; }
+      .cal-cell { min-height: 46px; padding: 4px 2px; }
+      .cal-day { font-size: 10px; width: 18px; height: 18px; }
+      .cal-event { font-size: 7px; padding: 1px 4px; }
+      .matches-col-title { font-size: 13px; }
+      .score-card { padding: 12px 14px; }
+      .score-team-logo { width: 36px; height: 36px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <a href="#" class="logo" style="width:0;overflow:visible;opacity:0;pointer-events:none">
+      <div class="logo-badge">
+        <img src="logo.jpg" alt="白金台ジャンキース">
+      </div>
+    </a>
+    <nav>
+      <a href="#members"  class="nav-link">メンバー</a>
+      <a href="#news"     class="nav-link">ニュース</a>
+      <a href="#matches"  class="nav-link">試合結果</a>
+      <a href="#calendar" class="nav-link">スケジュール</a>
+      <a href="#contact"  class="nav-link">お問い合わせ</a>
+      <a href="#"         class="nav-link nav-login">チームメンバーの方</a>
+    </nav>
+    <button class="hamburger" id="hamburger" onclick="toggleDrawer()" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- ─── MOBILE DRAWER ─── -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="#members"  class="mobile-drawer-link" onclick="toggleDrawer()">メンバー</a>
+    <a href="#news"     class="mobile-drawer-link" onclick="toggleDrawer()">ニュース</a>
+    <a href="#matches"  class="mobile-drawer-link" onclick="toggleDrawer()">試合結果</a>
+    <a href="#calendar" class="mobile-drawer-link" onclick="toggleDrawer()">スケジュール</a>
+    <a href="#contact"  class="mobile-drawer-link" onclick="toggleDrawer()">お問い合わせ</a>
+    <a href="#"         class="mobile-drawer-link mobile-drawer-login">チームメンバーの方</a>
+  </div>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero" id="hero">
+
+    <!-- Hero logo overlay -->
+    <a href="#" class="hero-logo-overlay">
+      <img src="logo.jpg" alt="白金台ジャンキース">
+    </a>
+
+    <!-- 背景写真 -->
+    <img src="mission-photo.jpg" class="hero-bg" alt="チーム背景">
+    <div class="hero-overlay"></div>
+
+    <!-- 統合スライダー（写真が物理的にスライド） -->
+    <div class="hero-slider-wrap">
+      <div class="hero-slider-inner" id="heroSliderInner"></div>
+      <div class="frame-dots" id="frameDots">
+        <div class="frame-dot active"></div>
+        <div class="frame-dot"></div>
+        <div class="frame-dot"></div>
+      </div>
+    </div>
+
+    <!-- チーム名固定表示 -->
+    <div class="hero-text">
+      <h1>白金台ジャンキース</h1>
+    </div>
+
+    <button class="hero-arrow hero-arrow-left" onclick="frameSlide(-1)">&#8249;</button>
+    <button class="hero-arrow hero-arrow-right" onclick="frameSlide(1)">&#8250;</button>
+  </section>
+
+  <!-- ─── SNS BAR ─── -->
+  <div class="sns-bar">
+    <div class="sns-bar-inner">
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <span>X</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        <span>Instagram</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <span>Facebook</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        <span>YouTube</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+        <span>TikTok</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+      <a href="#" class="sns-bar-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2 4v2h12V8H6zm0 4v2h8v-2H6z"/></svg>
+        <span>note</span>
+        <svg class="sns-bar-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- ─── MISSION ─── -->
+  <section class="mission" id="team">
+    <div class="mission-left">
+      <div class="mission-label">ABOUT US</div>
+      <div class="mission-title">
+        チーム理念<br>
+        MISSION VISION<br>
+        VALUE
+      </div>
+      <a href="#" class="btn-outline-white">VIEW MORE &nbsp;→</a>
+    </div>
+    <div class="mission-right">
+      <img class="mission-photo"
+        src="mission-photo.jpg"
+        alt="野球チーム練習風景">
+    </div>
+  </section>
+
+  <!-- ─── MEMBERS ─── -->
+  <section class="members" id="members">
+    <div class="members-inner">
+      <div class="section-heading">
+        <span class="section-heading-en">MEMBERS</span>
+        <span class="section-heading-jp">メンバー</span>
+      </div>
+      <div class="member-cards">
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#1</span><div class="member-name">山田 太郎</div></div><span class="member-position">投手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#3</span><div class="member-name">田中 一郎</div></div><span class="member-position">捕手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#5</span><div class="member-name">鈴木 次郎</div></div><span class="member-position">一塁手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#7</span><div class="member-name">佐藤 三郎</div></div><span class="member-position">二塁手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#9</span><div class="member-name">伊藤 健太</div></div><span class="member-position">三塁手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#11</span><div class="member-name">渡辺 翔太</div></div><span class="member-position">遊撃手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#13</span><div class="member-name">高橋 拓也</div></div><span class="member-position">左翼手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#15</span><div class="member-name">中村 裕介</div></div><span class="member-position">中堅手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#17</span><div class="member-name">小林 悠斗</div></div><span class="member-position">右翼手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#19</span><div class="member-name">加藤 蓮</div></div><span class="member-position">指名打者</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#21</span><div class="member-name">吉田 大輝</div></div><span class="member-position">投手</span></div>
+        </div>
+        <div class="member-card">
+          <div class="member-card-top"><div class="member-avatar"><svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div></div>
+          <div class="member-card-body"><div class="member-name-row"><span class="member-number">#23</span><div class="member-name">山本 颯</div></div><span class="member-position">外野手</span></div>
+        </div>
+      </div>
+      <div class="view-all-wrap">
+        <a href="members.html" class="btn-outline-white-teal">VIEW ALL &nbsp;→</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── NEWS ─── -->
+  <section class="news" id="news">
+    <div class="news-inner">
+      <div class="section-heading">
+        <span class="section-heading-en">NEWS</span>
+        <span class="section-heading-jp">新着情報</span>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="setTab(this,'news')">すべて</div>
+        <div class="tab" onclick="setTab(this,'news')">試合</div>
+        <div class="tab" onclick="setTab(this,'news')">チーム</div>
+        <div class="tab" onclick="setTab(this,'news')">選手</div>
+        <div class="tab" onclick="setTab(this,'news')">イベント</div>
+      </div>
+
+      <a href="#" class="news-article">
+        <span class="news-date">2026.03.01</span>
+        <span class="news-badge">お知らせ</span>
+        <span class="news-title">2026年度 新メンバー募集開始。経験不問・見学大歓迎</span>
+      </a>
+      <a href="#" class="news-article">
+        <span class="news-date">2026.02.28</span>
+        <span class="news-badge">イベント</span>
+        <span class="news-title">春季大会エントリー完了。3/22より開幕！</span>
+      </a>
+      <a href="#" class="news-article">
+        <span class="news-date">2026.02.23</span>
+        <span class="news-badge">試合結果</span>
+        <span class="news-title">vs 新宿ブラックイーグルス 5-2 勝利。連勝スタート</span>
+      </a>
+      <a href="#" class="news-article">
+        <span class="news-date">2026.02.15</span>
+        <span class="news-badge">チーム</span>
+        <span class="news-title">キャプテン交代のお知らせ。田中から山田へ引き継ぎ</span>
+      </a>
+      <a href="#" class="news-article">
+        <span class="news-date">2026.02.10</span>
+        <span class="news-badge">イベント</span>
+        <span class="news-title">OB・OG戦 4/6（日）に開催決定。参加者募集中</span>
+      </a>
+
+      <div class="view-all-wrap">
+        <a href="news.html" class="btn-outline-dark">VIEW ALL &nbsp;→</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MATCHES ─── -->
+  <section class="matches" id="matches">
+    <div class="matches-inner">
+      <div class="section-heading">
+        <span class="section-heading-en">MATCHES</span>
+        <span class="section-heading-jp">試合</span>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="setTab(this,'matches')">すべて</div>
+        <div class="tab" onclick="setTab(this,'matches')">公式戦</div>
+        <div class="tab" onclick="setTab(this,'matches')">練習試合</div>
+      </div>
+
+      <div class="matches-cols" id="schedule">
+        <!-- Next Matches -->
+        <div>
+          <div class="matches-col-title">Next Matches</div>
+
+          <div class="score-card">
+            <div class="score-card-top">
+              <span class="score-badge">公式戦</span>
+              <span class="score-date">2026.03.16（日）</span>
+              <span class="score-type">春季リーグ</span>
+            </div>
+            <div class="score-teams">
+              <div class="score-team">
+                <div class="score-team-logo logo-img"><img src="logo.jpg" alt="白金台ジャンキース"></div>
+                <div class="score-team-name">白金台<br>ジャンキース</div>
+              </div>
+              <div class="score-vs">VS</div>
+              <div class="score-team">
+                <div class="score-team-logo gray" style="font-size:11px;color:#666">SW</div>
+                <div class="score-team-name">世田谷<br>ウォーリアーズ</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="score-card-top">
+              <span class="score-badge">公式戦</span>
+              <span class="score-date">2026.03.23（日）</span>
+              <span class="score-type">春季大会</span>
+            </div>
+            <div class="score-teams">
+              <div class="score-team">
+                <div class="score-team-logo logo-img"><img src="logo.jpg" alt="白金台ジャンキース"></div>
+                <div class="score-team-name">白金台<br>ジャンキース</div>
+              </div>
+              <div class="score-vs">VS</div>
+              <div class="score-team">
+                <div class="score-team-logo gray" style="font-size:11px;color:#666">SR</div>
+                <div class="score-team-name">品川<br>レッドサンズ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Match Results -->
+        <div>
+          <div class="matches-col-title">Match Results</div>
+
+          <div class="score-card">
+            <div class="score-card-top">
+              <span class="score-badge">公式戦</span>
+              <span class="score-date">2026.03.02（日）</span>
+              <span class="score-type">春季リーグ</span>
+            </div>
+            <div class="score-teams">
+              <div class="score-team">
+                <div class="score-team-logo logo-img"><img src="logo.jpg" alt="白金台ジャンキース"></div>
+                <div class="score-num" style="color:var(--teal)">8</div>
+                <div class="score-team-name">白金台<br>ジャンキース</div>
+              </div>
+              <div class="score-vs">VS</div>
+              <div class="score-team">
+                <div class="score-team-logo gray" style="font-size:11px;color:#666">SC</div>
+                <div class="score-num">3</div>
+                <div class="score-team-name">渋谷<br>クラブ</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="score-card-top">
+              <span class="score-badge">公式戦</span>
+              <span class="score-date">2026.02.23（日）</span>
+              <span class="score-type">公式戦</span>
+            </div>
+            <div class="score-teams">
+              <div class="score-team">
+                <div class="score-team-logo logo-img"><img src="logo.jpg" alt="白金台ジャンキース"></div>
+                <div class="score-num" style="color:var(--teal)">5</div>
+                <div class="score-team-name">白金台<br>ジャンキース</div>
+              </div>
+              <div class="score-vs">VS</div>
+              <div class="score-team">
+                <div class="score-team-logo gray" style="font-size:11px;color:#666">NB</div>
+                <div class="score-num">2</div>
+                <div class="score-team-name">新宿<br>ブラックイーグルス</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="view-all-wrap">
+        <a href="matches.html" class="btn-outline-white-teal">VIEW ALL &nbsp;→</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CALENDAR ─── -->
+  <section class="calendar" id="calendar">
+    <div class="calendar-inner">
+      <div class="section-heading">
+        <span class="section-heading-en">SCHEDULE</span>
+        <span class="section-heading-jp">スケジュール</span>
+      </div>
+
+      <div class="cal-nav">
+        <button class="cal-arrow" onclick="calMove(-1)">&#8249;</button>
+        <div class="cal-month" id="calMonthLabel">2026年 3月</div>
+        <button class="cal-arrow" onclick="calMove(1)">&#8250;</button>
+        <button class="cal-today-btn" onclick="calToday()">今月</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-header-row">
+          <div class="cal-header-cell sun">SUN</div>
+          <div class="cal-header-cell">MON</div>
+          <div class="cal-header-cell">TUE</div>
+          <div class="cal-header-cell">WED</div>
+          <div class="cal-header-cell">THU</div>
+          <div class="cal-header-cell">FRI</div>
+          <div class="cal-header-cell sat">SAT</div>
+        </div>
+        <div class="cal-body" id="calBody"></div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--teal)"></div>試合予定</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(255,255,255,0.5)"></div>試合結果</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f59e0b"></div>イベント</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TEAM INFO + CONTACT (dark card) ─── -->
+  <div class="team-info-wrap" id="contact">
+    <div class="team-info-card">
+
+      <!-- Top: 2-column (left: info / right: form) -->
+      <div class="team-info-top">
+
+        <!-- Left: team name + SNS -->
+        <div>
+          <div class="team-info-name">白金台<br>ジャンキース</div>
+          <div style="margin-top:24px">
+            <div class="team-info-sns-label">SNS</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <a href="#" class="sns-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+                Twitter / X
+              </a>
+              <a href="#" class="sns-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="#192533"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="#192533" stroke-width="1.5"/></svg>
+                Instagram
+              </a>
+              <a href="#" class="sns-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.05 12 20.05 12 20.05s6.88 0 8.59-.45a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#192533"/></svg>
+                YouTube ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: contact form -->
+        <div>
+          <div class="contact-form-heading">CONTACT</div>
+          <div class="contact-form-sub">お気軽にお問い合わせください</div>
+          <form class="contact-form" action="#contact" onsubmit="handleContactSubmit(event)">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">お名前 <span style="color:var(--teal)">*</span></label>
+                <input type="text" class="form-input" placeholder="山田 太郎" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label">メールアドレス <span style="color:var(--teal)">*</span></label>
+                <input type="email" class="form-input" placeholder="example@mail.com" required>
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">お問い合わせ種別</label>
+              <select class="form-select">
+                <option value="">選択してください</option>
+                <option value="join">入団希望</option>
+                <option value="match">試合申込み</option>
+                <option value="sponsor">スポンサー・協賛</option>
+                <option value="press">取材・メディア</option>
+                <option value="other">その他</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">メッセージ <span style="color:var(--teal)">*</span></label>
+              <textarea class="form-textarea" placeholder="お問い合わせ内容をご記入ください..." required></textarea>
+            </div>
+            <div class="form-success" id="formSuccess">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              送信が完了しました。ありがとうございます！
+            </div>
+            <button type="submit" class="form-submit">送信する →</button>
+          </form>
+        </div>
+
+      </div><!-- /team-info-top -->
+
+      <!-- Bottom: sponsors -->
+      <div class="sponsors-card">
+        <div class="sponsors-title">OFFICIAL SPONSORS</div>
+        <div class="sponsors-sub">本チームはパートナーを募集しています。</div>
+        <div class="sponsors-logos">
+          <div class="sponsor-item">BASEBALL SHOP TOKYO</div>
+          <div class="sponsor-item">SPORTS LAB SHIBUYA</div>
+          <div class="sponsor-item">IZAKAYA SLUGGER</div>
+          <div class="sponsor-item">GLOVE WORKS</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-copy">© 白金台ジャンキース All rights reserved.</div>
+  </footer>
+
+  <!-- ─── SCRIPTS ─── -->
+  <script>
+    // ─── MOBILE DRAWER ───
+    function toggleDrawer() {
+      const drawer = document.getElementById('mobileDrawer');
+      const overlay = document.getElementById('drawerOverlay');
+      const btn = document.getElementById('hamburger');
+      const open = drawer.classList.toggle('open');
+      overlay.classList.toggle('open', open);
+      btn.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    // ─── 統合ヒーロースライダー（写真が物理的にスライド）
+    const SLIDE_PHOTOS = [
+      { src: 'hero1.jpg', pos: 'center 30%' },
+      { src: 'hero2.jpg', pos: 'center 40%' },
+      { src: 'hero3.jpg', pos: 'center 35%' },
+    ];
+    const SLIDE_TOTAL = SLIDE_PHOTOS.length;
+    let sIdx = 0;
+    let sPos = 1; // 1 = 最初の実スライド（クローン込み）
+    let sAnimating = false;
+
+    const sliderWrap  = document.querySelector('.hero-slider-wrap');
+    const sliderInner = document.getElementById('heroSliderInner');
+    const sDotEls     = document.querySelectorAll('.frame-dot');
+
+    // スライド生成: [clone-last, s0, s1, s2, clone-first]
+    const allPhotos = [
+      SLIDE_PHOTOS[SLIDE_TOTAL - 1],
+      ...SLIDE_PHOTOS,
+      SLIDE_PHOTOS[0]
+    ];
+    // カード幅とマージンをピクセルで計算（左右均等のため）
+    const CARD_RATIO   = 0.62;
+    const MARGIN_RATIO = 0.015; // 片側
+
+    function applyCardDimensions() {
+      const wrapW    = sliderWrap.offsetWidth;
+      const cardW    = Math.floor(wrapW * CARD_RATIO);
+      const marginPx = Math.floor(wrapW * MARGIN_RATIO);
+      sliderInner.querySelectorAll('.hero-slide-card').forEach(card => {
+        card.style.width       = cardW + 'px';
+        card.style.flexBasis   = cardW + 'px';
+        card.style.marginLeft  = marginPx + 'px';
+        card.style.marginRight = marginPx + 'px';
+      });
+    }
+
+    allPhotos.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'hero-slide-card' + (i === 1 ? ' is-active' : '');
+      const img = document.createElement('img');
+      img.src = p.src;
+      img.alt = 'photo';
+      img.style.objectPosition = p.pos;
+      card.appendChild(img);
+      sliderInner.appendChild(card);
+    });
+
+    applyCardDimensions();
+
+    function getCardOffset(pos) {
+      const wrapW    = sliderWrap.offsetWidth;
+      const cardW    = Math.floor(wrapW * CARD_RATIO);
+      const marginPx = Math.floor(wrapW * MARGIN_RATIO);
+      const unit     = cardW + marginPx * 2;
+      const center   = (wrapW - cardW) / 2 - marginPx;
+      return center - pos * unit;
+    }
+
+    function setSliderPos(animate) {
+      sliderInner.style.transition = animate ? 'transform 0.5s ease-in-out' : 'none';
+      sliderInner.style.transform  = `translateX(${getCardOffset(sPos)}px)`;
+    }
+
+    window.addEventListener('resize', () => {
+      applyCardDimensions();
+      setSliderPos(false);
+    });
+
+    function updateActiveCard() {
+      sliderInner.querySelectorAll('.hero-slide-card')
+        .forEach((c, i) => c.classList.toggle('is-active', i === sPos));
+      sDotEls.forEach((d, i) => d.classList.toggle('active', i === sIdx));
+    }
+
+    // 初期位置
+    setSliderPos(false);
+
+    let sTimer = setInterval(() => frameSlide(1), 4500);
+
+    function frameSlide(dir) {
+      if (sAnimating) return;
+      sAnimating = true;
+      sPos += dir;
+      sIdx = ((sIdx + dir) + SLIDE_TOTAL) % SLIDE_TOTAL;
+      setSliderPos(true);
+      updateActiveCard();
+      clearInterval(sTimer);
+      sTimer = setInterval(() => frameSlide(1), 4500);
+    }
+
+    sliderInner.addEventListener('transitionend', () => {
+      sAnimating = false;
+      if (sPos === SLIDE_TOTAL + 1) {
+        sPos = 1;
+        setSliderPos(false);
+        updateActiveCard();
+      } else if (sPos === 0) {
+        sPos = SLIDE_TOTAL;
+        setSliderPos(false);
+        updateActiveCard();
+      }
+    });
+
+    // ─── CALENDAR ───
+    const calEvents = {
+      '2026-03-02': [{ text: 'vs 渋谷クラブ ○8-3', type: 'result' }],
+      '2026-03-08': [{ text: '練習（多摩川G）', type: 'event' }],
+      '2026-03-15': [{ text: '練習（多摩川G）', type: 'event' }],
+      '2026-03-16': [{ text: 'vs 世田谷W（春季）', type: 'game' }],
+      '2026-03-22': [{ text: '練習（多摩川G）', type: 'event' }],
+      '2026-03-23': [{ text: 'vs 品川RS（春季）', type: 'game' }],
+      '2026-03-29': [{ text: 'OB・OG交流戦', type: 'event' }],
+      '2026-04-05': [{ text: 'vs 目黒ブルズ（公式）', type: 'game' }],
+      '2026-04-12': [{ text: '練習（多摩川G）', type: 'event' }],
+      '2026-04-19': [{ text: 'vs 中野ドラゴンズ', type: 'game' }],
+      '2026-04-26': [{ text: '練習試合（調整中）', type: 'game' }],
+    };
+
+    let calYear = 2026, calMonth = 2;
+
+    function calRender() {
+      const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      document.getElementById('calMonthLabel').textContent = `${calYear}年 ${monthNames[calMonth]}`;
+      const body = document.getElementById('calBody');
+      body.innerHTML = '';
+      const today = new Date();
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+      let cells = [];
+      for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, month: calMonth - 1, year: calYear, other: true });
+      for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, month: calMonth, year: calYear, other: false });
+      const rem = 7 - (cells.length % 7);
+      if (rem < 7) for (let d = 1; d <= rem; d++) cells.push({ day: d, month: calMonth + 1, year: calYear, other: true });
+
+      cells.forEach(c => {
+        const dow = new Date(c.year, c.month, c.day).getDay();
+        const key = `${c.year}-${String(c.month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+        const isToday = !c.other && c.day === today.getDate() && c.month === today.getMonth() && c.year === today.getFullYear();
+        const div = document.createElement('div');
+        div.className = ['cal-cell', c.other?'other-month':'', dow===0?'sunday':'', dow===6?'saturday':'', isToday?'today':''].filter(Boolean).join(' ');
+        const dayEl = document.createElement('div');
+        dayEl.className = 'cal-day';
+        dayEl.textContent = c.day;
+        div.appendChild(dayEl);
+        const evs = calEvents[key] || [];
+        if (evs.length) {
+          const dots = document.createElement('div');
+          dots.className = 'cal-dots';
+          evs.forEach(ev => {
+            const dot = document.createElement('div');
+            dot.className = `cal-dot ${ev.type}`;
+            dot.title = ev.text;
+            dots.appendChild(dot);
+          });
+          div.appendChild(dots);
+        }
+        body.appendChild(div);
+      });
+    }
+
+    function calMove(dir) {
+      calMonth += dir;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0)  { calMonth = 11; calYear--; }
+      calRender();
+    }
+
+    function calToday() {
+      const now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      calRender();
+    }
+
+    calRender();
+
+    // ─── CONTACT FORM ───
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('.form-submit');
+      const success = document.getElementById('formSuccess');
+      btn.textContent = '送信中...';
+      btn.disabled = true;
+      setTimeout(() => {
+        success.style.display = 'flex';
+        btn.style.display = 'none';
+        setTimeout(() => {
+          success.style.display = 'none';
+          btn.style.display = '';
+          btn.textContent = '送信する →';
+          btn.disabled = false;
+          e.target.reset();
+        }, 4000);
+      }, 800);
+    }
+
+    // Tabs
+    function setTab(el, group) {
+      const parent = el.closest('.tabs') || el.parentElement;
+      parent.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+        t.style.color = '';
+        t.style.borderBottomColor = '';
+      });
+      el.classList.add('active');
+    }
+  </script>
+</body>
+</html>

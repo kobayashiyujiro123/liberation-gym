@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>メンバー | 東京ランブラーズ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #00A2B1; --teal-dark: #008f9d;
+      --navy: #192533; --navy-mid: #1e3a5f;
+      --gray-bg: #F2F2F2; --white: #FFFFFF;
+      --text: #222222; --text-gray: #666666;
+      --max-w: 1200px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Sans JP', sans-serif; color: var(--text); background: var(--white); overflow-x: hidden; }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: linear-gradient(135deg, rgba(0,162,177,0.18) 0%, rgba(25,37,51,0.92) 50%, rgba(0,77,90,0.18) 100%);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,162,177,0.18);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; text-decoration: none; }
+    .logo-badge { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-badge img { width: 46px; height: 46px; border-radius: 50%; filter: drop-shadow(0 0 7px rgba(0,162,177,0.45)); transition: filter 0.3s; }
+    .logo:hover .logo-badge img { filter: drop-shadow(0 0 14px rgba(0,162,177,0.75)); }
+    nav { display: flex; gap: 6px; align-items: center; }
+    .nav-link {
+      color: var(--white); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.55);
+      transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.15); }
+    .nav-link.active { background: var(--teal); border-color: var(--teal); }
+    .nav-login { background: var(--teal); border-color: var(--teal); color: var(--white); font-weight: 700; padding: 7px 20px; margin-left: 8px; }
+    .nav-login:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+
+    /* ─── PAGE HERO ─── */
+    .page-hero {
+      background: linear-gradient(to right, #00008C, #00A2B1);
+      padding: 120px 48px 72px;
+      position: relative; overflow: hidden;
+    }
+    .page-hero-inner { max-width: var(--max-w); margin: 0 auto; position: relative; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .breadcrumb a { color: rgba(255,255,255,0.55); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--teal); }
+    .breadcrumb-sep { color: rgba(255,255,255,0.3); font-size: 13px; }
+    .breadcrumb-current { color: rgba(255,255,255,0.85); font-size: 13px; }
+    .page-hero-en {
+      font-family: 'Oswald', sans-serif; font-size: clamp(48px, 7vw, 80px);
+      font-weight: 700; color: var(--white); letter-spacing: 4px; line-height: 1;
+      margin-bottom: 8px; text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .page-hero-jp { font-size: 15px; color: rgba(255,255,255,0.55); font-weight: 500; letter-spacing: 2px; }
+    .page-hero-bg-text {
+      position: absolute; right: -20px; bottom: -30px;
+      font-family: 'Oswald', sans-serif; font-size: 140px; font-weight: 700;
+      color: rgba(255,255,255,0.03); letter-spacing: 8px; line-height: 1; pointer-events: none;
+    }
+    .page-hero-stats {
+      display: flex; gap: 40px; margin-top: 32px;
+    }
+    .page-hero-stat { text-align: left; }
+    .page-hero-stat-num {
+      font-family: 'Oswald', sans-serif; font-size: 36px; font-weight: 700;
+      color: var(--teal); line-height: 1;
+    }
+    .page-hero-stat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 1px; }
+
+    /* ─── MAIN CONTENT ─── */
+    .page-content { background: var(--gray-bg); min-height: 60vh; padding: 56px 48px 80px; }
+    .page-content-inner { max-width: var(--max-w); margin: 0 auto; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--white); border-radius: 14px;
+      padding: 16px 24px; margin-bottom: 36px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      flex-wrap: wrap;
+    }
+    .filter-label { font-size: 12px; font-weight: 700; color: var(--text-gray); letter-spacing: 1px; margin-right: 4px; }
+    .filter-btn {
+      border: 1.5px solid #ddd; background: transparent; color: var(--text-gray);
+      font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: 20px;
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .filter-btn.active { background: var(--teal); border-color: var(--teal); color: var(--white); }
+    .filter-divider { width: 1px; height: 24px; background: #e0e0e0; margin: 0 4px; }
+    .member-count { margin-left: auto; font-size: 12px; color: var(--text-gray); font-weight: 500; }
+
+    /* Member cards grid */
+    .member-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+    }
+    .member-card {
+      background: var(--white); border-radius: 16px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      transition: transform 0.25s, box-shadow 0.25s;
+      cursor: pointer;
+    }
+    .member-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(0,162,177,0.18); }
+    .member-card-top {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5a 100%);
+      padding: 28px 16px 20px;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+    .member-num-badge {
+      position: absolute; top: 10px; left: 12px;
+      font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--teal); letter-spacing: 1px;
+    }
+    .member-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(0,162,177,0.12); border: 2px solid rgba(0,162,177,0.35);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .member-avatar svg { width: 36px; height: 36px; fill: rgba(0,162,177,0.6); }
+    .member-card-body { padding: 14px 14px 18px; text-align: center; }
+    .member-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .member-name-en { font-size: 10px; color: var(--text-gray); margin-bottom: 8px; letter-spacing: 0.5px; }
+    .member-position {
+      font-size: 11px; color: var(--teal); background: rgba(0,162,177,0.08);
+      display: inline-block; padding: 3px 12px; border-radius: 20px; font-weight: 700;
+    }
+    .member-detail-row {
+      display: flex; justify-content: center; gap: 16px; margin-top: 10px;
+      padding-top: 10px; border-top: 1px solid #f0f0f0;
+    }
+    .member-detail { text-align: center; }
+    .member-detail-val { font-size: 12px; font-weight: 700; color: var(--text); }
+    .member-detail-key { font-size: 9px; color: var(--text-gray); margin-top: 1px; }
+
+    /* Captain badge */
+    .captain-badge {
+      position: absolute; top: 10px; right: 12px;
+      background: gold; color: #222; font-size: 8px; font-weight: 900;
+      padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
+    }
+
+    /* Position section header */
+    .position-section { margin-bottom: 40px; }
+    .position-section-header {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+    }
+    .position-section-title {
+      font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700;
+      color: var(--navy); letter-spacing: 1px;
+    }
+    .position-section-line { flex: 1; height: 1px; background: #ddd; }
+    .position-section-count { font-size: 12px; color: var(--text-gray); font-weight: 500; }
+
+    /* Staff section */
+    .staff-section { margin-top: 56px; padding-top: 48px; border-top: 2px solid #e0e0e0; }
+    .staff-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
+    .staff-card {
+      background: var(--white); border-radius: 14px; padding: 24px 16px;
+      text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: transform 0.25s; cursor: pointer;
+    }
+    .staff-card:hover { transform: translateY(-4px); }
+    .staff-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #e8e8e8, #d0d0d0);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .staff-avatar svg { width: 32px; height: 32px; fill: #aaa; }
+    .staff-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .staff-role {
+      font-size: 11px; background: var(--navy); color: var(--white);
+      display: inline-block; padding: 3px 12px; border-radius: 20px; font-weight: 600;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: var(--navy); padding: 24px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--teal); letter-spacing: 2px; }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .footer-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .footer-back:hover { color: var(--teal); border-color: var(--teal); }
+
+    /* Hidden card for filter */
+    .member-card[data-hidden="true"] { display: none; }
+
+    @media (max-width: 1024px) { .member-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 768px) {
+      .page-hero { padding: 100px 20px 48px; }
+      .page-content { padding: 36px 20px 60px; }
+      .member-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .staff-grid { grid-template-columns: repeat(2, 1fr); }
+      .page-hero-stats { gap: 24px; }
+      .footer { padding: 20px; }
+    }
+    @media (max-width: 480px) {
+      .member-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <a href="baseball-team.html" class="logo">
+      <div class="logo-badge">
+        <img src="logo.jpg" alt="白金台ジャンキース">
+      </div>
+    </a>
+    <nav>
+      <a href="members.html"                class="nav-link active">メンバー</a>
+      <a href="news.html"                   class="nav-link">ニュース</a>
+      <a href="matches.html"                class="nav-link">試合結果</a>
+      <a href="baseball-team.html#calendar" class="nav-link">スケジュール</a>
+      <a href="baseball-team.html#contact"  class="nav-link">お問い合わせ</a>
+      <a href="#"                           class="nav-link nav-login">チームメンバーの方</a>
+    </nav>
+  </header>
+
+  <!-- ─── PAGE HERO ─── -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="breadcrumb">
+        <a href="baseball-team.html">TOP</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">メンバー</span>
+      </div>
+      <div class="page-hero-en">MEMBERS</div>
+      <div class="page-hero-jp">メンバー一覧</div>
+      <div class="page-hero-stats">
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">20</div>
+          <div class="page-hero-stat-label">TOTAL PLAYERS</div>
+        </div>
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">5</div>
+          <div class="page-hero-stat-label">PITCHERS</div>
+        </div>
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">2</div>
+          <div class="page-hero-stat-label">CATCHERS</div>
+        </div>
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">7</div>
+          <div class="page-hero-stat-label">INFIELDERS</div>
+        </div>
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">6</div>
+          <div class="page-hero-stat-label">OUTFIELDERS</div>
+        </div>
+        <div class="page-hero-stat">
+          <div class="page-hero-stat-num">4</div>
+          <div class="page-hero-stat-label">OTHERS</div>
+        </div>
+      </div>
+      <div class="page-hero-bg-text">PLAYERS</div>
+    </div>
+  </section>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div class="page-content">
+    <div class="page-content-inner">
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <span class="filter-label">ポジション</span>
+        <button class="filter-btn active" onclick="filterMembers('all', this)">すべて</button>
+        <button class="filter-btn" onclick="filterMembers('投手', this)">投手</button>
+        <button class="filter-btn" onclick="filterMembers('捕手', this)">捕手</button>
+        <button class="filter-btn" onclick="filterMembers('内野手', this)">内野手</button>
+        <button class="filter-btn" onclick="filterMembers('外野手', this)">外野手</button>
+        <button class="filter-btn" onclick="filterMembers('others', this)">その他</button>
+        <div class="filter-divider"></div>
+        <span class="member-count" id="memberCount">20名</span>
+      </div>
+
+      <!-- Pitchers -->
+      <div class="position-section">
+        <div class="position-section-header">
+          <div class="position-section-title">投手</div>
+          <div class="position-section-line"></div>
+          <div class="position-section-count">5名</div>
+        </div>
+        <div class="member-grid" id="pitcherGrid">
+          <!-- #1 山田太郎 -->
+          <div class="member-card" data-position="投手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#1</span>
+              <span class="captain-badge">C</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">山田 太郎</div>
+              <div class="member-name-en">YAMADA Taro</div>
+              <span class="member-position">投手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">175cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2018</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- #21 吉田大輝 -->
+          <div class="member-card" data-position="投手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#21</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">吉田 大輝</div>
+              <div class="member-name-en">YOSHIDA Daiki</div>
+              <span class="member-position">投手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">左左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">181cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2021</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- #25 木村健吾 -->
+          <div class="member-card" data-position="投手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#25</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">木村 健吾</div>
+              <div class="member-name-en">KIMURA Kengo</div>
+              <span class="member-position">投手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">179cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2023</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- #31 松本雄介 -->
+          <div class="member-card" data-position="投手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#31</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">松本 雄介</div>
+              <div class="member-name-en">MATSUMOTO Yusuke</div>
+              <span class="member-position">投手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">177cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2024</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- #35 岡田凌 -->
+          <div class="member-card" data-position="投手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#35</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">岡田 凌</div>
+              <div class="member-name-en">OKADA Ryo</div>
+              <span class="member-position">投手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">183cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2025</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catchers -->
+      <div class="position-section">
+        <div class="position-section-header">
+          <div class="position-section-title">捕手</div>
+          <div class="position-section-line"></div>
+          <div class="position-section-count">2名</div>
+        </div>
+        <div class="member-grid">
+          <div class="member-card" data-position="捕手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#3</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">田中 一郎</div>
+              <div class="member-name-en">TANAKA Ichiro</div>
+              <span class="member-position">捕手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">173cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2019</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="捕手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#27</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">林 孝太</div>
+              <div class="member-name-en">HAYASHI Kota</div>
+              <span class="member-position">捕手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">170cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2022</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infielders -->
+      <div class="position-section">
+        <div class="position-section-header">
+          <div class="position-section-title">内野手</div>
+          <div class="position-section-line"></div>
+          <div class="position-section-count">7名</div>
+        </div>
+        <div class="member-grid">
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#5</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">鈴木 次郎</div>
+              <div class="member-name-en">SUZUKI Jiro</div>
+              <span class="member-position">一塁手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">左左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">185cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2020</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#7</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">佐藤 三郎</div>
+              <div class="member-name-en">SATO Saburo</div>
+              <span class="member-position">二塁手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">172cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2019</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#9</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">伊藤 健太</div>
+              <div class="member-name-en">ITO Kenta</div>
+              <span class="member-position">三塁手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">178cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2021</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#11</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">渡辺 翔太</div>
+              <div class="member-name-en">WATANABE Shota</div>
+              <span class="member-position">遊撃手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">174cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2020</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#29</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">村上 亮</div>
+              <div class="member-name-en">MURAKAMI Ryo</div>
+              <span class="member-position">一塁手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">182cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2023</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#33</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">藤井 陸</div>
+              <div class="member-name-en">FUJII Riku</div>
+              <span class="member-position">二塁手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">171cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2024</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="内野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#19</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">加藤 蓮</div>
+              <div class="member-name-en">KATO Ren</div>
+              <span class="member-position">指名打者</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右両</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">176cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2022</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outfielders -->
+      <div class="position-section">
+        <div class="position-section-header">
+          <div class="position-section-title">外野手</div>
+          <div class="position-section-line"></div>
+          <div class="position-section-count">6名</div>
+        </div>
+        <div class="member-grid">
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#13</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">高橋 拓也</div>
+              <div class="member-name-en">TAKAHASHI Takuya</div>
+              <span class="member-position">左翼手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">176cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2020</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#15</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">中村 裕介</div>
+              <div class="member-name-en">NAKAMURA Yusuke</div>
+              <span class="member-position">中堅手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">179cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2021</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#17</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">小林 悠斗</div>
+              <div class="member-name-en">KOBAYASHI Yuto</div>
+              <span class="member-position">右翼手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">174cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2022</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#23</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">山本 颯</div>
+              <div class="member-name-en">YAMAMOTO So</div>
+              <span class="member-position">外野手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">177cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2023</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#37</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">石川 蒼</div>
+              <div class="member-name-en">ISHIKAWA Ao</div>
+              <span class="member-position">外野手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">左左</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">180cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2025</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="member-card" data-position="外野手">
+            <div class="member-card-top">
+              <span class="member-num-badge">#39</span>
+              <div class="member-avatar"><svg viewBox="0 0 50 50"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            </div>
+            <div class="member-card-body">
+              <div class="member-name">菊地 翼</div>
+              <div class="member-name-en">KIKUCHI Tsubasa</div>
+              <span class="member-position">外野手</span>
+              <div class="member-detail-row">
+                <div class="member-detail"><div class="member-detail-val">右右</div><div class="member-detail-key">投打</div></div>
+                <div class="member-detail"><div class="member-detail-val">175cm</div><div class="member-detail-key">身長</div></div>
+                <div class="member-detail"><div class="member-detail-val">2025</div><div class="member-detail-key">入団</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Staff -->
+      <div class="staff-section">
+        <div class="position-section-header">
+          <div class="position-section-title">その他</div>
+          <div class="position-section-line"></div>
+          <div class="position-section-count">4名</div>
+        </div>
+        <div class="staff-grid">
+          <div class="staff-card">
+            <div class="staff-avatar"><svg viewBox="0 0 50 50" fill="#aaa"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            <div class="staff-name">西村 誠一</div>
+            <span class="staff-role">監督</span>
+          </div>
+          <div class="staff-card">
+            <div class="staff-avatar"><svg viewBox="0 0 50 50" fill="#aaa"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            <div class="staff-name">前田 康夫</div>
+            <span class="staff-role">コーチ</span>
+          </div>
+          <div class="staff-card">
+            <div class="staff-avatar"><svg viewBox="0 0 50 50" fill="#aaa"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            <div class="staff-name">橋本 美咲</div>
+            <span class="staff-role">マネージャー</span>
+          </div>
+          <div class="staff-card">
+            <div class="staff-avatar"><svg viewBox="0 0 50 50" fill="#aaa"><circle cx="25" cy="16" r="10"/><ellipse cx="25" cy="38" rx="14" ry="10"/></svg></div>
+            <div class="staff-name">野口 隆志</div>
+            <span class="staff-role">トレーナー</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-logo">TOKYO RAMBLERS</div>
+    <div class="footer-copy">© 東京ランブラーズ All rights reserved.</div>
+    <a href="baseball-team.html" class="footer-back">← TOPに戻る</a>
+  </footer>
+
+  <script>
+    function filterMembers(position, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const staffSection = document.querySelector('.staff-section');
+
+      if (position === 'others') {
+        // OTHERSのみ表示
+        document.querySelectorAll('.member-card').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.position-section').forEach(s => s.style.display = 'none');
+        if (staffSection) staffSection.style.display = '';
+        document.getElementById('memberCount').textContent = '4名';
+        return;
+      }
+
+      const cards = document.querySelectorAll('.member-card');
+      let count = 0;
+      cards.forEach(card => {
+        if (position === 'all' || card.dataset.position === position) {
+          card.style.display = '';
+          count++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      document.getElementById('memberCount').textContent = count + '名';
+
+      document.querySelectorAll('.position-section').forEach(section => {
+        const visible = section.querySelectorAll('.member-card:not([style*="display: none"])');
+        section.style.display = visible.length > 0 ? '' : 'none';
+      });
+
+      if (staffSection) staffSection.style.display = position === 'all' ? '' : 'none';
+    }
+  </script>
+</body>
+</html>

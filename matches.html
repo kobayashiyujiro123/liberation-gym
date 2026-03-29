@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>試合結果 | 東京ランブラーズ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #00A2B1; --teal-dark: #008f9d;
+      --navy: #192533; --navy-mid: #1e3a5f;
+      --gray-bg: #F2F2F2; --white: #FFFFFF;
+      --text: #222222; --text-gray: #666666;
+      --win: #00A2B1; --lose: #e74c3c; --draw: #f39c12;
+      --max-w: 1200px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Sans JP', sans-serif; color: var(--text); background: var(--gray-bg); overflow-x: hidden; }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: linear-gradient(135deg, rgba(0,162,177,0.18) 0%, rgba(25,37,51,0.92) 50%, rgba(0,77,90,0.18) 100%);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,162,177,0.18);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; text-decoration: none; }
+    .logo-badge { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-badge img { width: 46px; height: 46px; border-radius: 50%; filter: drop-shadow(0 0 7px rgba(0,162,177,0.45)); transition: filter 0.3s; }
+    .logo:hover .logo-badge img { filter: drop-shadow(0 0 14px rgba(0,162,177,0.75)); }
+    nav { display: flex; gap: 6px; align-items: center; }
+    .nav-link {
+      color: var(--white); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.55);
+      transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.15); }
+    .nav-link.active { background: var(--teal); border-color: var(--teal); }
+    .nav-login { background: var(--teal); border-color: var(--teal); color: var(--white); font-weight: 700; padding: 7px 20px; margin-left: 8px; }
+    .nav-login:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+
+    /* ─── PAGE HERO ─── */
+    .page-hero {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 60%, #006675 100%);
+      padding: 110px 48px 64px;
+      position: relative; overflow: hidden;
+    }
+    .page-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1600&q=20') center/cover no-repeat;
+      opacity: 0.1;
+    }
+    .page-hero-inner { max-width: var(--max-w); margin: 0 auto; position: relative; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .breadcrumb a { color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--white); }
+    .breadcrumb-sep { color: rgba(255,255,255,0.35); font-size: 13px; }
+    .breadcrumb-current { color: rgba(255,255,255,0.9); font-size: 13px; }
+    .page-hero-en {
+      font-family: 'Oswald', sans-serif; font-size: clamp(40px, 6vw, 72px);
+      font-weight: 700; color: var(--white); letter-spacing: 4px; line-height: 1; margin-bottom: 6px;
+    }
+    .page-hero-jp { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; letter-spacing: 1px; }
+    .page-hero-bg-text {
+      position: absolute; right: -10px; bottom: -30px;
+      font-family: 'Oswald', sans-serif; font-size: 120px; font-weight: 700;
+      color: rgba(255,255,255,0.07); letter-spacing: 8px; line-height: 1; pointer-events: none;
+    }
+
+    /* Season summary */
+    .season-summary {
+      display: flex; gap: 24px; margin-top: 32px; flex-wrap: wrap;
+    }
+    .summary-stat {
+      background: rgba(255,255,255,0.15); border-radius: 12px; padding: 16px 24px;
+      text-align: center; backdrop-filter: blur(8px); min-width: 90px;
+    }
+    .summary-num {
+      font-family: 'Oswald', sans-serif; font-size: 32px; font-weight: 700;
+      color: var(--white); line-height: 1;
+    }
+    .summary-num.win  { color: #7fffd4; }
+    .summary-num.lose { color: #ffaaaa; }
+    .summary-num.draw { color: #ffe066; }
+    .summary-label { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 4px; letter-spacing: 1px; }
+
+    /* ─── MAIN CONTENT ─── */
+    .page-content { padding: 40px 48px 80px; }
+    .page-content-inner { max-width: var(--max-w); margin: 0 auto; }
+
+    /* Filter / tabs bar */
+    .filter-bar {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 60%, #006675 100%);
+      border-radius: 14px; padding: 16px 24px;
+      box-shadow: 0 4px 20px rgba(0,162,177,0.3); margin-bottom: 28px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .filter-tabs { display: flex; gap: 0; flex: 1; }
+    .filter-tab {
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: rgba(255,255,255,0.7); border-bottom: 2.5px solid transparent;
+      transition: all 0.2s; white-space: nowrap; border-radius: 0;
+      background: none; border: none; font-family: 'Noto Sans JP', sans-serif;
+    }
+    .filter-tab.active { color: var(--white); border-bottom-color: var(--white); }
+    .filter-tab:hover:not(.active) { color: var(--white); }
+    .year-select {
+      margin-left: auto; padding: 7px 14px; border: 1.5px solid rgba(255,255,255,0.5);
+      border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--white);
+      background: rgba(255,255,255,0.15); cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    /* ─── UPCOMING ─── */
+    .section-title {
+      font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--navy); letter-spacing: 1px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: #ddd; }
+
+    /* ─── MATCH CARD ─── */
+    .match-card {
+      background: var(--white); border-radius: 14px; margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .match-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .match-card-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px; background: #fafafa; border-bottom: 1px solid #f0f0f0;
+    }
+    .match-badge {
+      background: var(--navy); color: var(--white);
+      font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 3px;
+      letter-spacing: 0.5px; white-space: nowrap;
+    }
+    .match-badge.practice { background: #7f8c8d; }
+    .match-date { font-size: 14px; font-weight: 700; color: var(--text); }
+    .match-type { font-size: 12px; color: var(--text-gray); }
+    .match-venue { font-size: 11px; color: var(--text-gray); margin-left: auto; display: flex; align-items: center; gap: 4px; }
+    .match-body {
+      display: flex; align-items: center; padding: 16px 24px; gap: 16px;
+    }
+    .match-team { flex: 1; display: flex; align-items: center; gap: 14px; }
+    .match-team.right { flex-direction: row-reverse; }
+    .team-logo {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 900;
+      color: var(--white); flex-shrink: 0;
+      background: var(--navy);
+    }
+    .team-logo.opp { background: #b0bec5; color: var(--text); }
+    .team-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .score-center { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-width: 120px; justify-content: center; }
+    .score-num { font-family: 'Oswald', sans-serif; font-size: 44px; font-weight: 700; line-height: 1; }
+    .score-num.our { color: var(--teal); }
+    .score-num.opp { color: var(--text); }
+    .score-sep { font-size: 20px; color: #ccc; font-weight: 300; }
+    .result-badge {
+      font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; align-self: center;
+      flex-shrink: 0;
+    }
+    .result-badge.win  { background: rgba(0,162,177,0.1); color: var(--teal); border: 1px solid rgba(0,162,177,0.3); }
+    .result-badge.lose { background: rgba(231,76,60,0.1); color: var(--lose); border: 1px solid rgba(231,76,60,0.3); }
+    .result-badge.draw { background: rgba(243,156,18,0.1); color: var(--draw); border: 1px solid rgba(243,156,18,0.3); }
+    .result-badge.upcoming { background: rgba(0,162,177,0.08); color: var(--teal); border: 1px solid rgba(0,162,177,0.2); font-size: 10px; }
+    .match-detail { font-size: 11px; color: var(--text-gray); text-align: center; }
+    .inning-scores {
+      display: flex; gap: 2px; align-items: center;
+      font-size: 10px; color: var(--text-gray); padding-left: 24px;
+      border-left: 1px solid #f0f0f0; min-width: 140px; flex-wrap: wrap;
+    }
+    .inning-label { font-weight: 700; margin-right: 4px; }
+    .inning-cell { width: 20px; text-align: center; }
+
+    /* Group section */
+    .match-group { margin-bottom: 40px; }
+
+    /* Legend */
+    .legend { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: 12px 0; margin-bottom: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-gray); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: var(--navy); padding: 24px 48px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--teal); letter-spacing: 2px; }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .footer-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .footer-back:hover { color: var(--teal); border-color: var(--teal); }
+
+    @media (max-width: 900px) {
+      .inning-scores { display: none; }
+      .score-num { font-size: 36px; }
+    }
+    @media (max-width: 600px) {
+      .page-hero { padding: 90px 20px 48px; }
+      .page-content { padding: 28px 16px 60px; }
+      .match-body { padding: 14px 16px; gap: 8px; }
+      .score-num { font-size: 32px; }
+      .score-center { min-width: 100px; }
+      nav { display: none; }
+      .footer { padding: 20px; }
+      .season-summary { gap: 12px; }
+      .summary-stat { padding: 12px 16px; min-width: 70px; }
+      .summary-num { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <a href="baseball-team.html" class="logo">
+      <div class="logo-badge">
+        <img src="logo.jpg" alt="白金台ジャンキース">
+      </div>
+    </a>
+    <nav>
+      <a href="members.html"                class="nav-link">メンバー</a>
+      <a href="news.html"                   class="nav-link">ニュース</a>
+      <a href="matches.html"                class="nav-link active">試合結果</a>
+      <a href="baseball-team.html#calendar" class="nav-link">スケジュール</a>
+      <a href="baseball-team.html#contact"  class="nav-link">お問い合わせ</a>
+      <a href="#"                           class="nav-link nav-login">チームメンバーの方</a>
+    </nav>
+  </header>
+
+  <!-- ─── PAGE HERO ─── -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="breadcrumb">
+        <a href="baseball-team.html">TOP</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">試合結果</span>
+      </div>
+      <div class="page-hero-en">MATCHES</div>
+      <div class="page-hero-jp">試合日程・結果一覧</div>
+      <div class="season-summary">
+        <div class="summary-stat">
+          <div class="summary-num">8</div>
+          <div class="summary-label">GAMES</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-num win">6</div>
+          <div class="summary-label">WIN</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-num lose">2</div>
+          <div class="summary-label">LOSE</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-num draw">0</div>
+          <div class="summary-label">DRAW</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-num" style="color:#ffe066">75%</div>
+          <div class="summary-label">WIN RATE</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-hero-bg-text">MATCHES</div>
+  </section>
+
+  <!-- ─── MAIN CONTENT ─── */
+  <div class="page-content">
+    <div class="page-content-inner">
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterMatches('all', this)">すべて</button>
+          <button class="filter-tab" onclick="filterMatches('公式戦', this)">公式戦</button>
+          <button class="filter-tab" onclick="filterMatches('練習試合', this)">練習試合</button>
+          <button class="filter-tab" onclick="filterMatches('upcoming', this)">予定</button>
+        </div>
+        <select class="year-select" onchange="filterYear(this.value)">
+          <option value="2026">2026年</option>
+          <option value="2025">2025年</option>
+        </select>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>勝利</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--lose)"></div>敗戦</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--draw)"></div>引き分け</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ccc"></div>予定</div>
+      </div>
+
+      <!-- ─── Upcoming ─── -->
+      <div class="match-group" id="upcomingSection">
+        <div class="section-title">UPCOMING MATCHES &nbsp; 次の試合</div>
+
+        <div class="match-card" data-type="公式戦" data-result="upcoming" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2026.03.22（日）</span>
+            <span class="match-type">春季大会 1回戦</span>
+            <span class="match-venue">📍 多摩川グラウンド（10:00〜）</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div>
+                <div class="team-name">東京ランブラーズ</div>
+                <div class="match-detail">ホーム</div>
+              </div>
+            </div>
+            <div class="score-center">
+              <span class="result-badge upcoming">UPCOMING</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">SW</div>
+              <div style="text-align:right">
+                <div class="team-name">世田谷ウォーリアーズ</div>
+                <div class="match-detail">アウェイ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-card" data-type="公式戦" data-result="upcoming" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2026.03.29（日）</span>
+            <span class="match-type">春季リーグ 第3節</span>
+            <span class="match-venue">📍 品川球場（13:00〜）</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div>
+                <div class="team-name">東京ランブラーズ</div>
+                <div class="match-detail">アウェイ</div>
+              </div>
+            </div>
+            <div class="score-center">
+              <span class="result-badge upcoming">UPCOMING</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">SR</div>
+              <div style="text-align:right">
+                <div class="team-name">品川レッドサンズ</div>
+                <div class="match-detail">ホーム</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Results 2026 ─── -->
+      <div class="match-group" id="results2026">
+        <div class="section-title">2026 RESULTS &nbsp; 試合結果</div>
+
+        <!-- Win: vs 渋谷クラブ 8-3 -->
+        <div class="match-card" data-type="公式戦" data-result="win" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2026.03.02（日）</span>
+            <span class="match-type">春季リーグ 第1節</span>
+            <span class="match-venue">📍 多摩川グラウンド</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div>
+                <div class="team-name">東京ランブラーズ</div>
+                <div class="match-detail">先発：山田</div>
+              </div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">8</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">3</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">SC</div>
+              <div style="text-align:right">
+                <div class="team-name">渋谷クラブ</div>
+              </div>
+            </div>
+            <div class="inning-scores">
+              <span class="inning-label">TR</span>
+              <span class="inning-cell">3</span><span class="inning-cell">0</span><span class="inning-cell">2</span><span class="inning-cell">1</span><span class="inning-cell">0</span><span class="inning-cell">2</span><span class="inning-cell">0</span>
+              <span class="inning-label" style="margin-left:8px">OPP</span>
+              <span class="inning-cell">1</span><span class="inning-cell">0</span><span class="inning-cell">0</span><span class="inning-cell">2</span><span class="inning-cell">0</span><span class="inning-cell">0</span><span class="inning-cell">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Win: vs 新宿BE 5-2 -->
+        <div class="match-card" data-type="公式戦" data-result="win" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2026.02.23（日）</span>
+            <span class="match-type">公式戦</span>
+            <span class="match-venue">📍 新宿スポーツセンター球場</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div>
+                <div class="team-name">東京ランブラーズ</div>
+                <div class="match-detail">先発：吉田</div>
+              </div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">5</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">2</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">NB</div>
+              <div style="text-align:right">
+                <div class="team-name">新宿ブラックイーグルス</div>
+              </div>
+            </div>
+            <div class="inning-scores">
+              <span class="inning-label">TR</span>
+              <span class="inning-cell">0</span><span class="inning-cell">2</span><span class="inning-cell">0</span><span class="inning-cell">1</span><span class="inning-cell">2</span><span class="inning-cell">0</span><span class="inning-cell">0</span>
+              <span class="inning-label" style="margin-left:8px">OPP</span>
+              <span class="inning-cell">0</span><span class="inning-cell">0</span><span class="inning-cell">1</span><span class="inning-cell">0</span><span class="inning-cell">1</span><span class="inning-cell">0</span><span class="inning-cell">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Win: practice vs 目黒ライオンズ 7-4 -->
+        <div class="match-card" data-type="練習試合" data-result="win" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge practice">練習試合</span>
+            <span class="match-date">2026.02.08（日）</span>
+            <span class="match-type">練習試合</span>
+            <span class="match-venue">📍 多摩川グラウンド</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">7</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">4</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">ML</div>
+              <div style="text-align:right"><div class="team-name">目黒ライオンズ</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lose: vs 港区アタッカーズ 2-5 -->
+        <div class="match-card" data-type="公式戦" data-result="lose" data-year="2026">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2026.01.26（日）</span>
+            <span class="match-type">冬季オープン戦</span>
+            <span class="match-venue">📍 港区運動公園</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div><div class="match-detail">先発：山田</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num" style="color:var(--lose)">2</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">5</span>
+              <span class="result-badge lose">LOSE</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">MA</div>
+              <div style="text-align:right"><div class="team-name">港区アタッカーズ</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Results 2025 ─── -->
+      <div class="match-group" id="results2025" style="display:none">
+        <div class="section-title">2025 RESULTS &nbsp; 試合結果</div>
+
+        <div class="match-card" data-type="公式戦" data-result="win" data-year="2025">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2025.11.23（日）</span>
+            <span class="match-type">秋季大会 準決勝</span>
+            <span class="match-venue">📍 多摩川グラウンド</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">4</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">2</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">KD</div>
+              <div style="text-align:right"><div class="team-name">葛飾ドルフィンズ</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-card" data-type="公式戦" data-result="lose" data-year="2025">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2025.11.30（日）</span>
+            <span class="match-type">秋季大会 決勝</span>
+            <span class="match-venue">📍 東京都営グラウンド</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div><div class="match-detail">準優勝</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num" style="color:var(--lose)">3</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">6</span>
+              <span class="result-badge lose">LOSE</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">SA</div>
+              <div style="text-align:right"><div class="team-name">杉並エース</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-card" data-type="公式戦" data-result="win" data-year="2025">
+          <div class="match-card-header">
+            <span class="match-badge">公式戦</span>
+            <span class="match-date">2025.10.12（日）</span>
+            <span class="match-type">秋季リーグ 第4節</span>
+            <span class="match-venue">📍 多摩川グラウンド</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">9</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">1</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">OT</div>
+              <div style="text-align:right"><div class="team-name">大田トライデンツ</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="match-card" data-type="練習試合" data-result="win" data-year="2025">
+          <div class="match-card-header">
+            <span class="match-badge practice">練習試合</span>
+            <span class="match-date">2025.09.28（日）</span>
+            <span class="match-type">練習試合</span>
+            <span class="match-venue">📍 中野スタジアム</span>
+          </div>
+          <div class="match-body">
+            <div class="match-team">
+              <div class="team-logo">TR</div>
+              <div><div class="team-name">東京ランブラーズ</div></div>
+            </div>
+            <div class="score-center">
+              <span class="score-num our">6</span>
+              <span class="score-sep">–</span>
+              <span class="score-num opp">3</span>
+              <span class="result-badge win">WIN</span>
+            </div>
+            <div class="match-team right">
+              <div class="team-logo opp">NK</div>
+              <div style="text-align:right"><div class="team-name">中野ドラゴンズ</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-logo">TOKYO RAMBLERS</div>
+    <div class="footer-copy">© 東京ランブラーズ All rights reserved.</div>
+    <a href="baseball-team.html" class="footer-back">← TOPに戻る</a>
+  </footer>
+
+  <script>
+    function filterMatches(type, btn) {
+      if (btn) {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+      }
+
+      const cards = document.querySelectorAll('.match-card');
+      cards.forEach(c => {
+        const show = type === 'all'
+          || (type === 'upcoming' && c.dataset.result === 'upcoming')
+          || (type !== 'upcoming' && c.dataset.result !== 'upcoming' && (type === 'all' || c.dataset.type === type));
+        c.style.display = show ? '' : 'none';
+      });
+
+      // Hide "Upcoming" section header if not relevant
+      const upcomingSection = document.getElementById('upcomingSection');
+      if (type === '公式戦' || type === '練習試合') {
+        upcomingSection.style.display = 'none';
+      } else {
+        upcomingSection.style.display = '';
+      }
+    }
+
+    function filterYear(year) {
+      const cards2026 = document.querySelectorAll('[data-year="2026"]');
+      const cards2025 = document.querySelectorAll('[data-year="2025"]');
+      const section2025 = document.getElementById('results2025');
+      const section2026 = document.getElementById('results2026');
+      const upcomingSection = document.getElementById('upcomingSection');
+
+      if (year === '2025') {
+        cards2026.forEach(c => c.style.display = 'none');
+        section2026.style.display = 'none';
+        upcomingSection.style.display = 'none';
+        section2025.style.display = '';
+        cards2025.forEach(c => c.style.display = '');
+      } else {
+        cards2025.forEach(c => c.style.display = 'none');
+        section2025.style.display = 'none';
+        section2026.style.display = '';
+        upcomingSection.style.display = '';
+        cards2026.forEach(c => c.style.display = '');
+      }
+    }
+  </script>
+</body>
+</html>

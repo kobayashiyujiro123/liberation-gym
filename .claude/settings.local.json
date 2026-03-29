@@ -170,7 +170,32 @@
       "Bash(npx --version)",
       "Bash(where ruby:*)",
       "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\kobay\\\\Downloads\\\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4\\\\.claude\\\\serve-admin.ps1\")",
-      "Bash(grep -rn \"pw-form\\\\|pw-done\\\\|updateUser\\\\|パスワード変更\" 'C:\\\\Users\\\\kobay\\\\Downloads\\\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4' --include=*.html)"
+      "Bash(grep -rn \"pw-form\\\\|pw-done\\\\|updateUser\\\\|パスワード変更\" 'C:\\\\Users\\\\kobay\\\\Downloads\\\\AI-Engineer-claude-plan-solution-architecture-aHZVv 4' --include=*.html)",
+      "Bash(where python.exe)",
+      "Bash(where python3.exe)",
+      "Bash(where py.exe)",
+      "Bash(where node.exe)",
+      "Bash(where npx.exe)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:6550/gym-member.html)",
+      "Read(//usr/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Bash(command -v node)",
+      "Bash(command -v python3)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:6544/gym-member.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:6548/gym-member.html)",
+      "Bash(curl -s \"https://liberation-gym.vercel.app/gym-schedule.html\")",
+      "Bash(curl -s \"https://liberation-gym.vercel.app/supabase-config.js\")",
+      "Bash(curl -sk \"https://liberation-gym.vercel.app/supabase-config.js\")",
+      "Bash(curl -sk \"https://liberation-gym.vercel.app/gym-schedule.html\")",
+      "Bash(curl -s -X GET \"https://getlmyggtxlfswinctss.supabase.co/rest/v1/notices?select=*\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\")",
+      "Bash(curl -s -X POST \"https://getlmyggtxlfswinctss.supabase.co/rest/v1/notices\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" -d '{\"\"title\"\":\"\"INSERTテスト\"\",\"\"content\"\":\"\"直接APIテスト\"\",\"\"visible\"\":true,\"\"date\"\":\"\"2026-03-27\"\"}')",
+      "Bash(curl -s -I -X OPTIONS \"https://getlmyggtxlfswinctss.supabase.co/rest/v1/notices\" -H \"Origin: https://liberation-gym.vercel.app\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: apikey,authorization,content-type\")",
+      "Bash(curl -s \"https://liberation-gym.pages.dev/supabase-config.js\")",
+      "Bash(curl -s https://liberation-gym.vercel.app/gym-member.html)",
+      "Bash(curl -s \"https://liberation-gym.vercel.app/gym-member\")",
+      "Bash(curl -s \"https://getlmyggtxlfswinctss.supabase.co/rest/v1/reservations?limit=1\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldGxteWdndHhsZnN3aW5jdHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjU1MjEsImV4cCI6MjA4OTI0MTUyMX0.gamQJ7A9qojkuF0UhL44A73ibzP6WB3ORfM5p8xD2po\")",
+      "WebFetch(domain:liberation-gym.vercel.app)",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

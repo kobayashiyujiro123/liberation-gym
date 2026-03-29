@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お知らせ | 東京ランブラーズ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #00A2B1; --teal-dark: #008f9d;
+      --navy: #192533; --navy-mid: #1e3a5f;
+      --gray-bg: #F2F2F2; --white: #FFFFFF;
+      --text: #222222; --text-gray: #666666;
+      --max-w: 1200px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Sans JP', sans-serif; color: var(--text); background: var(--white); overflow-x: hidden; }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: linear-gradient(135deg, rgba(0,162,177,0.18) 0%, rgba(25,37,51,0.92) 50%, rgba(0,77,90,0.18) 100%);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,162,177,0.18);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; text-decoration: none; }
+    .logo-badge { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-badge img { width: 46px; height: 46px; border-radius: 50%; filter: drop-shadow(0 0 7px rgba(0,162,177,0.45)); transition: filter 0.3s; }
+    .logo:hover .logo-badge img { filter: drop-shadow(0 0 14px rgba(0,162,177,0.75)); }
+    nav { display: flex; gap: 6px; align-items: center; }
+    .nav-link {
+      color: var(--white); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.55);
+      transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.15); }
+    .nav-link.active { background: var(--teal); border-color: var(--teal); }
+    .nav-login { background: var(--teal); border-color: var(--teal); color: var(--white); font-weight: 700; padding: 7px 20px; margin-left: 8px; }
+    .nav-login:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+
+    /* ─── PAGE HERO ─── */
+    .page-hero {
+      background: var(--gray-bg);
+      padding: 100px 48px 56px;
+      border-bottom: 1px solid #e0e0e0;
+      position: relative; overflow: hidden;
+    }
+    .page-hero::after {
+      content: '';
+      position: absolute; left: 0; bottom: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--teal), transparent);
+    }
+    .page-hero-inner { max-width: var(--max-w); margin: 0 auto; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .breadcrumb a { color: var(--text-gray); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--teal); }
+    .breadcrumb-sep { color: #ccc; font-size: 13px; }
+    .breadcrumb-current { color: var(--text); font-size: 13px; font-weight: 500; }
+    .page-hero-en {
+      font-family: 'Oswald', sans-serif; font-size: clamp(40px, 6vw, 68px);
+      font-weight: 700; color: var(--navy); letter-spacing: 4px; line-height: 1;
+      margin-bottom: 6px;
+    }
+    .page-hero-jp { font-size: 14px; color: var(--text-gray); font-weight: 500; letter-spacing: 1px; }
+    .page-hero-bg-text {
+      position: absolute; right: 0; bottom: -20px;
+      font-family: 'Oswald', sans-serif; font-size: 120px; font-weight: 700;
+      color: rgba(0,0,0,0.04); letter-spacing: 8px; line-height: 1; pointer-events: none;
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .page-content { background: var(--gray-bg); min-height: 60vh; padding: 40px 48px 80px; }
+    .page-content-inner { max-width: var(--max-w); margin: 0 auto; display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
+
+    /* ─── NEWS LIST ─── */
+    .news-panel { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+    .news-panel-header { padding: 20px 28px 0; border-bottom: 1.5px solid #f0f0f0; }
+    .tabs { display: flex; gap: 0; }
+    .tab {
+      padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text-gray);
+      cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .tab.active { color: var(--text); border-bottom-color: var(--teal); font-weight: 700; }
+    .tab:hover:not(.active) { color: var(--text); }
+    .news-list { padding: 8px 0; }
+    .news-article {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 20px 28px; border-bottom: 1px solid #f5f5f5;
+      text-decoration: none; color: var(--text);
+      transition: background 0.2s; cursor: pointer;
+    }
+    .news-article:last-child { border-bottom: none; }
+    .news-article:hover { background: #fafafa; }
+    .news-date-col { min-width: 86px; flex-shrink: 0; }
+    .news-date { font-size: 11px; color: var(--text-gray); display: block; }
+    .news-badge {
+      display: inline-block; background: var(--navy); color: var(--white);
+      font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 2px;
+      white-space: nowrap; letter-spacing: 0.5px; margin-top: 5px;
+    }
+    .news-badge.match { background: var(--teal); }
+    .news-badge.event { background: #e67e22; }
+    .news-badge.team  { background: #27ae60; }
+    .news-badge.player{ background: #8e44ad; }
+    .news-content { flex: 1; }
+    .news-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
+    .news-excerpt { font-size: 12px; color: var(--text-gray); line-height: 1.6; }
+    .news-arrow { color: #ccc; font-size: 16px; align-self: center; flex-shrink: 0; transition: color 0.2s, transform 0.2s; }
+    .news-article:hover .news-arrow { color: var(--teal); transform: translateX(4px); }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    .sidebar-card { background: var(--white); border-radius: 16px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+    .sidebar-title {
+      font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 700;
+      color: var(--navy); letter-spacing: 1px; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--teal);
+    }
+    .category-list { display: flex; flex-direction: column; gap: 4px; }
+    .category-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      transition: background 0.2s; text-decoration: none;
+      font-size: 13px; color: var(--text); font-weight: 500;
+    }
+    .category-item:hover { background: var(--gray-bg); color: var(--teal); }
+    .category-count {
+      background: var(--gray-bg); color: var(--text-gray);
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    }
+    .recent-list { display: flex; flex-direction: column; gap: 12px; }
+    .recent-item { display: flex; gap: 12px; cursor: pointer; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-thumb {
+      width: 60px; height: 44px; background: var(--gray-bg); border-radius: 6px;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .recent-info { flex: 1; min-width: 0; }
+    .recent-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .recent-date { font-size: 10px; color: var(--text-gray); margin-top: 4px; }
+    .sns-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .sns-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      text-decoration: none; transition: opacity 0.2s; color: var(--white);
+    }
+    .sns-btn:hover { opacity: 0.85; }
+    .sns-btn.x       { background: #000; }
+    .sns-btn.ig      { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+    .sns-btn.yt      { background: #ff0000; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: var(--navy); padding: 24px 48px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--teal); letter-spacing: 2px; }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .footer-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .footer-back:hover { color: var(--teal); border-color: var(--teal); }
+
+    @media (max-width: 900px) {
+      .page-content-inner { grid-template-columns: 1fr; }
+      .sidebar { display: grid; grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .page-hero { padding: 90px 20px 40px; }
+      .page-content { padding: 28px 16px 60px; }
+      .sidebar { grid-template-columns: 1fr; }
+      .news-article { padding: 16px 18px; }
+      nav { display: none; }
+      .footer { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <a href="baseball-team.html" class="logo">
+      <div class="logo-badge">
+        <img src="logo.jpg" alt="白金台ジャンキース">
+      </div>
+    </a>
+    <nav>
+      <a href="members.html"                class="nav-link">メンバー</a>
+      <a href="news.html"                   class="nav-link active">ニュース</a>
+      <a href="matches.html"                class="nav-link">試合結果</a>
+      <a href="baseball-team.html#calendar" class="nav-link">スケジュール</a>
+      <a href="baseball-team.html#contact"  class="nav-link">お問い合わせ</a>
+      <a href="#"                           class="nav-link nav-login">チームメンバーの方</a>
+    </nav>
+  </header>
+
+  <!-- ─── PAGE HERO ─── -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="breadcrumb">
+        <a href="baseball-team.html">TOP</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">お知らせ</span>
+      </div>
+      <div class="page-hero-en">NEWS</div>
+      <div class="page-hero-jp">新着情報・お知らせ</div>
+    </div>
+    <div class="page-hero-bg-text">NEWS</div>
+  </section>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div class="page-content">
+    <div class="page-content-inner">
+
+      <!-- News List -->
+      <div>
+        <div class="news-panel">
+          <div class="news-panel-header">
+            <div class="tabs">
+              <div class="tab active" onclick="filterNews('all', this)">すべて</div>
+              <div class="tab" onclick="filterNews('試合結果', this)">試合</div>
+              <div class="tab" onclick="filterNews('チーム', this)">チーム</div>
+              <div class="tab" onclick="filterNews('選手', this)">選手</div>
+              <div class="tab" onclick="filterNews('イベント', this)">イベント</div>
+              <div class="tab" onclick="filterNews('お知らせ', this)">お知らせ</div>
+            </div>
+          </div>
+          <div class="news-list" id="newsList">
+
+            <a class="news-article" data-cat="お知らせ">
+              <div class="news-date-col">
+                <span class="news-date">2026.03.18</span>
+                <span class="news-badge">お知らせ</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">【重要】2026年度 会費・ユニフォーム申込のご案内</div>
+                <div class="news-excerpt">2026年シーズンの会費納入およびユニフォーム注文の締切は3月31日（火）です。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="お知らせ">
+              <div class="news-date-col">
+                <span class="news-date">2026.03.01</span>
+                <span class="news-badge">お知らせ</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">2026年度 新メンバー募集開始。経験不問・見学大歓迎</div>
+                <div class="news-excerpt">草野球未経験の方も大歓迎です。まずはお気軽に見学からどうぞ。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="イベント">
+              <div class="news-date-col">
+                <span class="news-date">2026.02.28</span>
+                <span class="news-badge event">イベント</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">春季大会エントリー完了。3/22より開幕！</div>
+                <div class="news-excerpt">第12回東京都草野球春季大会への参加が決定しました。初戦は3/22、多摩川グラウンドにて。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="試合結果">
+              <div class="news-date-col">
+                <span class="news-date">2026.03.02</span>
+                <span class="news-badge match">試合結果</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">【試合結果】vs 渋谷クラブ 8-3 勝利 ／ 春季リーグ第1節</div>
+                <div class="news-excerpt">春季リーグ開幕戦を快勝。山田投手が7回を1失点に抑え、打線も14安打と爆発した。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="試合結果">
+              <div class="news-date-col">
+                <span class="news-date">2026.02.23</span>
+                <span class="news-badge match">試合結果</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">vs 新宿ブラックイーグルス 5-2 勝利。連勝スタート</div>
+                <div class="news-excerpt">先制の2点本塁打から流れを掴み、終盤に追加点。投打噛み合い快勝。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="チーム">
+              <div class="news-date-col">
+                <span class="news-date">2026.02.15</span>
+                <span class="news-badge team">チーム</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">キャプテン交代のお知らせ。田中から山田へ引き継ぎ</div>
+                <div class="news-excerpt">2026年シーズンより、山田太郎選手が新キャプテンに就任します。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="イベント">
+              <div class="news-date-col">
+                <span class="news-date">2026.02.10</span>
+                <span class="news-badge event">イベント</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">OB・OG戦 4/6（日）に開催決定。参加者募集中</div>
+                <div class="news-excerpt">年1回のOB・OG戦を今年も開催します。卒業生の方はぜひご連絡ください。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="選手">
+              <div class="news-date-col">
+                <span class="news-date">2026.01.28</span>
+                <span class="news-badge player">選手</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">新加入選手のご紹介：岡田凌（投手・背番号35）</div>
+                <div class="news-excerpt">大学野球経験者の岡田凌選手が入団。最速135km/hの本格派右腕として期待がかかる。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="チーム">
+              <div class="news-date-col">
+                <span class="news-date">2026.01.15</span>
+                <span class="news-badge team">チーム</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">2026年シーズン開幕。スローガン「前進」で戦います</div>
+                <div class="news-excerpt">今季のチームスローガンは「前進」。昨季の悔しさをバネに、リーグ優勝を目指します。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="試合結果">
+              <div class="news-date-col">
+                <span class="news-date">2025.11.30</span>
+                <span class="news-badge match">試合結果</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">2025年秋季大会 準優勝！来季への誓い</div>
+                <div class="news-excerpt">惜しくも決勝で敗れたものの、チーム史上最高の結果を残すことができました。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="お知らせ">
+              <div class="news-date-col">
+                <span class="news-date">2025.11.01</span>
+                <span class="news-badge">お知らせ</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">公式サイトをリニューアルしました</div>
+                <div class="news-excerpt">より見やすく、スマートフォンにも対応したWebサイトにリニューアルしました。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+            <a class="news-article" data-cat="イベント">
+              <div class="news-date-col">
+                <span class="news-date">2025.10.18</span>
+                <span class="news-badge event">イベント</span>
+              </div>
+              <div class="news-content">
+                <div class="news-title">打ち上げ BBQ のご案内（10/25 多摩川河川敷）</div>
+                <div class="news-excerpt">秋季大会終了後の親睦BBQを開催します。家族・友人も大歓迎です。</div>
+              </div>
+              <div class="news-arrow">›</div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <!-- Category -->
+        <div class="sidebar-card">
+          <div class="sidebar-title">CATEGORY</div>
+          <div class="category-list">
+            <a class="category-item" onclick="filterNews('all', null)">すべて <span class="category-count">12</span></a>
+            <a class="category-item" onclick="filterNews('試合結果', null)">試合結果 <span class="category-count">3</span></a>
+            <a class="category-item" onclick="filterNews('チーム', null)">チーム <span class="category-count">2</span></a>
+            <a class="category-item" onclick="filterNews('選手', null)">選手 <span class="category-count">1</span></a>
+            <a class="category-item" onclick="filterNews('イベント', null)">イベント <span class="category-count">3</span></a>
+            <a class="category-item" onclick="filterNews('お知らせ', null)">お知らせ <span class="category-count">3</span></a>
+          </div>
+        </div>
+
+        <!-- Recent -->
+        <div class="sidebar-card">
+          <div class="sidebar-title">RECENT</div>
+          <div class="recent-list">
+            <div class="recent-item">
+              <div class="recent-thumb">⚾</div>
+              <div class="recent-info">
+                <div class="recent-title">【試合結果】vs 渋谷クラブ 8-3 勝利</div>
+                <div class="recent-date">2026.03.02</div>
+              </div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-thumb">📢</div>
+              <div class="recent-info">
+                <div class="recent-title">新メンバー募集開始。経験不問・見学大歓迎</div>
+                <div class="recent-date">2026.03.01</div>
+              </div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-thumb">🏆</div>
+              <div class="recent-info">
+                <div class="recent-title">春季大会エントリー完了。3/22より開幕！</div>
+                <div class="recent-date">2026.02.28</div>
+              </div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-thumb">⚾</div>
+              <div class="recent-info">
+                <div class="recent-title">vs 新宿ブラックイーグルス 5-2 勝利</div>
+                <div class="recent-date">2026.02.23</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SNS -->
+        <div class="sidebar-card">
+          <div class="sidebar-title">FOLLOW US</div>
+          <div class="sns-links">
+            <a href="#" class="sns-btn x">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.632 5.905-5.632z"/></svg>
+              X (Twitter)
+            </a>
+            <a href="#" class="sns-btn ig">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="rgba(255,255,255,0.2)"/></svg>
+              Instagram
+            </a>
+            <a href="#" class="sns-btn yt">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20.05 12 20.05 12 20.05s6.88 0 8.59-.45a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="rgba(255,0,0,0.8)"/></svg>
+              YouTube
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-logo">TOKYO RAMBLERS</div>
+    <div class="footer-copy">© 東京ランブラーズ All rights reserved.</div>
+    <a href="baseball-team.html" class="footer-back">← TOPに戻る</a>
+  </footer>
+
+  <script>
+    function filterNews(cat, tabEl) {
+      // Update tabs
+      if (tabEl) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tabEl.classList.add('active');
+      }
+      const articles = document.querySelectorAll('.news-article');
+      articles.forEach(a => {
+        if (cat === 'all' || a.dataset.cat === cat) {
+          a.style.display = '';
+        } else {
+          a.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
