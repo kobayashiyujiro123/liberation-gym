@@ -843,6 +843,32 @@ function _clearSession() {
   _gymSession=null; localStorage.removeItem(_AUTH_KEY);
   try { const ref=SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1]||''; localStorage.removeItem('sb-'+ref+'-auth-token'); localStorage.removeItem('sb-'+ref+'-auth-token-code-verifier'); } catch(e){}
 }
+async function _tryRefreshSession() {
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem(_AUTH_KEY) || 'null'); } catch(e) {}
+  if (!stored || !stored.refresh_token) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: stored.refresh_token })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token) return null;
+    if (!data.user && stored.user) data.user = stored.user;
+    _saveSession(data);
+    return _getSession();
+  } catch(e) { return null; }
+}
+function _scheduleTokenRefresh() {
+  setInterval(async () => {
+    const s = _gymSession || (() => { try { return JSON.parse(localStorage.getItem(_AUTH_KEY)||'null'); } catch(e) { return null; } })();
+    if (!s || !s.refresh_token) return;
+    const remaining = (s.expires_at || 0) - Math.floor(Date.now()/1000);
+    if (remaining < 600) await _tryRefreshSession();
+  }, 5 * 60 * 1000);
+}
 async function _authAPI(method, path, body, tok) {
   const r=await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{method,headers:{'apikey':SUPABASE_ANON,'Authorization':`Bearer ${tok||_getToken()}`,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
   return {ok:r.ok,status:r.status,data:await r.json().catch(()=>({}))};
@@ -966,6 +992,7 @@ function removePhoto() {
 function enterApp() {
   document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
   document.getElementById('app-wrap').classList.add('visible');
+  _scheduleTokenRefresh();
   document.getElementById('sb-name').textContent = user.name || '';
   updateAvatarUI(user.photoUrl || null);
   // 予約状況閲覧権限があればボタンを表示
@@ -1306,8 +1333,8 @@ if (DEMO_MODE) {
         return;
       }
     }
-    // 保存済みセッション確認
-    const sess = _getSession();
+    // 保存済みセッション確認（期限切れならリフレッシュを試みる）
+    const sess = _getSession() || await _tryRefreshSession();
     if (sess && sess.user) {
       let hasProfile = false;
       try { hasProfile = await loadUserProfile(sess.user, sess.access_token); } catch(e) {}

@@ -993,12 +993,13 @@ if (DEMO_MODE) {
   });
 } else {
   (async function _initAdminSession() {
-    // gym_auth_v1 セッションを読み取る
+    // gym_auth_v1 セッションを読み取る（期限切れならリフレッシュを試みる）
     let sess = null;
     try {
       const s = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null');
       if (s && s.access_token && s.expires_at > Math.floor(Date.now()/1000) + 30) sess = s;
     } catch(e) {}
+    if (!sess) sess = await _tryRefreshAdminSession();
     if (!sess || !sess.user) {
       location.href = 'gym-member';
       return;
@@ -1026,6 +1027,7 @@ if (DEMO_MODE) {
       console.warn('Role check failed, proceeding as admin:', e);
     }
     applyRoleVisibility(role);
+    _scheduleAdminTokenRefresh();
     await initFromDB();
   })();
 }
@@ -2788,6 +2790,34 @@ function _getAccessToken() {
   return SUPABASE_ANON;
 }
 const _getAdminToken = _getAccessToken;
+async function _tryRefreshAdminSession() {
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null'); } catch(e) {}
+  if (!stored || !stored.refresh_token) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: stored.refresh_token })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token) return null;
+    if (!data.user && stored.user) data.user = stored.user;
+    const newSess = { access_token: data.access_token, refresh_token: data.refresh_token || stored.refresh_token, expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600), user: data.user || stored.user };
+    localStorage.setItem('gym_auth_v1', JSON.stringify(newSess));
+    return newSess;
+  } catch(e) { return null; }
+}
+function _scheduleAdminTokenRefresh() {
+  setInterval(async () => {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('gym_auth_v1')||'null'); } catch(e) {}
+    if (!s || !s.refresh_token) return;
+    const remaining = (s.expires_at || 0) - Math.floor(Date.now()/1000);
+    if (remaining < 600) await _tryRefreshAdminSession();
+  }, 5 * 60 * 1000);
+}
 
 function _noticesApiHeaders(extra) {
   const token = _getAccessToken();
