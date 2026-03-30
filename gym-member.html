@@ -1688,9 +1688,15 @@ async function renderRes() {
   const nowMs = Date.now();
   // 今日の日付文字列（YYYY-MM-DD）
   const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  // 予約時間＋1時間を過ぎたものは非表示にするフィルター
+  const _isVisible = r => {
+    const [ry, rmm, rd2] = r.date.split('-').map(Number);
+    const [rh, rmin] = (r.time || '00:00').split(':').map(Number);
+    return new Date(ry, rmm - 1, rd2, rh, rmin).getTime() + 3600000 > nowMs;
+  };
   let data;
   if (DEMO_MODE) {
-    data = demoReservations.filter(r => r.date >= todayStr);
+    data = demoReservations.filter(r => r.date >= todayStr && _isVisible(r));
   } else {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
     const res = await _restAPI('GET', 'reservations', `user_id=eq.${user.id}&date=gte.${todayStr}&order=date.asc`);
@@ -1698,7 +1704,7 @@ async function renderRes() {
       el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
       return;
     }
-    data = res.data;
+    data = res.data.filter(_isVisible);
   }
   if (!data.length) {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
