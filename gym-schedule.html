@@ -1226,9 +1226,11 @@ function renderReservations() {
       const isMale = r.gender === '男';
       const isFemale = r.gender === '女';
       const avStyle = isCancel ? '' : isMale ? 'style="background:linear-gradient(135deg,#64b5f6,#1565c0);"' : isFemale ? 'style="background:linear-gradient(135deg,#f06292,#ba68c8);"' : '';
-      const cardStyle = isCancel ? '' : isMale ? 'style="border-left-color:#1565c0;"' : isFemale ? 'style="border-left-color:#ba68c8;"' : '';
+      const cardBorderColor = isCancel ? '' : isMale ? 'border-left-color:#1565c0;' : isFemale ? 'border-left-color:#ba68c8;' : '';
+      const isCoach = currentUserRole === 'coach';
+      const cardStyleStr = (cardBorderColor || isCoach) ? `style="${cardBorderColor}${isCoach ? 'cursor:default;' : ''}"` : '';
       return `
-        <div class="${cardClass}" ${cardStyle} id="res-card-${r.id}" onclick="openMemberDetailByResName('${r.name.replace(/'/g, "\\'")}')">
+        <div class="${cardClass}" ${cardStyleStr} id="res-card-${r.id}" ${isCoach ? '' : `onclick="openMemberDetailByResName('${r.name.replace(/'/g, "\\'")}')"`}>
           <div class="res-card-avatar" ${avStyle}>${r.name.slice(0,2)}</div>
           <div class="res-card-body">
             <div class="res-card-name">${r.name}</div>
@@ -1238,9 +1240,9 @@ function renderReservations() {
             </div>
             ${r.memo ? `<div style="font-size:0.72rem;color:var(--text-light);margin-top:3px;"><i class="fas fa-sticky-note" style="margin-right:4px;opacity:0.6;"></i>${r.memo}</div>` : ''}
           </div>
-          <div class="res-card-actions" onclick="event.stopPropagation()">
+          ${isCoach ? '' : `<div class="res-card-actions" onclick="event.stopPropagation()">
             <button class="act-btn" id="res-edit-btn-${r.id}" style="font-size:0.72rem;padding:3px 8px;" onclick="toggleResEdit('${r.id}')">編集</button>
-          </div>
+          </div>`}
         </div>`;
     }).join('');
 
