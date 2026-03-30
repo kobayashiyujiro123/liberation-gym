@@ -729,7 +729,7 @@
       </div>
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>氏名</th><th>担当会員数</th><th>ステータス</th><th></th></tr></thead>
+          <thead><tr><th>氏名</th><th>生年月日</th><th>年齢</th><th>担当会員数</th><th>ステータス</th><th></th></tr></thead>
           <tbody id="coach-tbody"></tbody>
         </table>
         <div class="pagination" id="coach-pagination"></div>
@@ -2350,8 +2350,9 @@ function renderCoaches() {
   const tbody = document.getElementById('coach-tbody');
   tbody.innerHTML = items.length ? items.map(c => `
     <tr class="clickable-row" onclick="openCoachDetail('${c.id}')">
-      <td>${c.id}</td>
       <td><div class="m-cell"><div class="m-av" style="background:${c.color}">${c.name.slice(0,2)}</div>${c.name}</div></td>
+      <td>${fmtDate(c.birthday)}</td>
+      <td>${calcAge(c.birthday)}</td>
       <td>${c.classes}</td>
       <td><span class="badge ${c.badge}">${c.status}</span></td>
       <td onclick="event.stopPropagation()">
@@ -2359,7 +2360,7 @@ function renderCoaches() {
         <button class="act-btn" onclick="openCoachEdit('${c.id}')">編集</button>
       </td>
     </tr>`).join('')
-  : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">該当するコーチが見つかりません</td></tr>';
+  : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当するコーチが見つかりません</td></tr>';
 
   const pag = document.getElementById('coach-pagination');
   let html = `<button class="pg-btn" onclick="coachGoPage(${coachPage-1})" ${coachPage===1?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-left"></i></button>`;
@@ -2844,11 +2845,14 @@ async function initNoticesFromDB() {
 async function initCoachesFromDB() {
   try {
     const token = _getAccessToken();
-    const [coachRes, memberRes] = await Promise.all([
+    const [coachRes, memberRes, profileRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/coaches?select=*&order=created_at.asc`, {
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
       }),
       fetch(`${SUPABASE_URL}/rest/v1/profiles?select=coach_name&role=not.in.(admin,coach)&coach_name=not.is.null`, {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=name,birth_date&role=eq.coach`, {
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -2862,6 +2866,12 @@ async function initCoachesFromDB() {
         if (p.coach_name) coachCountMap[p.coach_name] = (coachCountMap[p.coach_name] || 0) + 1;
       });
     }
+    // コーチプロファイルから生年月日マップを作成
+    const coachBirthdayMap = {};
+    if (profileRes.ok) {
+      const profs = await profileRes.json();
+      profs.forEach(p => { if (p.name) coachBirthdayMap[p.name] = p.birth_date || ''; });
+    }
     allCoaches.length = 0;
     const statusMap = { active: '在籍中', on_leave: '休暇中', resigned: '退職' };
     const badgeMap  = { active: 'badge-s', on_leave: 'badge-w', resigned: 'badge-d' };
@@ -2872,6 +2882,7 @@ async function initCoachesFromDB() {
         classes: coachCountMap[c.name] || 0, rating: 5, status: statusMap[c.status] || '在籍中',
         badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
         joined: c.joined_at || '', color: colors[i % colors.length],
+        birthday: coachBirthdayMap[c.name] || '',
       });
     });
     renderCoaches();
