@@ -1496,6 +1496,9 @@ async function doGoogleLogin() {
 async function sendVerification() {
   regEmail = document.getElementById('reg-email').value.trim();
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
+  // 画面を即切り替えてからAPIをバックグラウンド送信
+  document.getElementById('reg2-email').textContent = regEmail;
+  goTo('page-reg2');
   const redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
   const r = await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
     method: 'POST',
@@ -1503,9 +1506,7 @@ async function sendVerification() {
     body: JSON.stringify({ email: regEmail, create_user: true })
   });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
-  document.getElementById('reg2-email').textContent = regEmail;
-  goTo('page-reg2');
+  if (!r.ok) { alert('送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); goTo('page-reg1'); }
 }
 
 async function resendVerification() {
