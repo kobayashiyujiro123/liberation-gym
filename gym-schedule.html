@@ -2912,7 +2912,7 @@ async function initMembersFromDB() {
   try {
   const token = _getAdminToken();
   const [profilesRes, reservationsRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&order=created_at.asc`, {
+    fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&name=not.is.null&order=created_at.asc`, {
       headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
     }),
     fetch(`${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed`, {
