@@ -369,7 +369,7 @@
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
       <i class="nav-icon fas fa-clipboard-list"></i><span>予約管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-members" onclick="show('members')" data-admin-only>
+    <div class="nav-item" id="nav-members" onclick="show('members')" data-admin-only data-coach-members-ok>
       <i class="nav-icon fas fa-users"></i><span>会員管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-coach" onclick="show('coach')" data-admin-only>
@@ -405,7 +405,7 @@
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
         <div class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
-        <div class="dash-card" onclick="show('members')" data-admin-only><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
+        <div class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
@@ -592,7 +592,7 @@
             <div class="mem-field-row"><div class="mem-field-label">メモ</div><div class="mem-field-val" id="md-memo"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">予約状況閲覧権限</div><div class="mem-field-val"><div class="mem-toggle" id="md-toggle"><div class="mem-toggle-knob"></div></div></div></div>
           </div>
-          <div class="mem-detail-actions">
+          <div class="mem-detail-actions" id="mem-detail-edit-btn">
             <button class="btn-p" onclick="openMemberEdit(currentMemberId)"><i class="fas fa-edit"></i> 編集</button>
           </div>
         </div>
@@ -930,11 +930,15 @@ const titles = { dashboard:'トップページ', basicinfo:'基本情報設定',
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
+let currentCoachName = '';
 
 function applyRoleVisibility(role) {
   currentUserRole = role;
   if (role === 'coach') {
-    document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('[data-admin-only]').forEach(el => {
+      if (el.hasAttribute('data-coach-members-ok')) return; // コーチにも見せる
+      el.style.display = 'none';
+    });
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
@@ -1000,7 +1004,7 @@ if (DEMO_MODE) {
     let role = 'admin'; // デフォルト: セッションあり = アクセス許可
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
       );
       if (res.ok) {
@@ -1008,6 +1012,7 @@ if (DEMO_MODE) {
         const p = rows[0];
         if (p && (p.role === 'admin' || p.role === 'coach' || p.can_view)) {
           role = p.role === 'coach' ? 'coach' : p.role === 'admin' ? 'admin' : 'viewer';
+          if (p.role === 'coach') currentCoachName = p.name || '';
         } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
           location.href = 'gym-member';
@@ -1633,6 +1638,9 @@ function openMemberDetail(id, fromView) {
   tog.className = 'mem-toggle' + (m.canView ? '' : ' off');
 
   document.getElementById('heading').textContent = m.name + ' — 会員情報詳細';
+  // コーチは編集ボタン非表示
+  const editBtnWrap = document.getElementById('mem-detail-edit-btn');
+  if (editBtnWrap) editBtnWrap.style.display = currentUserRole === 'coach' ? 'none' : '';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-member-detail').classList.add('active');
   document.querySelectorAll('.nav-item[id]').forEach(n => n.classList.remove('active'));
@@ -1727,10 +1735,11 @@ function memberSort(key) {
 
 function renderMembers() {
   const q = (document.getElementById('member-search')?.value || '').toLowerCase();
-  let filtered = allMembers.filter(m =>
-    m.name.includes(q) || m.email.toLowerCase().includes(q) ||
-    m.id.toLowerCase().includes(q) || (m.memberNo || '').toLowerCase().includes(q)
-  );
+  let filtered = allMembers.filter(m => {
+    if (currentUserRole === 'coach' && currentCoachName && m.coach !== currentCoachName) return false;
+    return m.name.includes(q) || m.email.toLowerCase().includes(q) ||
+      m.id.toLowerCase().includes(q) || (m.memberNo || '').toLowerCase().includes(q);
+  });
 
   // ソート
   if (memberSortKey) {
@@ -1769,7 +1778,7 @@ function renderMembers() {
       <td>${m.tel}</td>
       <td>${m.date}</td>
       <td><span class="badge ${m.badge}">${m.status}</span></td>
-      <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button><button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button></td>
+      <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button>${currentUserRole !== 'coach' ? `<button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button>` : ''}</td>
     </tr>`).join('')
   : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当する会員が見つかりません</td></tr>';
 
