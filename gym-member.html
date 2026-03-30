@@ -1340,6 +1340,31 @@ if (DEMO_MODE) {
   }
 } else {
   (async function _initSession() {
+    // PKCEフロー: ?code= によるトークン交換（メール確認・招待リンク共通）
+    const _pkceCode = new URLSearchParams(location.search).get('code');
+    if (_pkceCode) {
+      history.replaceState(null, '', location.pathname);
+      try {
+        const _pkceRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auth_code: _pkceCode, code_verifier: sessionStorage.getItem('pkce_verifier') || '' })
+        });
+        const _pkceData = await _pkceRes.json();
+        if (_pkceData.access_token) {
+          const { ok, data: uData } = await _authAPI('GET', 'user', null, _pkceData.access_token);
+          if (ok && uData.id) {
+            _saveSession({ access_token: _pkceData.access_token, refresh_token: _pkceData.refresh_token || '', expires_in: parseInt(_pkceData.expires_in || '3600'), user: uData });
+            sessionStorage.removeItem('pkce_verifier');
+            let hasProfile = false;
+            try { hasProfile = await loadUserProfile(uData, _pkceData.access_token); } catch(e) {}
+            if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
+            if (hasProfile) { setTimeout(enterApp, 0); return; }
+            else { regEmail = uData.email || ''; goTo('page-reg3'); return; }
+          }
+        }
+      } catch(e) { console.warn('PKCE exchange failed:', e); }
+    }
     // 招待リンク: ?invite=<token> の処理（ハッシュより先に確認）
     const _inviteParam = new URLSearchParams(location.search).get('invite');
     if (_inviteParam) {
