@@ -794,9 +794,6 @@
           <button class="btn-p" id="invite-send-btn" onclick="submitCoachInvite()" style="width:100%;justify-content:center;">
             <i class="fas fa-paper-plane"></i> メールを送信する
           </button>
-          <button class="btn-o" id="invite-preview-btn" onclick="openCoachRegister()" style="width:100%;justify-content:center;display:none;">
-            <i class="fas fa-user-plus"></i> コーチ情報入力画面を開く（招待リンクのプレビュー）
-          </button>
         </div>
       </div>
     </div>
@@ -2416,16 +2413,14 @@ function openCoachInvite() {
   show('coach-invite');
 }
 
-function submitCoachInvite() {
+async function submitCoachInvite() {
   const emailInp = document.getElementById('invite-email');
   const email = (emailInp?.value || '').trim();
   const errEl  = document.getElementById('invite-email-err');
   const succEl = document.getElementById('invite-success-msg');
   const succTxt = document.getElementById('invite-success-text');
-  const previewBtn = document.getElementById('invite-preview-btn');
   const sendBtn = document.getElementById('invite-send-btn');
 
-  // バリデーション
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email || !emailRe.test(email)) {
     if (errEl) errEl.style.display = '';
@@ -2433,17 +2428,28 @@ function submitCoachInvite() {
     return;
   }
   if (errEl) errEl.style.display = 'none';
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...'; }
 
-  pendingInviteEmail = email;
+  try {
+    const token = _getAccessToken();
+    // pending_invites に role='coach' で登録
+    await fetch(`${SUPABASE_URL}/rest/v1/pending_invites`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ email, role: 'coach' }),
+    });
+    // OTP メール送信（Supabaseの登録用メールを送信）
+    const redirectTo = encodeURIComponent(location.origin + '/gym-member');
+    await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, create_user: true }),
+    });
+  } catch(e) { console.warn('coach invite error:', e); }
 
-  // 送信済み表示（デモ）
-  if (sendBtn) {
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<i class="fas fa-check"></i> 送信済み';
-  }
-  if (succTxt) succTxt.textContent = `${email} に招待メールを送信しました。`;
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<i class="fas fa-check"></i> 送信済み'; }
+  if (succTxt) succTxt.textContent = '送信完了しました。';
   if (succEl)  succEl.style.display = '';
-  if (previewBtn) previewBtn.style.display = '';
 }
 
 function openCoachRegister() {

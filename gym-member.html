@@ -826,6 +826,7 @@ const WD = ['日','月','火','水','木','金','土'];
 let user = {};
 let regEmail = '';
 let inviteToken = null;
+let inviteRole = 'member';
 let cancelTarget = null;
 
 // ===== SESSION & API HELPERS (Supabase JSクライアントの代替) =====
@@ -1378,6 +1379,7 @@ if (DEMO_MODE) {
       if (_inv && !_inv.completed_at && new Date(_inv.expires_at) > new Date()) {
         inviteToken = _inviteParam;
         regEmail = _inv.email;
+        inviteRole = _inv.role || 'member';
         goTo('page-reg3');
       } else {
         alert('このリンクは無効または期限切れです。管理者にお問い合わせください。');
@@ -1597,6 +1599,28 @@ async function completeReg() {
     // PATCH ではなく UPSERT（行がなければINSERT、あればUPDATE）
     // → 新規登録時に profiles 行が存在しなくても正しく作成される
     const token = _getToken();
+    // コーチ招待経由かどうかを判定（inviteRoleまたはDB上のpending_invites確認）
+    let profileRole = inviteRole || 'member';
+    if (profileRole === 'member') {
+      try {
+        const chkEmail = encodeURIComponent(regEmail || sess.user.email || '');
+        const chkRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${chkEmail}&role=eq.coach&completed_at=is.null`,
+          { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+        );
+        if (chkRes.ok) {
+          const chkRows = await chkRes.json();
+          if (chkRows.length > 0) {
+            profileRole = 'coach';
+            fetch(`${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${chkEmail}&role=eq.coach`, {
+              method: 'PATCH',
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ completed_at: new Date().toISOString() }),
+            }).catch(() => {});
+          }
+        }
+      } catch(e) {}
+    }
     await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
       method: 'POST',
       headers: {
@@ -1611,7 +1635,7 @@ async function completeReg() {
         name,
         gender,
         birth_date,
-        role:       'member',
+        role:       profileRole,
         status:     'active',
       }),
     });
