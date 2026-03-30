@@ -386,7 +386,7 @@
       ※メールが届かない場合、以下をお試しください。<br>
       ・迷惑メールフォルダをご確認ください<br>
       ・メールの検索機能を使用し「xxxx@xxx.com」でご検索ください<br>
-      ・<a onclick="resendVerification()">URLを再送信する</a>
+      ・<a id="resend-btn" onclick="resendVerification()">URLを再送信する</a>
     </div>
     <a class="auth-link" onclick="goTo('page-reg1')">メールアドレスを再入力する</a>
   </div>
@@ -1493,12 +1493,35 @@ async function doGoogleLogin() {
   if (error) { alert('Googleログインに失敗しました: ' + error.message); }
 }
 
+let _resendTimer = null;
+function _startResendCooldown() {
+  const btn = document.getElementById('resend-btn');
+  if (!btn) return;
+  let sec = 60;
+  btn.style.pointerEvents = 'none';
+  btn.style.color = '#999';
+  btn.textContent = `URLを再送信する（${sec}秒後に再試行可能）`;
+  clearInterval(_resendTimer);
+  _resendTimer = setInterval(() => {
+    sec--;
+    if (sec <= 0) {
+      clearInterval(_resendTimer);
+      btn.style.pointerEvents = '';
+      btn.style.color = '';
+      btn.textContent = 'URLを再送信する';
+    } else {
+      btn.textContent = `URLを再送信する（${sec}秒後に再試行可能）`;
+    }
+  }, 1000);
+}
+
 async function sendVerification() {
   regEmail = document.getElementById('reg-email').value.trim();
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
   // 画面を即切り替えてからAPIをバックグラウンド送信
   document.getElementById('reg2-email').textContent = regEmail;
   goTo('page-reg2');
+  _startResendCooldown();
   const redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
   const r = await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
     method: 'POST',
@@ -1511,6 +1534,7 @@ async function sendVerification() {
 
 async function resendVerification() {
   if (!regEmail) { goTo('page-reg1'); return; }
+  _startResendCooldown();
   const redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
   const r = await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
     method: 'POST',
@@ -1519,7 +1543,6 @@ async function resendVerification() {
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) { alert('再送信に失敗しました: ' + (data.error_description || data.error || 'エラー')); return; }
-  alert('メールを再送信しました。');
 }
 
 async function completeReg() {
