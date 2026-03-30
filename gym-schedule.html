@@ -527,7 +527,7 @@
 
       <div class="search-bar" style="margin-top:16px;">
         <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="res-search" placeholder="会員名・コーチ名で検索..." oninput="renderReservations()" /></div>
-        <button class="btn-p" onclick="openAddResModal()"><i class="fas fa-plus"></i> 予約追加</button>
+        <button class="btn-p" id="res-add-btn" onclick="openAddResModal()"><i class="fas fa-plus"></i> 予約追加</button>
       </div>
       <div class="res-coach-tabs" id="res-coach-tabs"></div>
       <div id="res-timeline"></div>
@@ -939,6 +939,8 @@ function applyRoleVisibility(role) {
       if (el.hasAttribute('data-coach-members-ok')) return; // コーチにも見せる
       el.style.display = 'none';
     });
+    const addBtn = document.getElementById('res-add-btn');
+    if (addBtn) addBtn.style.display = 'none';
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
