@@ -510,7 +510,7 @@
       <div class="user-avatar" id="sb-avatar"><i class="fas fa-user"></i></div>
       <div>
         <div class="user-name" id="sb-name">山田 太郎</div>
-        <div class="user-role">会員</div>
+        <div class="user-role" id="sb-role">会員</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1001,6 +1001,8 @@ function enterApp() {
   document.getElementById('app-wrap').classList.add('visible');
   _scheduleTokenRefresh();
   document.getElementById('sb-name').textContent = user.name || '';
+  const _roleEl = document.getElementById('sb-role');
+  if (_roleEl) _roleEl.textContent = user.role === 'coach' ? 'コーチ' : '会員';
   updateAvatarUI(user.photoUrl || null);
   // 予約状況閲覧権限があればボタンを表示
   const canView = user.canView || false;
