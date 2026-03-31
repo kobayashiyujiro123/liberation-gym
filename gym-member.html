@@ -1734,6 +1734,9 @@ async function submitNewPw() {
 async function sendReset() {
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { alert('メールアドレスを入力してください'); return; }
+  // 画面を即切り替えてからAPIをバックグラウンド送信
+  document.getElementById('reset-email-disp').textContent = email;
+  goTo('page-pw-reset2');
   const _redirectTo = encodeURIComponent(window.location.origin + '/gym-member');
   const _res = await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${_redirectTo}`, {
     method: 'POST',
@@ -1741,9 +1744,7 @@ async function sendReset() {
     body: JSON.stringify({ email }),
   });
   const rd = await _res.json().catch(() => ({}));
-  if (!_res.ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); return; }
-  document.getElementById('reset-email-disp').textContent = email;
-  goTo('page-pw-reset2');
+  if (!_res.ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); goTo('page-pw-reset'); }
 }
 
 async function doLogout() {
