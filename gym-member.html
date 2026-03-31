@@ -1023,9 +1023,14 @@ function enterApp() {
   const canView = user.canView || false;
   document.getElementById('nav-res-view').style.display    = canView ? '' : 'none';
   document.getElementById('top-card-res-view').style.display = canView ? '' : 'none';
-  const hash = location.hash.replace('#', '');
-  const page = (hash && APP_PAGES[hash]) ? hash : (localStorage.getItem('gym_currentPage') || 'top');
-  showApp(APP_PAGES[page] ? page : 'top');
+  // コーチが ?schedule=1 で来た場合はスケジュール予約画面へ直接遷移
+  if (_isCoach && new URLSearchParams(location.search).get('schedule') === '1') {
+    showApp('schedule');
+  } else {
+    const hash = location.hash.replace('#', '');
+    const page = (hash && APP_PAGES[hash]) ? hash : (localStorage.getItem('gym_currentPage') || 'top');
+    showApp(APP_PAGES[page] ? page : 'top');
+  }
   loadNotices();
 }
 
