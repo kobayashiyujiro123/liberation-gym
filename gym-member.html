@@ -1540,7 +1540,8 @@ async function doLogin() {
   }
   _saveSession(data);
   let hasProfile = false;
-  try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) {}
+  try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) { console.error('[doLogin] loadUserProfile threw:', e); }
+  console.log('[doLogin] hasProfile=', hasProfile, 'role=', user.role, 'data.user=', data.user);
   const _loginScheduleMode = new URLSearchParams(location.search).get('schedule') === '1';
   if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_loginScheduleMode) { location.href = 'gym-schedule'; return; }
   if (hasProfile) enterApp();
