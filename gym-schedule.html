@@ -359,7 +359,7 @@
     <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-user" style="color:#fff;font-size:0.85rem;"></i></div>
     <div>
       <div id="sidebar-coach-name" style="font-size:0.88rem;font-weight:600;color:#fff;"></div>
-      <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);">ã³ã¼ã</div>
+      <div id="sidebar-coach-role" style="font-size:0.72rem;color:rgba(255,255,255,0.5);"></div>
     </div>
   </div>
   <nav class="sidebar-nav">
@@ -1053,6 +1053,17 @@ if (DEMO_MODE) {
       console.warn('Role check failed, proceeding as admin:', e);
     }
     applyRoleVisibility(role);
+    // \u30b5\u30a4\u30c9\u30d0\u30fc\u306b\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\u3092\u76f4\u63a5\u8868\u793a
+    (function() {
+      var _sbEl = document.getElementById('sidebar-coach-user');
+      var _sbName = document.getElementById('sidebar-coach-name');
+      var _sbRole = document.getElementById('sidebar-coach-role');
+      if (!_sbEl) return;
+      var _name = currentCoachName || localStorage.getItem('gym_coach_name') || '';
+      if (_sbName) _sbName.textContent = _name;
+      if (_sbRole) _sbRole.textContent = (role === 'coach') ? '\u30b3\u30fc\u30c1' : (role === 'admin') ? '\u7ba1\u7406\u8005' : '';
+      _sbEl.style.display = 'flex';
+    })();
     _scheduleAdminTokenRefresh();
     await initFromDB();
   })();
