@@ -391,6 +391,9 @@
     <div class="nav-item" id="nav-birthday" onclick="show('birthday')" data-admin-only>
       <i class="nav-icon fas fa-birthday-cake"></i><span>バースデー</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
+    <div class="nav-item" id="nav-userinfo" onclick="show('userinfo')" data-coach-only style="display:none;">
+      <i class="nav-icon fas fa-user-circle"></i><span>\u30e6\u30fc\u30b6\u60c5\u5831</span><i class="nav-arrow fas fa-chevron-right"></i>
+    </div>
     <div class="nav-item" id="nav-password" onclick="show('password')">
       <i class="nav-icon fas fa-key"></i><span>パスワード変更</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
@@ -414,13 +417,14 @@
       <div class="dash-grid">
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
-        <div class="dash-card" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
-        <div class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
-        <div class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
+        <div id="dash-member-schedule" class="dash-card" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
+        <div id="dash-reservation" class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
+        <div id="dash-members" class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
-        <div class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
+        <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">\u30e6\u30fc\u30b6\u60c5\u5831</div></div>
+        <div id="dash-password" class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
       </div>
     </div>
 
@@ -673,6 +677,33 @@
         <div class="form-group"><label class="form-label">新しいパスワード</label><input type="password" id="pw-new" class="form-ctrl" placeholder="8文字以上の英数字" /></div>
         <div class="form-group"><label class="form-label">新しいパスワード（確認）</label><input type="password" id="pw-new2" class="form-ctrl" placeholder="8文字以上の英数字" /></div>
         <div class="form-actions"><button class="btn-p" onclick="changePw()">変更する</button><button class="btn-o" onclick="['pw-cur','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='')">キャンセル</button></div>
+      </div>
+    </div>
+
+    <!-- USER INFO (coach) -->
+    <div class="view" id="view-userinfo">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> \u30c8\u30c3\u30d7\u30da\u30fc\u30b8\u306b\u623b\u308b</span></div>
+      <div class="form-card" style="max-width:520px;margin-top:24px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
+            <i class="fas fa-user-circle" style="color:#fff;font-size:1.8rem;"></i>
+          </div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);">\u30e6\u30fc\u30b6\u60c5\u5831</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-user"></i> \u6c0f\u540d</div>
+            <div class="coach-detail-val" id="ui-name" style="font-size:1rem;font-weight:600;"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-envelope"></i> \u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9</div>
+            <div class="coach-detail-val" id="ui-email"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-phone"></i> \u96fb\u8a71\u756a\u53f7</div>
+            <div class="coach-detail-val" id="ui-tel"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -938,7 +969,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'\u30e6\u30fc\u30b6\u60c5\u5831' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -966,6 +997,30 @@ function applyRoleVisibility(role) {
       var _displayName = currentCoachName || localStorage.getItem('gym_coach_name') || '';
       _coachNameEl.textContent = _displayName;
     }
+    // ── サイドバー ナビゲーションの並び替え（コーチ用順序）──
+    (function() {
+      var _navDash = document.getElementById('nav-dashboard');
+      if (!_navDash) return;
+      var _coachNavOrder = ['nav-reservation', 'nav-members', 'nav-member-schedule', 'nav-userinfo', 'nav-password'];
+      var _afterNode = _navDash;
+      _coachNavOrder.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          _afterNode.parentNode.insertBefore(el, _afterNode.nextSibling);
+          _afterNode = el;
+        }
+      });
+    })();
+    // ── ダッシュボードカードの並び替え（コーチ用順序）──
+    (function() {
+      var _grid = document.querySelector('.dash-grid');
+      if (!_grid) return;
+      var _coachDashOrder = ['dash-reservation', 'dash-members', 'dash-member-schedule', 'dash-userinfo', 'dash-password'];
+      _coachDashOrder.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) _grid.appendChild(el);
+      });
+    })();
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
@@ -1031,7 +1086,7 @@ if (DEMO_MODE) {
     let role = 'admin'; // デフォルト: セッションあり = アクセス許可
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name,email,tel&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
       );
       if (res.ok) {
@@ -1041,6 +1096,13 @@ if (DEMO_MODE) {
           role = p.role === 'coach' ? 'coach' : p.role === 'admin' ? 'admin' : 'viewer';
           if (p.role === 'coach') {
             currentCoachName = p.name || localStorage.getItem('gym_coach_name') || '';
+            // ユーザ情報ビューに反映
+            var _uiName  = document.getElementById('ui-name');
+            var _uiEmail = document.getElementById('ui-email');
+            var _uiTel   = document.getElementById('ui-tel');
+            if (_uiName)  _uiName.textContent  = p.name  || '';
+            if (_uiEmail) _uiEmail.textContent = p.email || sess.user.email || '';
+            if (_uiTel)   _uiTel.textContent   = p.tel   || '-';
           }
         } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
