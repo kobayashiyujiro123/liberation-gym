@@ -1014,6 +1014,8 @@ function enterApp() {
   if (_roleEl) _roleEl.textContent = user.role === 'coach' ? 'コーチ' : '会員';
   // コーチ/会員で表示要素を切り替え
   const _isCoach = user.role === 'coach';
+  // ã³ã¼ãåãlocalStorageã«ä¿å­ï¼gym-scheduleã§ä½¿ç¨ï¼
+  if (_isCoach && user.name) localStorage.setItem('gym_coach_name', user.name);
   document.querySelectorAll('[data-coach-only]').forEach(el => el.style.display = _isCoach ? '' : 'none');
   document.querySelectorAll('[data-member-only]').forEach(el => el.style.display = _isCoach ? 'none' : '');
   updateAvatarUI(user.photoUrl || null);

@@ -962,7 +962,10 @@ function applyRoleVisibility(role) {
     var _coachUserEl = document.getElementById('sidebar-coach-user');
     if (_coachUserEl) _coachUserEl.style.display = 'flex';
     var _coachNameEl = document.getElementById('sidebar-coach-name');
-    if (_coachNameEl) _coachNameEl.textContent = currentCoachName || '';
+    if (_coachNameEl) {
+      var _displayName = currentCoachName || localStorage.getItem('gym_coach_name') || '';
+      _coachNameEl.textContent = _displayName;
+    }
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
@@ -1036,7 +1039,9 @@ if (DEMO_MODE) {
         const p = rows[0];
         if (p && (p.role === 'admin' || p.role === 'coach' || p.can_view)) {
           role = p.role === 'coach' ? 'coach' : p.role === 'admin' ? 'admin' : 'viewer';
-          if (p.role === 'coach') currentCoachName = p.name || '';
+          if (p.role === 'coach') {
+            currentCoachName = p.name || localStorage.getItem('gym_coach_name') || '';
+          }
         } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
           location.href = 'gym-member';
