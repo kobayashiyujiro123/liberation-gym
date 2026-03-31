@@ -1648,7 +1648,7 @@ async function completeReg() {
     user.birthYear  = bdy;
     user.birthMonth = bdm;
     user.birthDay   = bdd;
-    user.role       = user.role  || 'member';
+    user.role       = profileRole;
     user.totalVisits  = user.totalVisits  || 0;
     user.yearVisits   = user.yearVisits   || 0;
     user.monthVisits  = user.monthVisits  || 0;
@@ -1659,6 +1659,24 @@ async function completeReg() {
     user.style  = user.style  || 'オーソドックス';
     user.goal   = user.goal   || '';
     user.phone  = user.phone  || '';
+
+    // コーチの場合: coaches テーブルにも登録してgym-scheduleへリダイレクト
+    if (profileRole === 'coach') {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/coaches`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({ name, email: regEmail || sess.user.email || '', status: 'active' }),
+        });
+      } catch(e) {}
+      location.href = 'gym-schedule';
+      return;
+    }
   }
   goTo('page-reg4');
 }
