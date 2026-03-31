@@ -940,8 +940,6 @@ function applyRoleVisibility(role) {
       if (el.hasAttribute('data-coach-members-ok')) return; // コーチにも見せる
       el.style.display = 'none';
     });
-    const addBtn = document.getElementById('res-add-btn');
-    if (addBtn) addBtn.style.display = 'none';
     // コーチ向けに「会員管理」→「担当会員」に文言変更
     document.querySelectorAll('[data-coach-members-ok] .dash-label, [data-coach-members-ok] span').forEach(el => {
       if (el.textContent.trim() === '会員管理') el.textContent = '担当会員';
