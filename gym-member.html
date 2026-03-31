@@ -1663,6 +1663,18 @@ async function completeReg() {
     // コーチの場合: coaches テーブルにも登録してgym-scheduleへリダイレクト
     if (profileRole === 'coach') {
       try {
+        // 次のコーチIDを自動生成 (例: C001 → C002)
+        const maxIdRes = await fetch(`${SUPABASE_URL}/rest/v1/coaches?select=id&order=id.desc&limit=1`, {
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+        });
+        let nextId = 'C001';
+        if (maxIdRes.ok) {
+          const maxIdData = await maxIdRes.json();
+          if (maxIdData && maxIdData.length > 0 && maxIdData[0].id) {
+            const num = parseInt(maxIdData[0].id.replace(/\D/g, ''), 10);
+            nextId = 'C' + String(num + 1).padStart(3, '0');
+          }
+        }
         await fetch(`${SUPABASE_URL}/rest/v1/coaches`, {
           method: 'POST',
           headers: {
@@ -1671,7 +1683,7 @@ async function completeReg() {
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal',
           },
-          body: JSON.stringify({ name, email: regEmail || sess.user.email || '', status: 'active' }),
+          body: JSON.stringify({ id: nextId, name, email: regEmail || sess.user.email || '', status: 'active' }),
         });
       } catch(e) {}
       location.href = 'gym-schedule';
