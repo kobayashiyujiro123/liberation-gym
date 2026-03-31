@@ -1541,7 +1541,8 @@ async function doLogin() {
   _saveSession(data);
   let hasProfile = false;
   try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) {}
-  if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_scheduleMode) { location.href = 'gym-schedule'; return; }
+  const _loginScheduleMode = new URLSearchParams(location.search).get('schedule') === '1';
+  if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_loginScheduleMode) { location.href = 'gym-schedule'; return; }
   if (hasProfile) enterApp();
   else { regEmail = data.user?.email || ''; goTo('page-reg3'); }
 }
