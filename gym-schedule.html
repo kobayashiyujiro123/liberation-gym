@@ -2443,7 +2443,7 @@ async function submitCoachInvite() {
       body: JSON.stringify({ email, role: 'coach' }),
     });
     // OTP メール送信（Supabaseの登録用メールを送信）
-    const redirectTo = encodeURIComponent(location.origin + '/gym-member');
+    const redirectTo = encodeURIComponent(location.origin + '/gym-member?invite_type=coach');
     await fetch(`${SUPABASE_URL}/auth/v1/otp?redirect_to=${redirectTo}`, {
       method: 'POST',
       headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },

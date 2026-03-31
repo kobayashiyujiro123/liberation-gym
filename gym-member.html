@@ -1344,6 +1344,8 @@ if (DEMO_MODE) {
     // PKCEフロー: ?code= によるトークン交換（メール確認・招待リンク共通）
     const _pkceCode = new URLSearchParams(location.search).get('code');
     if (_pkceCode) {
+      const _inviteType = new URLSearchParams(location.search).get('invite_type');
+      if (_inviteType === 'coach') inviteRole = 'coach';
       history.replaceState(null, '', location.pathname);
       try {
         const _pkceRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
@@ -1611,26 +1613,15 @@ async function completeReg() {
     // → 新規登録時に profiles 行が存在しなくても正しく作成される
     const token = _getToken();
     // コーチ招待経由かどうかを判定（inviteRoleまたはDB上のpending_invites確認）
-    let profileRole = inviteRole || 'member';
-    if (profileRole === 'member') {
-      try {
-        const chkEmail = encodeURIComponent(regEmail || sess.user.email || '');
-        const chkRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${chkEmail}&role=eq.coach&completed_at=is.null`,
-          { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
-        );
-        if (chkRes.ok) {
-          const chkRows = await chkRes.json();
-          if (chkRows.length > 0) {
-            profileRole = 'coach';
-            fetch(`${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${chkEmail}&role=eq.coach`, {
-              method: 'PATCH',
-              headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ completed_at: new Date().toISOString() }),
-            }).catch(() => {});
-          }
-        }
-      } catch(e) {}
+    const profileRole = inviteRole || 'member';
+    // コーチ招待経由の場合、pending_invites を completed_at 済みに更新
+    if (profileRole === 'coach') {
+      const chkEmail = encodeURIComponent(regEmail || sess.user.email || '');
+      fetch(`${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${chkEmail}&role=eq.coach&completed_at=is.null`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ completed_at: new Date().toISOString() }),
+      }).catch(() => {});
     }
     await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
       method: 'POST',
