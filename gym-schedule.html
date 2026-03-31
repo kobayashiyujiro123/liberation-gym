@@ -536,6 +536,10 @@
     <!-- MEMBERS LIST -->
     <div class="view" id="view-members">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+      <div style="margin:0 0 12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:0.85rem;color:var(--text-light);">会員数</span>
+        <span id="member-count-badge" style="background:var(--primary);color:#fff;border-radius:20px;padding:2px 14px;font-size:0.95rem;font-weight:600;">0</span>
+      </div>
       <div class="search-bar">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="member-search" placeholder="会員名・メールで検索..." oninput="renderMembers()" /></div>
       </div>
@@ -1764,6 +1768,10 @@ function renderMembers() {
     th.classList.remove('asc','desc');
     if (memberSortKey === k) th.classList.add(memberSortDir);
   });
+
+  // 会員数バッジ更新
+  const _cntBadge = document.getElementById('member-count-badge');
+  if (_cntBadge) _cntBadge.textContent = filtered.length + '名';
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   if (memberPage > totalPages) memberPage = 1;
