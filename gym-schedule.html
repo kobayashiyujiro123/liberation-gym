@@ -938,6 +938,10 @@ function applyRoleVisibility(role) {
     });
     const addBtn = document.getElementById('res-add-btn');
     if (addBtn) addBtn.style.display = 'none';
+    // コーチ向けに「会員管理」→「担当会員」に文言変更
+    document.querySelectorAll('[data-coach-members-ok] .dash-label, [data-coach-members-ok] span').forEach(el => {
+      if (el.textContent.trim() === '会員管理') el.textContent = '担当会員';
+    });
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
