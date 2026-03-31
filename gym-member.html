@@ -1387,8 +1387,19 @@ if (DEMO_MODE) {
       }
       return;
     }
-    // マジックリンクコールバック: URLハッシュにaccess_tokenがあれば処理
+    // マジックリンクコールバック: URLハッシュにエラーがあれば先にチェック
     const hp = new URLSearchParams(location.hash.replace(/^#/,''));
+    const hashError = hp.get('error');
+    if (hashError) {
+      history.replaceState(null, '', location.pathname);
+      const errCode = hp.get('error_code') || '';
+      const errDesc = hp.get('error_description') || hashError;
+      let msg = 'メールリンクが無効または期限切れです。\n再度メールを送信してください。';
+      if (errCode === 'otp_expired') msg = 'メールリンクの有効期限が切れています。\n新しいリンクを送信してください。';
+      alert(msg);
+      goTo('page-login');
+      return;
+    }
     const hashToken = hp.get('access_token');
     if (hashToken) {
       history.replaceState(null, '', location.pathname);
