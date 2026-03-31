@@ -1341,6 +1341,8 @@ if (DEMO_MODE) {
   }
 } else {
   (async function _initSession() {
+    // コーチがスケジュール予約モードで来た場合はgym-scheduleへのリダイレクトをスキップ
+    const _scheduleMode = new URLSearchParams(location.search).get('schedule') === '1';
     // PKCEフロー: ?code= によるトークン交換（メール確認・招待リンク共通）
     const _pkceCode = new URLSearchParams(location.search).get('code');
     if (_pkceCode) {
@@ -1373,7 +1375,7 @@ if (DEMO_MODE) {
             } catch(e) {}
             let hasProfile = false;
             try { hasProfile = await loadUserProfile(uData, _pkceData.access_token); } catch(e) {}
-            if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
+            if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_scheduleMode) { location.href = 'gym-schedule'; return; }
             if (hasProfile) { setTimeout(enterApp, 0); return; }
             else { regEmail = uData.email || ''; goTo('page-reg3'); return; }
           }
@@ -1440,7 +1442,7 @@ if (DEMO_MODE) {
         } catch(e) {}
         let hasProfile = false;
         try { hasProfile = await loadUserProfile(uData, hashToken); } catch(e) {}
-        if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !document.referrer.includes('gym-schedule')) { location.href = 'gym-schedule'; return; }
+        if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_scheduleMode && !document.referrer.includes('gym-schedule')) { location.href = 'gym-schedule'; return; }
         if (hasProfile) setTimeout(enterApp, 0);
         else { regEmail = uData.email || ''; goTo('page-reg3'); }
         return;
@@ -1451,7 +1453,7 @@ if (DEMO_MODE) {
     if (sess && sess.user) {
       let hasProfile = false;
       try { hasProfile = await loadUserProfile(sess.user, sess.access_token); } catch(e) {}
-      if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
+      if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_scheduleMode) { location.href = 'gym-schedule'; return; }
       if (hasProfile) setTimeout(enterApp, 0);
       else { regEmail = sess.user.email || ''; goTo('page-reg3'); }
     } else {
@@ -1522,7 +1524,7 @@ async function doLogin() {
   _saveSession(data);
   let hasProfile = false;
   try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) {}
-  if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
+  if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_scheduleMode) { location.href = 'gym-schedule'; return; }
   if (hasProfile) enterApp();
   else { regEmail = data.user?.email || ''; goTo('page-reg3'); }
 }

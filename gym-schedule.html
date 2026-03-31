@@ -366,7 +366,7 @@
     <div class="nav-item" id="nav-schedule" onclick="show('schedule')" data-admin-only>
       <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-member-schedule" onclick="location.href='gym-member'" data-coach-only style="display:none;">
+    <div class="nav-item" id="nav-member-schedule" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;">
       <i class="nav-icon fas fa-calendar-week"></i><span>スケジュール予約</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
@@ -407,7 +407,7 @@
       <div class="dash-grid">
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
-        <div class="dash-card" onclick="location.href='gym-member'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
+        <div class="dash-card" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
         <div class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
