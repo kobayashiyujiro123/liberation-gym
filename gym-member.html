@@ -1426,6 +1426,18 @@ if (DEMO_MODE) {
       const { ok, data: uData } = await _authAPI('GET', 'user', null, hashToken);
       if (ok && uData.id) {
         _saveSession({ access_token: hashToken, refresh_token: hp.get('refresh_token')||'', expires_in: parseInt(hp.get('expires_in')||'3600'), user: uData });
+        // pending_invites にコーチ招待があればコーチとして登録
+        try {
+          const _chkEmail = encodeURIComponent(uData.email || '');
+          const _chkRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${_chkEmail}&role=eq.coach&completed_at=is.null`,
+            { headers: { 'apikey': SUPABASE_ANON } }
+          );
+          if (_chkRes.ok) {
+            const _chkRows = await _chkRes.json();
+            if (_chkRows.length > 0) inviteRole = 'coach';
+          }
+        } catch(e) {}
         let hasProfile = false;
         try { hasProfile = await loadUserProfile(uData, hashToken); } catch(e) {}
         if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !document.referrer.includes('gym-schedule')) { location.href = 'gym-schedule'; return; }
