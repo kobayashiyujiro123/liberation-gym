@@ -1368,7 +1368,7 @@ if (DEMO_MODE) {
                 const _chkEmail = encodeURIComponent(uData.email || '');
                 const _chkRes = await fetch(
                   `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${_chkEmail}&role=eq.coach&completed_at=is.null`,
-                  { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${_pkceData.access_token}` } }
+                  { headers: { 'apikey': SUPABASE_ANON } }
                 );
                 if (_chkRes.ok) {
                   const _chkRows = await _chkRes.json();
