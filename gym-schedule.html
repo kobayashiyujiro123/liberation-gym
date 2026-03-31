@@ -366,6 +366,9 @@
     <div class="nav-item" id="nav-schedule" onclick="show('schedule')" data-admin-only>
       <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
+    <div class="nav-item" id="nav-member-schedule" onclick="location.href='gym-member'" data-coach-only style="display:none;">
+      <i class="nav-icon fas fa-calendar-week"></i><span>スケジュール予約</span><i class="nav-arrow fas fa-chevron-right"></i>
+    </div>
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
       <i class="nav-icon fas fa-clipboard-list"></i><span>予約管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
@@ -404,6 +407,7 @@
       <div class="dash-grid">
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
+        <div class="dash-card" onclick="location.href='gym-member'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
         <div class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
@@ -942,6 +946,8 @@ function applyRoleVisibility(role) {
     });
     const addBtn = document.getElementById('res-add-btn');
     if (addBtn) addBtn.style.display = 'none';
+    // コーチ向け専用要素を表示
+    document.querySelectorAll('[data-coach-only]').forEach(el => el.style.display = '');
     // コーチ向けに「会員管理」→「担当会員」に文言変更
     document.querySelectorAll('[data-coach-members-ok] .dash-label, [data-coach-members-ok] span').forEach(el => {
       if (el.textContent.trim() === '会員管理') el.textContent = '担当会員';
