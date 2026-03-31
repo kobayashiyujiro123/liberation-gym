@@ -1020,6 +1020,8 @@ function applyRoleVisibility(role) {
         var el = document.getElementById(id);
         if (el) _grid.appendChild(el);
       });
+      // コーチは5枚なので3列グリッドに変更（3+2で均等）
+      _grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     })();
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移

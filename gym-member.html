@@ -1018,6 +1018,9 @@ function enterApp() {
   if (_isCoach && user.name) localStorage.setItem('gym_coach_name', user.name);
   document.querySelectorAll('[data-coach-only]').forEach(el => el.style.display = _isCoach ? '' : 'none');
   document.querySelectorAll('[data-member-only]').forEach(el => el.style.display = _isCoach ? 'none' : '');
+  // コーチは4枚カードなので2列グリッドに変更（2+2で均等）
+  var _topCards = document.querySelector('.top-cards');
+  if (_topCards) _topCards.style.gridTemplateColumns = _isCoach ? 'repeat(2, 1fr)' : '';
   updateAvatarUI(user.photoUrl || null);
   // 予約状況閲覧権限があればボタンを表示
   const canView = user.canView || false;
