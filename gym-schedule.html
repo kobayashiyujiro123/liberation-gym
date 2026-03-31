@@ -1017,10 +1017,13 @@ if (DEMO_MODE) {
       if (res.ok) {
         const rows = await res.json();
         const p = rows[0];
-        if (p && (p.role === 'admin' || p.role === 'coach' || p.can_view)) {
-          role = p.role === 'coach' ? 'coach' : p.role === 'admin' ? 'admin' : 'viewer';
-          if (p.role === 'coach') currentCoachName = p.name || '';
-        } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
+        if (p && p.role === 'coach') {
+          // コーチはgym-member.htmlのスケジュール予約画面を使用
+          location.href = 'gym-member';
+          return;
+        } else if (p && (p.role === 'admin' || p.can_view)) {
+          role = p.role === 'admin' ? 'admin' : 'viewer';
+        } else if (p && p.role !== 'admin' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
           location.href = 'gym-member';
           return;
