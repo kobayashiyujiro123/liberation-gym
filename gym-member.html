@@ -1359,23 +1359,18 @@ if (DEMO_MODE) {
           if (ok && uData.id) {
             _saveSession({ access_token: _pkceData.access_token, refresh_token: _pkceData.refresh_token || '', expires_in: parseInt(_pkceData.expires_in || '3600'), user: uData });
             sessionStorage.removeItem('pkce_verifier');
-            // 会員自己登録か、コーチ招待かを判別
-            const _selfRegEmail = localStorage.getItem('gym_self_reg_email');
-            localStorage.removeItem('gym_self_reg_email');
-            if (_selfRegEmail !== uData.email) {
-              // 自己登録でない = コーチ招待経由の可能性 → pending_invites を確認
-              try {
-                const _chkEmail = encodeURIComponent(uData.email || '');
-                const _chkRes = await fetch(
-                  `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${_chkEmail}&role=eq.coach&completed_at=is.null`,
-                  { headers: { 'apikey': SUPABASE_ANON } }
-                );
-                if (_chkRes.ok) {
-                  const _chkRows = await _chkRes.json();
-                  if (_chkRows.length > 0) inviteRole = 'coach';
-                }
-              } catch(e) {}
-            }
+            // pending_invites にコーチ招待があればコーチとして登録
+            try {
+              const _chkEmail = encodeURIComponent(uData.email || '');
+              const _chkRes = await fetch(
+                `${SUPABASE_URL}/rest/v1/pending_invites?email=eq.${_chkEmail}&role=eq.coach&completed_at=is.null`,
+                { headers: { 'apikey': SUPABASE_ANON } }
+              );
+              if (_chkRes.ok) {
+                const _chkRows = await _chkRes.json();
+                if (_chkRows.length > 0) inviteRole = 'coach';
+              }
+            } catch(e) {}
             let hasProfile = false;
             try { hasProfile = await loadUserProfile(uData, _pkceData.access_token); } catch(e) {}
             if (hasProfile && (user.role === 'admin' || user.role === 'coach')) { location.href = 'gym-schedule'; return; }
@@ -1550,8 +1545,6 @@ function _startResendCooldown() {
 async function sendVerification() {
   regEmail = document.getElementById('reg-email').value.trim();
   if (!regEmail) { alert('メールアドレスを入力してください'); return; }
-  // 会員として自己登録したメールアドレスを記録（コーチ招待との区別に使用）
-  localStorage.setItem('gym_self_reg_email', regEmail);
   // 画面を即切り替えてからAPIをバックグラウンド送信
   document.getElementById('reg2-email').textContent = regEmail;
   goTo('page-reg2');
