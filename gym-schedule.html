@@ -619,8 +619,9 @@
         <span style="font-size:0.85rem;color:var(--text-light);">会員数</span>
         <span id="member-count-badge" style="background:var(--primary);color:#fff;border-radius:20px;padding:2px 14px;font-size:0.95rem;font-weight:600;">0</span>
       </div>
-      <div class="search-bar">
+      <div class="search-bar" style="justify-content:space-between;">
         <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="member-search" placeholder="会員名・メールで検索..." oninput="renderMembers()" /></div>
+        <div class="pagination" id="member-pagination-top"></div>
       </div>
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
@@ -2024,13 +2025,13 @@ function renderMembers() {
     </tr>`).join('')
   : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当する会員が見つかりません</td></tr>';
 
-  const pag = document.getElementById('member-pagination');
   let html = `<button class="pg-btn" onclick="memberGoPage(${memberPage-1})" ${memberPage===1?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-left"></i></button>`;
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="pg-btn ${i===memberPage?'active':''}" onclick="memberGoPage(${i})">${i}</button>`;
   }
   html += `<button class="pg-btn" onclick="memberGoPage(${memberPage+1})" ${memberPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-right"></i></button>`;
-  pag.innerHTML = html;
+  document.getElementById('member-pagination').innerHTML = html;
+  document.getElementById('member-pagination-top').innerHTML = html;
 }
 
 function memberGoPage(p) {
