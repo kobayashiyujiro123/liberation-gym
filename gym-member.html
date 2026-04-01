@@ -1849,6 +1849,13 @@ if (DEMO_MODE) {
 // ===== RESERVATIONS =====
 async function renderRes() {
   const el = document.getElementById('res-list');
+  // キャンセル設定がまだ読み込まれていない場合はDBから取得
+  if (!DEMO_MODE && cachedGymSettings['bi-cancel-limit'] == null) {
+    try {
+      const { data } = await _restAPI('GET', 'gym_settings', 'select=key,value');
+      if (data) data.forEach(s => { cachedGymSettings[s.key] = s.value; });
+    } catch(e) {}
+  }
   const cancelLimit = getCancelLimit();
   const nowMs = Date.now();
   // 今日の日付文字列（YYYY-MM-DD）
