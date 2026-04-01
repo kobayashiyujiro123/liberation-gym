@@ -399,6 +399,16 @@
     .ms-bk-btn-cl { flex:1; padding: 12px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; }
     .ms-bk-btn-cl:hover { background: var(--bg); }
     @media (max-width: 600px) { .ms-week-grid { grid-template-columns: repeat(3,1fr); } }
+
+    /* USAGE SUMMARY (coach userinfo) */
+    .usage-summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+    .usage-summary-title { background: var(--primary-dark); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 10px 18px; letter-spacing: 0.5px; }
+    .usage-summary-stats { display: flex; }
+    .usage-summary-stat { flex: 1; text-align: center; padding: 18px 8px; border-right: 1px solid var(--border); }
+    .usage-summary-stat:last-child { border-right: none; }
+    .usage-summary-lbl { font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; font-weight: 700; }
+    .usage-summary-val { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); line-height: 1; }
+    .usage-summary-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 2px; }
   </style>
 </head>
 <body>
@@ -749,7 +759,25 @@
     <!-- USER INFO (coach) -->
     <div class="view" id="view-userinfo">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
-      <div class="form-card" style="max-width:520px;margin-top:24px;">
+      <div style="max-width:520px;margin-top:24px;">
+      <div class="usage-summary-card">
+        <div class="usage-summary-title"><i class="fas fa-chart-bar"></i>&nbsp; 利用実績</div>
+        <div class="usage-summary-stats">
+          <div class="usage-summary-stat">
+            <div class="usage-summary-lbl">今までの利用回数</div>
+            <div class="usage-summary-val"><span id="ui-total-visits">0</span><span class="usage-summary-unit">回</span></div>
+          </div>
+          <div class="usage-summary-stat">
+            <div class="usage-summary-lbl">今年の利用回数</div>
+            <div class="usage-summary-val"><span id="ui-year-visits">0</span><span class="usage-summary-unit">回</span></div>
+          </div>
+          <div class="usage-summary-stat">
+            <div class="usage-summary-lbl">今月の利用回数</div>
+            <div class="usage-summary-val"><span id="ui-month-visits">0</span><span class="usage-summary-unit">回</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-card" style="max-width:none;">
         <div style="text-align:center;margin-bottom:24px;">
           <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
             <i class="fas fa-user-circle" style="color:#fff;font-size:1.8rem;"></i>
@@ -786,6 +814,7 @@
             <div class="coach-detail-val" id="ui-goal"></div>
           </div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -1195,6 +1224,33 @@ if (DEMO_MODE) {
             if (_uiBirth)  _uiBirth.textContent  = p.birth_date || '-';
             if (_uiStyle)  _uiStyle.textContent  = p.style  || '-';
             if (_uiGoal)   _uiGoal.textContent   = p.goal   || '-';
+            // 利用回数を予約実績から計算
+            try {
+              const now = new Date();
+              const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+              const nowTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+              const curYear = now.getFullYear();
+              const curMonth = now.getMonth() + 1;
+              const resRes = await fetch(
+                `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${encodeURIComponent(sess.user.id)}&status=eq.confirmed&date=lte.${todayStr}&select=date,time`,
+                { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
+              );
+              const resRows = resRes.ok ? await resRes.json() : [];
+              let total = 0, year = 0, month = 0;
+              for (const r of resRows) {
+                if (r.date > todayStr) continue;
+                if (r.date === todayStr && (r.time || '00:00') > nowTime) continue;
+                total++;
+                const [ry, rm] = r.date.split('-').map(Number);
+                if (ry === curYear) { year++; if (rm === curMonth) month++; }
+              }
+              var _tvEl = document.getElementById('ui-total-visits');
+              var _yvEl = document.getElementById('ui-year-visits');
+              var _mvEl = document.getElementById('ui-month-visits');
+              if (_tvEl) _tvEl.textContent = total;
+              if (_yvEl) _yvEl.textContent = year;
+              if (_mvEl) _mvEl.textContent = month;
+            } catch(e) { console.warn('coach visit count error:', e); }
           }
         } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
