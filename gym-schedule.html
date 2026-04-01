@@ -805,14 +805,6 @@
             <div class="coach-detail-label"><i class="fas fa-birthday-cake"></i> 生年月日</div>
             <div class="coach-detail-val" id="ui-birth"></div>
           </div>
-          <div class="coach-detail-card">
-            <div class="coach-detail-label"><i class="fas fa-dumbbell"></i> スタイル</div>
-            <div class="coach-detail-val" id="ui-style"></div>
-          </div>
-          <div class="coach-detail-card">
-            <div class="coach-detail-label"><i class="fas fa-bullseye"></i> 目標</div>
-            <div class="coach-detail-val" id="ui-goal"></div>
-          </div>
         </div>
       </div>
       </div>
@@ -1215,15 +1207,11 @@ if (DEMO_MODE) {
             var _uiTel    = document.getElementById('ui-tel');
             var _uiGender = document.getElementById('ui-gender');
             var _uiBirth  = document.getElementById('ui-birth');
-            var _uiStyle  = document.getElementById('ui-style');
-            var _uiGoal   = document.getElementById('ui-goal');
             if (_uiName)   _uiName.textContent   = p.name  || '';
             if (_uiEmail)  _uiEmail.textContent  = p.email || sess.user.email || '';
             if (_uiTel)    _uiTel.textContent    = p.tel   || '-';
             if (_uiGender) _uiGender.textContent = p.gender === 'male' ? '男性' : p.gender === 'female' ? '女性' : p.gender || '-';
             if (_uiBirth)  _uiBirth.textContent  = p.birth_date || '-';
-            if (_uiStyle)  _uiStyle.textContent  = p.style  || '-';
-            if (_uiGoal)   _uiGoal.textContent   = p.goal   || '-';
             // 利用回数を予約実績から計算
             try {
               const now = new Date();
