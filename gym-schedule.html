@@ -1244,12 +1244,16 @@ if (DEMO_MODE) {
               if (_mvEl) _mvEl.textContent = month;
             } catch(e) { console.warn('coach visit count error:', e); }
           }
-        } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
-          // 明らかに一般会員の場合のみgym-memberへ
+        } else if (!p) {
+          // プロフィールが存在しない（削除済みユーザー）→ ログアウトしてログイン画面へ
+          localStorage.removeItem('gym_auth_v1');
+          location.href = 'gym-member';
+          return;
+        } else {
+          // 一般会員はgym-memberへ
           location.href = 'gym-member';
           return;
         }
-        // p が null（プロフィール未作成）の場合はadminとして続行
       }
     } catch(e) {
       console.warn('Role check failed, proceeding as admin:', e);
