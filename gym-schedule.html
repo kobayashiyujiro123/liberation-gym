@@ -2230,9 +2230,10 @@ async function saveScheduleToStorage() {
     const holArr = [...holidays].map(date => ({ date }));
     if (holArr.length) await fetch(base + 'gym_holidays', { method:'POST', headers: h, body: JSON.stringify(holArr) });
 
-    // Day notes → day_notes (upsert)
+    // Day notes → day_notes (全件再sync: 削除→再INSERT)
+    await fetch(base + 'day_notes?date=gte.2000-01-01', { method:'DELETE', headers: h });
     const notes = Object.entries(dayNotes).map(([date, note]) => ({ date, note }));
-    if (notes.length) await fetch(base + 'day_notes', { method:'POST', headers: {...h, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body: JSON.stringify(notes) });
+    if (notes.length) await fetch(base + 'day_notes', { method:'POST', headers: {...h, 'Prefer':'return=minimal'}, body: JSON.stringify(notes) });
 
     // Schedule slots → schedule_slots (変更日付のみ再sync)
     const dates = Object.keys(scheduleData);
