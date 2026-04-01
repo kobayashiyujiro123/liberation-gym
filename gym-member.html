@@ -324,6 +324,13 @@
     .rv-card-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .rv-card-meta { font-size: 0.76rem; color: var(--text-light); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
     .rv-card-meta span { display: flex; align-items: center; gap: 3px; }
+    /* 埋め込みモード（gym-schedule.html の iframe 内で使用） */
+    body.embed-mode .sidebar,
+    body.embed-mode .topbar,
+    body.embed-mode #app-top,
+    body.embed-mode .breadcrumb { display: none !important; }
+    body.embed-mode .main-wrap { margin-left: 0 !important; }
+    body.embed-mode .content { height: 100vh; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -1549,7 +1556,6 @@ async function doLogin() {
   _saveSession(data);
   let hasProfile = false;
   try { hasProfile = await loadUserProfile(data.user, data.access_token); } catch(e) { console.error('[doLogin] loadUserProfile threw:', e); }
-  console.log('[doLogin] hasProfile=', hasProfile, 'role=', user.role, 'data.user=', data.user);
   const _loginScheduleMode = new URLSearchParams(location.search).get('schedule') === '1';
   if (hasProfile && (user.role === 'admin' || user.role === 'coach') && !_loginScheduleMode) { location.href = 'gym-schedule'; return; }
   if (hasProfile) enterApp();

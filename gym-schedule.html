@@ -345,6 +345,60 @@
       .topbar { padding: 0 14px; }
       .dash-grid { gap: 10px; }
     }
+
+    /* ===== MEMBER SCHEDULE (coach-only) ===== */
+    .ms-week-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .ms-tab { padding: 8px 22px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-light); transition: all 0.15s; }
+    .ms-tab:hover { border-color: var(--primary-light); color: var(--primary); }
+    .ms-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .ms-week-section-title { font-family: 'Oswald', sans-serif; font-size: 1.05rem; font-weight: 500; margin-bottom: 12px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .ms-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; overflow-x: auto; }
+    .ms-week-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; min-width: 108px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .ms-week-col-hd { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--border); background: #f8f9fa; }
+    .ms-week-col-hd.is-today { background: var(--primary); color: #fff; }
+    .ms-week-col-hd.is-today .ms-wk-dow { color: #fff; }
+    .ms-week-col-hd.wk-sun .ms-wk-dow { color: #e53935; }
+    .ms-week-col-hd.wk-sat .ms-wk-dow { color: #1e88e5; }
+    .ms-week-col-hd.is-today.wk-sun .ms-wk-dow,
+    .ms-week-col-hd.is-today.wk-sat .ms-wk-dow { color: #fff; }
+    .ms-wk-date-num { font-size: 0.7rem; opacity: 0.7; margin-bottom: 1px; }
+    .ms-wk-dow { font-size: 0.88rem; font-weight: 700; }
+    .ms-week-col-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; min-height: 60px; }
+    .ms-wk-slot { padding: 5px 7px; border-radius: 5px; background: rgba(0,188,212,0.08); border-left: 2px solid var(--primary); cursor: pointer; transition: background 0.15s; }
+    .ms-wk-slot:hover { background: rgba(0,188,212,0.22); }
+    .ms-wk-slot.is-past { opacity: 0.55; cursor: not-allowed; background: #f5f5f5; border-left-color: #ccc; pointer-events: none; }
+    .ms-wk-slot-time { font-size: 0.72rem; font-weight: 700; color: var(--primary-dark); }
+    .ms-wk-slot-name { font-size: 0.66rem; color: var(--text-light); }
+    .ms-wk-slot-cap { font-size: 0.62rem; color: var(--text-light); margin-top: 2px; }
+    .ms-wk-slot-cap.wk-cap-low { color: #e65100; font-weight: 700; }
+    .ms-wk-slot-cap.wk-cap-full { color: var(--danger); font-weight: 700; }
+    .ms-wk-slot.is-full { opacity: 0.55; cursor: not-allowed; background: #f5f5f5; border-left-color: #bbb; pointer-events: none; }
+    .ms-wk-slot.is-closed { opacity: 0.55; cursor: not-allowed; background: #f5f5f5; border-left-color: #ccc; pointer-events: none; }
+    .ms-wk-cap-closed { color: #9e9e9e; font-weight: 700; }
+    .ms-wk-holiday { padding: 14px 6px; text-align: center; color: #aaa; font-size: 0.74rem; }
+    .ms-wk-event { padding: 10px 6px; text-align: center; color: #f57c00; font-size: 0.78rem; font-weight: 700; }
+    .ms-week-col-hd.is-jpholiday:not(.is-today) { background: #fff5f5; }
+    .ms-week-col-hd.is-jpholiday:not(.is-today) .ms-wk-dow { color: #e53935; }
+    .ms-week-col-hd.is-jpholiday:not(.is-today) .ms-wk-date-num { color: #e53935; opacity: 1; }
+    .ms-wk-shuku { display: inline-block; background: #e53935; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; vertical-align: middle; line-height: 1.5; }
+    .ms-week-col-hd.is-today .ms-wk-shuku { background: rgba(255,255,255,0.35); }
+    /* BOOKING MODAL */
+    .ms-bk-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 600; display: none; align-items: center; justify-content: center; }
+    .ms-bk-overlay.open { display: flex; }
+    .ms-bk-modal { background: #fff; border-radius: 18px; padding: 28px 28px 24px; min-width: 300px; max-width: 360px; width: 92%; box-shadow: 0 12px 40px rgba(0,0,0,0.22); }
+    .ms-bk-modal-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+    .ms-bk-modal-sub { font-size: 0.85rem; color: var(--text-light); margin-bottom: 22px; }
+    .ms-bk-memo-wrap { margin-bottom: 18px; }
+    .ms-bk-memo-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .ms-bk-memo-opt { font-weight: 400; color: var(--text-light); }
+    .ms-bk-memo { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 11px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; color: var(--text); resize: vertical; outline: none; }
+    .ms-bk-memo:focus { border-color: var(--primary); }
+    .ms-bk-btns { display: flex; gap: 10px; }
+    .ms-bk-btn-ok { flex:1; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
+    .ms-bk-btn-ok:hover { background: var(--primary-dark); }
+    .ms-bk-btn-cl { flex:1; padding: 12px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; }
+    .ms-bk-btn-cl:hover { background: var(--bg); }
+    @media (max-width: 600px) { .ms-week-grid { grid-template-columns: repeat(3,1fr); } }
   </style>
 </head>
 <body>
@@ -373,7 +427,7 @@
     <div class="nav-item" id="nav-schedule" onclick="show('schedule')" data-admin-only>
       <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
-    <div class="nav-item" id="nav-member-schedule" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;">
+    <div class="nav-item" id="nav-member-schedule" onclick="show('member-schedule')" data-coach-only style="display:none;">
       <i class="nav-icon fas fa-calendar-week"></i><span>スケジュール予約</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
@@ -417,7 +471,7 @@
       <div class="dash-grid">
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
-        <div id="dash-member-schedule" class="dash-card" onclick="location.href='gym-member?schedule=1'" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
+        <div id="dash-member-schedule" class="dash-card" onclick="show('member-schedule')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div id="dash-reservation" class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
         <div id="dash-members" class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
@@ -680,6 +734,18 @@
       </div>
     </div>
 
+    <!-- MEMBER SCHEDULE (coach only) -->
+    <div class="view" id="view-member-schedule" data-coach-only>
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+      <div class="ms-week-tabs">
+        <button class="ms-tab active" id="ms-tab-this-week" onclick="msSwitchTab(0)">今週</button>
+        <button class="ms-tab" id="ms-tab-next-week" onclick="msSwitchTab(7)">来週</button>
+        <button class="ms-tab" id="ms-tab-week-after" onclick="msSwitchTab(14)">再来週</button>
+      </div>
+      <div class="ms-week-section-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> <span id="ms-week-label">今週のスケジュール</span></div>
+      <div class="ms-week-grid" id="ms-member-week-grid"></div>
+    </div>
+
     <!-- USER INFO (coach) -->
     <div class="view" id="view-userinfo">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
@@ -702,6 +768,22 @@
           <div class="coach-detail-card">
             <div class="coach-detail-label"><i class="fas fa-phone"></i> 電話番号</div>
             <div class="coach-detail-val" id="ui-tel"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-venus-mars"></i> 性別</div>
+            <div class="coach-detail-val" id="ui-gender"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-birthday-cake"></i> 生年月日</div>
+            <div class="coach-detail-val" id="ui-birth"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-dumbbell"></i> スタイル</div>
+            <div class="coach-detail-val" id="ui-style"></div>
+          </div>
+          <div class="coach-detail-card">
+            <div class="coach-detail-label"><i class="fas fa-bullseye"></i> 目標</div>
+            <div class="coach-detail-val" id="ui-goal"></div>
           </div>
         </div>
       </div>
@@ -969,7 +1051,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -1088,7 +1170,7 @@ if (DEMO_MODE) {
     let role = 'admin'; // デフォルト: セッションあり = アクセス許可
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name,email,tel&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name,email,tel,gender,birth_date,style,goal&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
       );
       if (res.ok) {
@@ -1099,12 +1181,20 @@ if (DEMO_MODE) {
           if (p.role === 'coach') {
             currentCoachName = p.name || localStorage.getItem('gym_coach_name') || '';
             // ユーザ情報ビューに反映
-            var _uiName  = document.getElementById('ui-name');
-            var _uiEmail = document.getElementById('ui-email');
-            var _uiTel   = document.getElementById('ui-tel');
-            if (_uiName)  _uiName.textContent  = p.name  || '';
-            if (_uiEmail) _uiEmail.textContent = p.email || sess.user.email || '';
-            if (_uiTel)   _uiTel.textContent   = p.tel   || '-';
+            var _uiName   = document.getElementById('ui-name');
+            var _uiEmail  = document.getElementById('ui-email');
+            var _uiTel    = document.getElementById('ui-tel');
+            var _uiGender = document.getElementById('ui-gender');
+            var _uiBirth  = document.getElementById('ui-birth');
+            var _uiStyle  = document.getElementById('ui-style');
+            var _uiGoal   = document.getElementById('ui-goal');
+            if (_uiName)   _uiName.textContent   = p.name  || '';
+            if (_uiEmail)  _uiEmail.textContent  = p.email || sess.user.email || '';
+            if (_uiTel)    _uiTel.textContent    = p.tel   || '-';
+            if (_uiGender) _uiGender.textContent = p.gender === 'male' ? '男性' : p.gender === 'female' ? '女性' : p.gender || '-';
+            if (_uiBirth)  _uiBirth.textContent  = p.birth_date || '-';
+            if (_uiStyle)  _uiStyle.textContent  = p.style  || '-';
+            if (_uiGoal)   _uiGoal.textContent   = p.goal   || '-';
           }
         } else if (p && p.role !== 'admin' && p.role !== 'coach' && !p.can_view) {
           // 明らかに一般会員の場合のみgym-memberへ
@@ -1933,6 +2023,10 @@ function show(name) {
   }
   if (name === 'coach') {
     initCoachesFromDB();
+  }
+  if (name === 'member-schedule') {
+    msWeekOffset = 0;
+    msSwitchTab(0);
   }
 }
 
@@ -3211,6 +3305,213 @@ function copyInviteMsg() {
     setTimeout(() => { btn.textContent = 'メッセージをコピー'; }, 2000);
   });
 }
+
+// ===== MEMBER SCHEDULE (coach-only) =====
+let msWeekOffset = 0;
+let msBkDate = null, msBkTime = null, msBkClass = null;
+let msCachedSettings = {};
+
+const MS_JP_HOLIDAYS = new Set([
+  '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20',
+  '2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-07-20',
+  '2026-09-21','2026-09-23','2026-10-12','2026-11-03','2026-11-23','2026-12-23'
+]);
+
+function msEscHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function msLoadSchedule() {
+  try {
+    const token = _getAccessToken();
+    const headers = { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token };
+    const [slotsRes, notesRes, holRes, settingsRes] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/schedule_slots?select=*', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/day_notes?select=*', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/gym_holidays?select=*', { headers }),
+      fetch(SUPABASE_URL + '/rest/v1/gym_settings?select=*', { headers }),
+    ]);
+    const scheduleData = {};
+    const slotsData = slotsRes.ok ? await slotsRes.json() : [];
+    (slotsData || []).forEach(s => {
+      if (!scheduleData[s.date]) scheduleData[s.date] = [];
+      scheduleData[s.date].push({ time: s.time, name: s.class_name });
+    });
+    const dayNotes = {};
+    const notesData = notesRes.ok ? await notesRes.json() : [];
+    (notesData || []).forEach(n => { dayNotes[n.date] = n.note; });
+    const holData = holRes.ok ? await holRes.json() : [];
+    const holidays = new Set((holData || []).map(h => h.date));
+    const businessHours = {};
+    const settingsData = settingsRes.ok ? await settingsRes.json() : [];
+    (settingsData || []).forEach(s => { businessHours[s.key] = s.value; });
+    msCachedSettings = businessHours;
+    return { scheduleData, dayNotes, holidays, businessHours };
+  } catch(e) {
+    return { scheduleData:{}, dayNotes:{}, holidays: new Set(), businessHours:{} };
+  }
+}
+
+function msGetDaySlots(date, scheduleData, dayNotes, holidays, businessHours) {
+  const dow = date.getDay();
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  const isHoliday = holidays.has(dateStr);
+  const note = dayNotes[dateStr];
+  const existing = scheduleData[dateStr];
+  if (note) return { type:'event', note, slots: null };
+  if (isHoliday) return { type:'holiday' };
+  if (existing !== undefined) {
+    if (Array.isArray(existing)) return { type:'slots', slots: existing };
+    return { type:'slots', slots: Object.entries(existing).map(([t,n])=>({time:t,name:n})).sort((a,b)=>a.time.localeCompare(b.time)) };
+  }
+  const isWkend = (dow === 0 || dow === 6);
+  const isJpH   = MS_JP_HOLIDAYS.has(dateStr);
+  const pfx = isJpH ? 'bi-holiday' : isWkend ? 'bi-weekend' : 'bi-weekday';
+  const dfltStart = (pfx === 'bi-weekday') ? '15時' : '12時';
+  const dfltEnd   = (pfx === 'bi-weekday') ? '23時' : '17時';
+  const sH = parseInt(((businessHours[`${pfx}-start`]) || dfltStart).replace('時',''));
+  const eH = parseInt(((businessHours[`${pfx}-end`])   || dfltEnd).replace('時',''));
+  const slots = [];
+  for (let h = sH; h < eH; h++) slots.push({ time:`${String(h).padStart(2,'0')}:00`, name:'練習' });
+  return { type:'slots', slots };
+}
+
+function msSwitchTab(offset) {
+  msWeekOffset = offset;
+  document.getElementById('ms-tab-this-week').classList.toggle('active', offset === 0);
+  document.getElementById('ms-tab-next-week').classList.toggle('active', offset === 7);
+  document.getElementById('ms-tab-week-after').classList.toggle('active', offset === 14);
+  const labels = { 0: '今週のスケジュール', 7: '来週のスケジュール', 14: '再来週のスケジュール' };
+  document.getElementById('ms-week-label').textContent = labels[offset] || '今週のスケジュール';
+  msRenderWeekly(offset);
+}
+
+async function msRenderWeekly(weekOffset) {
+  weekOffset = weekOffset != null ? weekOffset : msWeekOffset;
+  const grid = document.getElementById('ms-member-week-grid');
+  if (!grid) return;
+  const { scheduleData, dayNotes, holidays, businessHours } = await msLoadSchedule();
+  const capacity = parseInt(businessHours['bi-capacity'] || '8');
+  const resCounts = {};
+  try {
+    const token = _getAccessToken();
+    const resRes = await fetch(SUPABASE_URL + '/rest/v1/reservations?status=eq.confirmed&select=date,time', {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token }
+    });
+    const allRes = resRes.ok ? await resRes.json() : [];
+    (allRes || []).forEach(r => {
+      const key = r.date + '_' + r.time;
+      resCounts[key] = (resCounts[key] || 0) + 1;
+    });
+  } catch(e) { /* フォールバック */ }
+  const now = new Date();
+  const DAYS = ['日','月','火','水','木','金','土'];
+  let html = '';
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(now);
+    date.setDate(now.getDate() + weekOffset + d);
+    date.setHours(0,0,0,0);
+    const dow = date.getDay();
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    const isToday = weekOffset === 0 && d === 0;
+    const isJpHoliday = MS_JP_HOLIDAYS.has(dateStr);
+    const dowClass = dow === 0 ? 'wk-sun' : dow === 6 ? 'wk-sat' : '';
+    const hdCls = ['ms-week-col-hd', isToday ? 'is-today' : '', dowClass, isJpHoliday ? 'is-jpholiday' : ''].filter(Boolean).join(' ');
+    const label = isToday ? '今日' : (weekOffset === 0 && d === 1) ? '明日' : `${date.getMonth()+1}/${date.getDate()}`;
+    const shukuTag = isJpHoliday ? '<span class="ms-wk-shuku">祝</span>' : '';
+    const { type, slots, note } = msGetDaySlots(date, scheduleData, dayNotes, holidays, businessHours);
+    let body = '';
+    const nowMs = Date.now();
+    const reserveLimit = parseFloat(businessHours['bi-reserve-limit'] || msCachedSettings['bi-reserve-limit'] || '1.5');
+    if (type === 'holiday') {
+      body = `<div class="ms-wk-holiday"><i class="fas fa-moon" style="display:block;margin-bottom:4px;opacity:0.5;"></i>お休み</div>`;
+    } else if (type === 'event') {
+      body = `<div class="ms-wk-event"><i class="fas fa-star" style="display:block;margin-bottom:4px;font-size:0.7rem;"></i>${msEscHtml(note)}</div>`;
+    } else {
+      body = (slots||[]).map(({time,name}) => {
+        const [h,m] = time.split(':').map(Number);
+        const slotMs = new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m).getTime();
+        const past      = slotMs < nowMs ? ' is-past' : '';
+        const isClosed  = !past && (nowMs > slotMs - reserveLimit * 3600000);
+        const occupied  = resCounts[dateStr + '_' + time] || 0;
+        const remaining = capacity - occupied;
+        const isFull    = remaining <= 0;
+        const isUnavail = !!past || isClosed || isFull;
+        const capCls    = isFull ? 'wk-cap-full' : (past || isClosed) ? 'ms-wk-cap-closed' : remaining <= 2 ? 'wk-cap-low' : '';
+        const capLabel  = isFull ? '満員' : (past || isClosed) ? '受付終了' : `残り${remaining}名`;
+        const slotCls   = `ms-wk-slot${past}${isFull?' is-full':''}${isClosed?' is-closed':''}`;
+        const clickAttr = !isUnavail ? `onclick="msOpenBkModal('${dateStr}','${time}',${JSON.stringify(name).replace(/"/g,'&quot;')})"` : '';
+        return `<div class="${slotCls}" ${clickAttr}>
+          <div class="ms-wk-slot-time">${time}</div>
+          <div class="ms-wk-slot-name">${msEscHtml(name)}</div>
+          <div class="ms-wk-slot-cap ${capCls}">${capLabel}</div>
+        </div>`;
+      }).join('') || `<div class="ms-wk-holiday" style="font-size:0.7rem;">予定なし</div>`;
+    }
+    html += `<div class="ms-week-col">
+      <div class="${hdCls}">
+        <div class="ms-wk-date-num">${label}</div>
+        <div class="ms-wk-dow">${DAYS[dow]}${shukuTag}</div>
+      </div>
+      <div class="ms-week-col-body">${body}</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function msOpenBkModal(dateStr, time, className) {
+  const reserveLimit = parseFloat(msCachedSettings['bi-reserve-limit'] || '1.5');
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const [sh,sm] = time.split(':').map(Number);
+  const slotMs = new Date(y,m-1,d,sh,sm).getTime();
+  if (Date.now() > slotMs - reserveLimit * 3600000) {
+    alert('このクラスの予約受付は締め切られました');
+    return;
+  }
+  msBkDate = dateStr; msBkTime = time; msBkClass = className;
+  const dow = new Date(y,m-1,d).getDay();
+  const DAYS = ['日','月','火','水','木','金','土'];
+  document.getElementById('ms-bk-modal-title').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}`;
+  document.getElementById('ms-bk-modal-sub').textContent = `クラス：${className}`;
+  document.getElementById('ms-bk-memo').value = '';
+  document.getElementById('ms-bk-overlay').classList.add('open');
+}
+
+function msCloseBkModal() {
+  document.getElementById('ms-bk-overlay').classList.remove('open');
+  document.getElementById('ms-bk-memo').value = '';
+  msBkDate = msBkTime = msBkClass = null;
+}
+
+async function msSubmitBkModal() {
+  if (!msBkDate || !msBkTime || !msBkClass) return;
+  const [y,m,d] = msBkDate.split('-').map(Number);
+  const dow = new Date(y,m-1,d).getDay();
+  const DAYS = ['日','月','火','水','木','金','土'];
+  const time = msBkTime, cls = msBkClass;
+  const memo = document.getElementById('ms-bk-memo').value.trim();
+  const sess = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null');
+  if (!sess || !sess.user) { alert('ログインが必要です'); return; }
+  const token = _getAccessToken();
+  const res = await fetch(SUPABASE_URL + '/rest/v1/reservations', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: sess.user.id, date: msBkDate, time, class_name: cls, status: 'confirmed', memo: memo || null })
+  });
+  if (!res.ok && res.status !== 201 && res.status !== 204) {
+    const err = await res.json().catch(()=>({}));
+    alert('予約に失敗しました: ' + (err.message || res.status));
+    return;
+  }
+  msCloseBkModal();
+  document.getElementById('ms-bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
+  document.getElementById('ms-bk-success-overlay').classList.add('open');
+}
+
+function msCloseBkSuccess() {
+  document.getElementById('ms-bk-success-overlay').classList.remove('open');
+  msRenderWeekly(msWeekOffset);
+}
 </script>
 
 <!-- 招待リンク生成モーダル -->
@@ -3247,6 +3548,34 @@ function copyInviteMsg() {
         <button onclick="openInviteModal()" style="flex:1;padding:9px;border:1px solid var(--primary);border-radius:8px;background:#fff;color:var(--primary);cursor:pointer;font-size:0.84rem;">別のアドレスで生成</button>
         <button onclick="closeInviteModal()" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:0.84rem;">閉じる</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Member Schedule Booking Modal -->
+<div class="ms-bk-overlay" id="ms-bk-overlay" onclick="msCloseBkModal()">
+  <div class="ms-bk-modal" onclick="event.stopPropagation()">
+    <div class="ms-bk-modal-title" id="ms-bk-modal-title"></div>
+    <div class="ms-bk-modal-sub" id="ms-bk-modal-sub"></div>
+    <div class="ms-bk-memo-wrap">
+      <label class="ms-bk-memo-label">メモ <span class="ms-bk-memo-opt">（任意）</span></label>
+      <textarea id="ms-bk-memo" class="ms-bk-memo" rows="3" maxlength="200" placeholder="体調や連絡事項など…"></textarea>
+    </div>
+    <div class="ms-bk-btns">
+      <button class="ms-bk-btn-ok" onclick="msSubmitBkModal()"><i class="fas fa-check"></i> 予約する</button>
+      <button class="ms-bk-btn-cl" onclick="msCloseBkModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member Schedule Booking Success Modal -->
+<div class="ms-bk-overlay" id="ms-bk-success-overlay" onclick="msCloseBkSuccess()">
+  <div class="ms-bk-modal" onclick="event.stopPropagation()" style="text-align:center;">
+    <div style="font-size:2.2rem;color:var(--success);margin-bottom:10px;"><i class="fas fa-check-circle"></i></div>
+    <div class="ms-bk-modal-title" style="margin-bottom:8px;">予約を受け付けました</div>
+    <div class="ms-bk-modal-sub" id="ms-bk-success-detail" style="margin-bottom:6px;"></div>
+    <div class="ms-bk-btns">
+      <button class="ms-bk-btn-ok" onclick="msCloseBkSuccess()">OK</button>
     </div>
   </div>
 </div>
