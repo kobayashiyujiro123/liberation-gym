@@ -2603,6 +2603,7 @@ function renderCoaches() {
       <td onclick="event.stopPropagation()">
         <button class="act-btn" onclick="openCoachDetail('${c.id}')">詳細</button>
         <button class="act-btn" onclick="openCoachEdit('${c.id}')">編集</button>
+        <button class="act-btn del" onclick="deleteCoach('${c.id}','${c.name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${(c.email||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')"><i class="fas fa-trash"></i> 削除</button>
       </td>
     </tr>`).join('')
   : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当するコーチが見つかりません</td></tr>';
@@ -3094,6 +3095,33 @@ async function initNoticesFromDB() {
     });
     renderNotices();
   } catch(e) { console.error('initNoticesFromDB failed:', e); renderNotices(); }
+}
+
+async function deleteCoach(coachId, coachName, coachEmail) {
+  if (!confirm(`コーチ「${coachName}」を削除しますか？\nこの操作は元に戻せません。`)) return;
+  try {
+    const token = _getAccessToken();
+    const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    const base = SUPABASE_URL + '/rest/v1/';
+    // 1. coaches テーブルから削除
+    await fetch(`${base}coaches?id=eq.${encodeURIComponent(coachId)}`, { method: 'DELETE', headers: h });
+    // 2. profiles テーブルからコーチのロールを削除（メールまたは名前で検索）
+    if (coachEmail) {
+      // emailで特定してprofileを削除
+      const profRes = await fetch(`${base}profiles?email=eq.${encodeURIComponent(coachEmail)}&role=eq.coach&select=id`, { headers: h });
+      if (profRes.ok) {
+        const profs = await profRes.json();
+        for (const prof of profs) {
+          await fetch(`${base}profiles?id=eq.${encodeURIComponent(prof.id)}`, { method: 'DELETE', headers: h });
+        }
+      }
+    }
+    showAdminToast(`コーチ「${coachName}」を削除しました。※Supabase Authのユーザーは管理ダッシュボードから別途削除してください。`, 5000);
+    await initCoachesFromDB();
+  } catch(e) {
+    console.error('deleteCoach failed:', e);
+    alert('削除に失敗しました: ' + e.message);
+  }
 }
 
 async function initCoachesFromDB() {
