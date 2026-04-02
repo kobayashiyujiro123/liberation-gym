@@ -54,6 +54,12 @@
     .topbar-title { margin-right: auto; font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 500; letter-spacing: 1px; }
     .topbar-btn { background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 1.05rem; padding: 6px 8px; border-radius: 6px; transition: all 0.15s; }
     .topbar-btn:hover { color: var(--primary); background: rgba(0,188,212,0.07); }
+    .topbar-reload-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; background: #fff; color: var(--primary); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+    .topbar-reload-btn:hover { background: rgba(0,188,212,0.06); border-color: var(--primary); }
+    .topbar-reload-btn:active { transform: scale(0.95); }
+    .topbar-reload-btn i { font-size: 0.82rem; }
+    .topbar-reload-btn.spinning i { animation: spin 0.6s linear; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .hamburger { display: none; background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text); padding: 6px; }
     .page-content { flex: 1; padding: 28px 32px; }
     .view { display: none; }
@@ -475,6 +481,9 @@
   <header class="topbar">
     <button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
     <span class="topbar-title" id="heading">トップページ</span>
+    <button class="topbar-reload-btn" onclick="hardReload()" title="最新情報に更新">
+      <i class="fas fa-rotate-right"></i><span>更新</span>
+    </button>
   </header>
 
   <main class="page-content">
@@ -3379,6 +3388,18 @@ function copyInviteUrl() {
     setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
   });
 }
+function hardReload() {
+  const btn = document.querySelector('.topbar-reload-btn');
+  if (btn) btn.classList.add('spinning');
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      Promise.all(names.map(n => caches.delete(n))).then(() => location.reload());
+    }).catch(() => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
 function copyInviteMsg() {
   navigator.clipboard.writeText(document.getElementById('invite-msg-display').value).then(() => {
     const btn = document.getElementById('invite-msg-copy-btn');
