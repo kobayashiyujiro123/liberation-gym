@@ -484,7 +484,7 @@
       <i class="nav-icon fas fa-cog"></i><span>基本情報設定</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-schedule" onclick="show('schedule')" data-admin-only>
-      <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール</span><i class="nav-arrow fas fa-chevron-right"></i>
+      <i class="nav-icon fas fa-calendar-alt"></i><span>スケジュール登録</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-member-schedule" onclick="show('member-schedule')" data-coach-only style="display:none;">
       <i class="nav-icon fas fa-calendar-week"></i><span>スケジュール予約</span><i class="nav-arrow fas fa-chevron-right"></i>
@@ -532,7 +532,7 @@
     <div class="view active" id="view-dashboard">
       <div class="dash-grid">
         <div class="dash-card" onclick="show('basicinfo')" data-admin-only><div class="dash-icon"><i class="fas fa-cog"></i></div><div class="dash-label">基本情報設定</div></div>
-        <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール</div></div>
+        <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール登録</div></div>
         <div id="dash-member-schedule" class="dash-card" onclick="show('member-schedule')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div id="dash-reservation" class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
         <div id="dash-members" class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
@@ -1131,7 +1131,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
