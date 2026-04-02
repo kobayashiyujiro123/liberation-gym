@@ -1999,6 +1999,7 @@ async function renderInfo() {
   document.getElementById('info-start-note').textContent    = startStr ? `${startStr}～のご利用回数です。` : '';
   document.getElementById('info-table').innerHTML = `
     <div class="info-row"><div class="info-key">氏名</div><div class="info-val">${escHtml(u.name)}</div></div>
+    <div class="info-row"><div class="info-key">メールアドレス</div><div class="info-val">${escHtml(u.email || '—')}</div></div>
     <div class="info-row"><div class="info-key">性別</div><div class="info-val">${escHtml(u.gender)}</div></div>
     <div class="info-row"><div class="info-key">生年月日</div><div class="info-val">${u.birthYear}年${u.birthMonth}月${u.birthDay}日</div></div>
     <div class="info-row"><div class="info-key">電話番号</div><div class="info-val">${escHtml(u.phone || '—')}</div></div>
