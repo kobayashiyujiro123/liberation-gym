@@ -1437,7 +1437,7 @@ function buildDayTabs() {
     const diff = Math.round((dt.getTime() - todayMs) / 86400000);
     const label = diff === 0 ? '今日' : diff === 1 ? '明日' : (dt.getMonth()+1) + '/' + dt.getDate();
     const weekday = WEEKDAYS[dt.getDay()];
-    const count = resData[key].length;
+    const count = resData[key].filter(r => r.status !== 'キャンセル').length;
     const isActive = key === resSelectedDate ? 'active' : '';
     return `<div class="res-day-tab ${isActive}" onclick="selectResDay('${key}')">
       <span class="day-label">${label}（${weekday}）</span>
