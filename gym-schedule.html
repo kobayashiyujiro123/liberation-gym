@@ -292,6 +292,30 @@
       .mem-field-label { width: 130px; min-width: 130px; white-space: normal; line-height: 1.3; }
     }
 
+    /* MEMBER CARD (スマホ用) */
+    .member-cards { display: none; flex-direction: column; gap: 10px; }
+    .mem-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: box-shadow 0.15s; }
+    .mem-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .mem-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .mem-card-info { flex: 1; min-width: 0; }
+    .mem-card-name { font-weight: 700; font-size: 0.97rem; margin-bottom: 3px; }
+    .mem-card-email { font-size: 0.75rem; color: var(--text-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mem-card-stats { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+    .mem-card-stat { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid var(--border); }
+    .mem-card-stat:last-child { border-right: none; }
+    .mem-card-stat-lbl { font-size: 0.62rem; color: var(--text-light); margin-bottom: 2px; }
+    .mem-card-stat-val { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); }
+    .mem-card-stat-val span { font-size: 0.65rem; font-weight: 400; color: var(--text-light); }
+    .mem-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .mem-card-date { font-size: 0.73rem; color: var(--text-light); }
+    .mem-card-tel { font-size: 0.73rem; color: var(--text-light); }
+    .mem-card-actions { display: flex; gap: 6px; }
+    @media (max-width: 700px) {
+      .data-wrap { display: none; }
+      .member-cards { display: flex; }
+      .member-pagination-wrap { display: flex; justify-content: center; margin-top: 8px; }
+    }
+
     /* SORT HEADER */
     .sortable { cursor: pointer; user-select: none; white-space: nowrap; }
     .sortable:hover { color: var(--primary); background: rgba(0,188,212,0.05); }
@@ -652,6 +676,9 @@
         </table>
         <div class="pagination" id="member-pagination"></div>
       </div>
+      <!-- スマホ用カードリスト -->
+      <div class="member-cards" id="member-cards"></div>
+      <div class="member-pagination-wrap"><div class="pagination" id="member-pagination-sp" style="border-top:none;padding:8px 0;"></div></div>
     </div>
 
     <!-- MEMBER DETAIL -->
@@ -2048,6 +2075,41 @@ function renderMembers() {
   html += `<button class="pg-btn" onclick="memberGoPage(${memberPage+1})" ${memberPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-right"></i></button>`;
   document.getElementById('member-pagination').innerHTML = html;
   document.getElementById('member-pagination-top').innerHTML = html;
+
+  // スマホ用カード描画
+  const cards = document.getElementById('member-cards');
+  const spPag = document.getElementById('member-pagination-sp');
+  if (cards) {
+    cards.innerHTML = pageItems.length ? pageItems.map(m => {
+      const avHtml = (()=>{ const p = m.photoUrl; return p ? `<div class="m-av"><img src="${p}" alt="${m.name}"></div>` : `<div class="m-av${m.gender==='男'?' male':m.gender==='女'?' female':''}">${m.name.slice(0,2)}</div>`; })();
+      return `<div class="mem-card" onclick="openMemberDetail('${m.id}')">
+        <div class="mem-card-top">
+          ${avHtml}
+          <div class="mem-card-info">
+            <div class="mem-card-name">${m.name}</div>
+            <div class="mem-card-email">${m.email}</div>
+          </div>
+          <span class="badge ${m.badge}">${m.status}</span>
+        </div>
+        <div class="mem-card-stats">
+          <div class="mem-card-stat"><div class="mem-card-stat-lbl">利用回数</div><div class="mem-card-stat-val">${m.visits}<span>回</span></div></div>
+          <div class="mem-card-stat"><div class="mem-card-stat-lbl">今年</div><div class="mem-card-stat-val">${m.visitsYear}<span>回</span></div></div>
+          <div class="mem-card-stat"><div class="mem-card-stat-lbl">今月</div><div class="mem-card-stat-val">${m.visitsMonth}<span>回</span></div></div>
+        </div>
+        <div class="mem-card-meta">
+          <div>
+            ${m.tel ? `<div class="mem-card-tel"><i class="fas fa-phone" style="font-size:0.65rem;margin-right:3px;"></i>${m.tel}</div>` : ''}
+            <div class="mem-card-date"><i class="fas fa-calendar-alt" style="font-size:0.65rem;margin-right:3px;"></i>入会日 ${m.date}</div>
+          </div>
+          <div class="mem-card-actions" onclick="event.stopPropagation()">
+            <button class="act-btn" onclick="openMemberDetail('${m.id}')">詳細</button>
+            ${currentUserRole !== 'coach' ? `<button class="act-btn" onclick="openMemberEdit('${m.id}')">編集</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:24px;color:var(--text-light);">該当する会員が見つかりません</div>';
+  }
+  if (spPag) spPag.innerHTML = html;
 }
 
 function memberGoPage(p) {
