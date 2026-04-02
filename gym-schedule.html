@@ -321,13 +321,15 @@
     .coach-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .coach-card-detail { font-size: 0.73rem; color: var(--text-light); display: flex; flex-direction: column; gap: 2px; }
     .coach-card-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-    .coach-pagination-wrap { display: flex; justify-content: center; margin-top: 8px; }
+    .member-pagination-wrap { display: none; }
+    .coach-pagination-wrap { display: none; }
     @media (max-width: 700px) {
       #view-members .data-wrap { display: none; }
       .member-cards { display: flex; }
       .member-pagination-wrap { display: flex; justify-content: center; margin-top: 8px; }
       #view-coach .data-wrap { display: none; }
       .coach-cards { display: flex; }
+      .coach-pagination-wrap { display: flex; justify-content: center; margin-top: 8px; }
     }
 
     /* SORT HEADER */
