@@ -2656,14 +2656,14 @@ function makeBdayCard(m, isToday) {
   const cardStyle = isToday && isMale ? 'style="cursor:pointer;border-color:rgba(21,101,192,0.4);box-shadow:0 0 0 3px rgba(21,101,192,0.08);"'
                   : isToday && isFemale ? 'style="cursor:pointer;border-color:rgba(186,104,200,0.4);box-shadow:0 0 0 3px rgba(240,98,146,0.08);"'
                   : 'style="cursor:pointer;"';
-  const btnStyle = isMale ? 'style="background:rgba(21,101,192,0.08);border-color:rgba(21,101,192,0.28);color:#1565c0;"'
-                 : isFemale ? 'style="background:rgba(240,98,146,0.08);border-color:rgba(186,104,200,0.28);color:#ba68c8;"' : '';
+  const roleTag = m.isCoach ? '<span style="font-size:0.68rem;background:rgba(0,188,212,0.12);color:var(--primary-dark);border-radius:4px;padding:1px 6px;margin-left:4px;">コーチ</span>' : '';
+  const onclick = m.isCoach ? `openCoachDetail('${m.id}')` : `openMemberFromBday('${m.name}')`;
   return `
-    <div class="${cardClass}" ${cardStyle} onclick="openMemberFromBday('${m.name}')">
+    <div class="${cardClass}" ${cardStyle} onclick="${onclick}">
       <div class="bday-av" ${avStyle}><i class="fas fa-user"></i></div>
       <div>
         ${label}
-        <div class="bday-name">${m.name}</div>
+        <div class="bday-name">${m.name}${roleTag}</div>
         <div class="bday-date"><i class="fas fa-birthday-cake"></i> ${m.month}月${m.day}日</div>
       </div>
     </div>`;
@@ -2684,10 +2684,15 @@ function openMemberFromBday(name) {
 function renderBirthdays() {
   const bdayMembers = allMembers.filter(m => m.birthday).map(m => {
     const parts = m.birthday.split('-').map(Number);
-    return { name: m.name, gender: m.gender, month: parts[1], day: parts[2] };
+    return { name: m.name, gender: m.gender, month: parts[1], day: parts[2], isCoach: false };
   });
-  const todayList = bdayMembers.filter(m => daysUntilBirthday(m.month, m.day) === 0);
-  const weekList  = bdayMembers.filter(m => { const d = daysUntilBirthday(m.month, m.day); return d > 0 && d <= 7; });
+  const bdayCoaches = allCoaches.filter(c => c.birthday).map(c => {
+    const parts = c.birthday.split('-').map(Number);
+    return { id: c.id, name: c.name, gender: c.gender || '男', month: parts[1], day: parts[2], isCoach: true };
+  });
+  const bdayAll = [...bdayMembers, ...bdayCoaches];
+  const todayList = bdayAll.filter(m => daysUntilBirthday(m.month, m.day) === 0);
+  const weekList  = bdayAll.filter(m => { const d = daysUntilBirthday(m.month, m.day); return d > 0 && d <= 7; });
 
   const todayEl = document.getElementById('bday-today');
   const weekEl  = document.getElementById('bday-week');
