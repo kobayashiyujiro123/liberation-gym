@@ -1505,7 +1505,7 @@ function renderReservations() {
   const selDateMs = new Date(sy, sm - 1, sd).getTime();
   const nowMs2 = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
   const diff2 = Math.round((selDateMs - nowMs2) / 86400000);
-  document.getElementById('res-count').textContent = all.length;
+  document.getElementById('res-count').textContent = all.filter(r => r.status !== 'キャンセル').length;
   document.getElementById('res-count-lbl').textContent = diff2 === 0 ? '本日の予約' : diff2 === 1 ? '明日の予約' : resSelectedDate + 'の予約';
 
   const timeline = document.getElementById('res-timeline');
