@@ -125,6 +125,19 @@
     .cal-modal-footer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .btn-holiday { background: none; border: 1px solid var(--border); color: var(--text-light); padding: 7px 14px; border-radius: 6px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
     .btn-holiday:hover { border-color: #e53935; color: #e53935; }
+    /* カレンダー スマホ対応 */
+    @media (max-width: 700px) {
+      .cal-day-hd { padding: 6px 2px; font-size: 0.68rem; }
+      .cal-cell { min-height: 58px; padding: 3px 2px 4px; }
+      .cal-date { font-size: 0.72rem; width: 20px; height: 20px; margin-bottom: 2px; }
+      .cal-pill { font-size: 0.52rem; padding: 1px 3px; margin-bottom: 1px; }
+      .cal-more { font-size: 0.52rem; }
+      .cal-holiday-label { font-size: 0.62rem; height: 36px; }
+      .cal-event-label { font-size: 0.62rem; height: 36px; gap: 1px; }
+      .cal-modal { padding: 18px 16px; }
+      .cal-slots-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .cal-month-title { font-size: 1.1rem; min-width: 120px; }
+    }
     .btn-holiday.is-on { background: rgba(229,57,53,0.08); border-color: #e53935; color: #e53935; }
     .cls-default  { background: rgba(0,188,212,0.1);  border-left-color: var(--primary);  color: var(--primary-dark); }
     .cls-yoga     { background: rgba(156,39,176,0.08); border-left-color: #7b1fa2;         color: #7b1fa2; }
