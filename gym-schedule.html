@@ -3402,7 +3402,6 @@ async function initMembersFromDB() {
       photoUrl: p.photo_url || null,
     });
   });
-  memberPage = 1;
   renderMembers();
   } catch(e) { console.error('initMembersFromDB failed:', e); }
 }
