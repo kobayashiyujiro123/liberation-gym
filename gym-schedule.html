@@ -383,6 +383,11 @@
     .res-day-tab .day-label { font-weight: 700; font-size: 0.88rem; display: block; }
     .res-day-tab .day-sub { font-size: 0.72rem; opacity: 0.8; }
     .res-day-tab.active .day-sub { opacity: 0.85; }
+    .res-day-tab.res-tab-holiday { border-color: #e0e0e0; color: #999; }
+    .res-day-tab.res-tab-holiday .day-sub { color: #e53935; font-weight: 600; }
+    .res-day-tab.res-tab-holiday.active { background: #9e9e9e; border-color: #9e9e9e; color: #fff; }
+    .res-day-tab.res-tab-event .day-sub { color: #f57c00; font-weight: 600; }
+    .res-day-tab.res-tab-event.active .day-sub { color: #ffe0b2; }
     /* PAGINATION */
     .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 12px 18px; border-top: 1px solid var(--border); }
     .pg-btn { width: 28px; height: 28px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 4px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: var(--text-light); }
@@ -1415,6 +1420,8 @@ function genReservations() {
 
 const resData = {}; // DBから取得（initReservationsFromDB）
 const resDates = []; // DBから取得（initReservationsFromDB）
+const holidays = new Set();   // gym_holidaysから取得（buildDayTabs参照用に前方宣言）
+const dayNotes = {};           // day_notesから取得（buildDayTabs参照用に前方宣言）
 
 // ページロード時点でDB取得前から正しい日付タブを表示するため同期的に初期化
 (function _initResDates() {
@@ -1452,9 +1459,14 @@ function buildDayTabs() {
     const weekday = WEEKDAYS[dt.getDay()];
     const count = resData[key].filter(r => r.status !== 'キャンセル').length;
     const isActive = key === resSelectedDate ? 'active' : '';
-    return `<div class="res-day-tab ${isActive}" onclick="selectResDay('${key}')">
+    const dbKey = key.replace(/\//g, '-');
+    const isGymHoliday = holidays.has(dbKey);
+    const dayNote = dayNotes[dbKey] || '';
+    const subLabel = isGymHoliday ? 'お休み' : (dayNote || `${count}件`);
+    const extraClass = isGymHoliday ? ' res-tab-holiday' : (dayNote ? ' res-tab-event' : '');
+    return `<div class="res-day-tab ${isActive}${extraClass}" onclick="selectResDay('${key}')">
       <span class="day-label">${label}（${weekday}）</span>
-      <span class="day-sub">${count}件</span>
+      <span class="day-sub">${subLabel}</span>
     </div>`;
   }).join('');
 }
@@ -2264,8 +2276,6 @@ const weeklyClasses = {
 
 let calYear, calMonth;
 const calPublicState = {}; // { "2026-03": true, "2026-04": false, ... } 未設定=非公開
-const holidays = new Set();
-
 // 日本の祝日 (2025〜2026)
 const jpHolidays = new Set([
   '2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24',
@@ -2278,7 +2288,6 @@ const jpHolidays = new Set([
   '2026-11-03','2026-11-23',
 ]);
 const scheduleData = {};   // { "YYYY-MM-DD": {"09:00":"練習", ...} }
-const dayNotes = {};       // { "YYYY-MM-DD": "バーベキュー" }
 let calModalDate = null;
 let slotClassNames = {}; // { "09:00": "練習", "21:00": "スパーリング" }
 
