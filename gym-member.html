@@ -833,6 +833,20 @@
   </div>
 </div>
 
+<!-- Duplicate Reservation Modal -->
+<div class="bk-overlay" id="bk-duplicate-overlay" onclick="closeBkDuplicate()">
+  <div class="bk-modal" onclick="event.stopPropagation()" style="text-align:center;">
+    <div style="font-size:2.2rem;color:var(--warning);margin-bottom:10px;"><i class="fas fa-exclamation-circle"></i></div>
+    <div class="bk-modal-title" style="margin-bottom:8px;">既に同じ日に予約があります</div>
+    <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:22px;">
+      予約状況は<span onclick="closeBkDuplicate();showApp('res');" style="color:var(--primary);text-decoration:underline;cursor:pointer;">予約状況確認画面</span>でご確認ください。
+    </div>
+    <div class="bk-btns">
+      <button class="bk-btn-ok" onclick="closeBkDuplicate()">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- Cancel Modal -->
 <div class="modal-overlay" id="cancel-modal">
   <div class="modal">
@@ -2368,7 +2382,7 @@ async function openBkModal(dateStr, time, className) {
     }
   }
   if (hasSameDay) {
-    alert('既に同じ日に予約があります。\n予約状況は予約状況確認画面でご確認ください。');
+    document.getElementById('bk-duplicate-overlay').classList.add('open');
     return;
   }
 
@@ -2419,6 +2433,10 @@ async function submitBkModal() {
 
 function closeBkSuccess() {
   document.getElementById('bk-success-overlay').classList.remove('open');
+}
+
+function closeBkDuplicate() {
+  document.getElementById('bk-duplicate-overlay').classList.remove('open');
 }
 
 // Session restore is handled by sb.auth.onAuthStateChange above
