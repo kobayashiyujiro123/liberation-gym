@@ -2344,7 +2344,7 @@ document.addEventListener('visibilitychange', function() {
   }
 });
 
-function openBkModal(dateStr, time, className) {
+async function openBkModal(dateStr, time, className) {
   // 予約可能時間チェック
   const reserveLimit = parseFloat(cachedGymSettings['bi-reserve-limit'] || '1.5');
   const [y,m,d] = dateStr.split('-').map(Number);
@@ -2355,6 +2355,23 @@ function openBkModal(dateStr, time, className) {
     alert(`このクラスの予約受付は開始 ${lbl} 前に締め切られました`);
     return;
   }
+
+  // 同日の予約重複チェック
+  let hasSameDay = false;
+  if (DEMO_MODE) {
+    hasSameDay = demoReservations.some(r => r.date === dateStr && r.status === 'confirmed');
+  } else {
+    const sess = _getSession();
+    if (sess && sess.user) {
+      const res = await _restAPI('GET', 'reservations', `user_id=eq.${sess.user.id}&date=eq.${dateStr}&status=eq.confirmed`);
+      hasSameDay = !!(res.data && res.data.length > 0);
+    }
+  }
+  if (hasSameDay) {
+    alert('既に同じ日に予約があります。\n予約状況は予約状況確認画面でご確認ください。');
+    return;
+  }
+
   bkDate = dateStr; bkTime = time; bkClass = className;
   const dow = new Date(y,m-1,d).getDay();
   const DAYS = ['日','月','火','水','木','金','土'];
