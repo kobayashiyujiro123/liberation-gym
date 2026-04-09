@@ -1422,6 +1422,8 @@ const resData = {}; // DBから取得（initReservationsFromDB）
 const resDates = []; // DBから取得（initReservationsFromDB）
 const holidays = new Set();   // gym_holidaysから取得（buildDayTabs参照用に前方宣言）
 const dayNotes = {};           // day_notesから取得（buildDayTabs参照用に前方宣言）
+let holidaysLoaded = false;    // gym_holidaysのロード成功フラグ（保存時の誤削除防止）
+let dayNotesLoaded = false;    // day_notesのロード成功フラグ
 
 // ページロード時点でDB取得前から正しい日付タブを表示するため同期的に初期化
 (function _initResDates() {
@@ -2374,14 +2376,20 @@ async function saveScheduleToStorage() {
     const base = SUPABASE_URL + '/rest/v1/';
 
     // Holidays → gym_holidays (全件再sync)
-    await fetch(base + 'gym_holidays?date=gte.2000-01-01', { method:'DELETE', headers: h });
-    const holArr = [...holidays].map(date => ({ date }));
-    if (holArr.length) await fetch(base + 'gym_holidays', { method:'POST', headers: h, body: JSON.stringify(holArr) });
+    // ※ロード成功時のみ更新（失敗時に誤って全削除しないよう保護）
+    if (holidaysLoaded) {
+      await fetch(base + 'gym_holidays?date=gte.2000-01-01', { method:'DELETE', headers: h });
+      const holArr = [...holidays].map(date => ({ date }));
+      if (holArr.length) await fetch(base + 'gym_holidays', { method:'POST', headers: h, body: JSON.stringify(holArr) });
+    }
 
     // Day notes → day_notes (全件再sync: 削除→再INSERT)
-    await fetch(base + 'day_notes?date=gte.2000-01-01', { method:'DELETE', headers: h });
-    const notes = Object.entries(dayNotes).map(([date, note]) => ({ date, note }));
-    if (notes.length) await fetch(base + 'day_notes', { method:'POST', headers: {...h, 'Prefer':'return=minimal'}, body: JSON.stringify(notes) });
+    // ※ロード成功時のみ更新
+    if (dayNotesLoaded) {
+      await fetch(base + 'day_notes?date=gte.2000-01-01', { method:'DELETE', headers: h });
+      const notes = Object.entries(dayNotes).map(([date, note]) => ({ date, note }));
+      if (notes.length) await fetch(base + 'day_notes', { method:'POST', headers: {...h, 'Prefer':'return=minimal'}, body: JSON.stringify(notes) });
+    }
 
     // Schedule slots → schedule_slots (変更日付のみ再sync)
     const dates = Object.keys(scheduleData);
@@ -3209,7 +3217,9 @@ async function initScheduleFromDB() {
       scheduleData[s.date][s.time] = s.class_name;
     });
     (notesRes || []).forEach(n => { dayNotes[n.date] = n.note; });
+    dayNotesLoaded = true;
     (holRes || []).forEach(h => { holidays.add(h.date); });
+    holidaysLoaded = true;
     (settingsRes || []).forEach(s => {
       const el = document.getElementById(s.key);
       if (el) el.value = s.value;
