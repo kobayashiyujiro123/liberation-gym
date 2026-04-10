@@ -1521,7 +1521,18 @@ function renderReservations() {
   }
   const q = (document.getElementById('res-search')?.value || '').toLowerCase();
   const all = resData[resSelectedDate] || [];
-  const filtered = all.filter(r => {
+
+  // 同一会員で確定予約がある場合はキャンセルを非表示
+  const confirmedUserIds = new Set(all.filter(r => r.status === '確定' && r.userId).map(r => r.userId));
+  const confirmedNames   = new Set(all.filter(r => r.status === '確定' && !r.userId).map(r => r.name));
+  const deduped = all.filter(r => {
+    if (r.status !== 'キャンセル') return true;
+    if (r.userId && confirmedUserIds.has(r.userId)) return false;
+    if (!r.userId && confirmedNames.has(r.name)) return false;
+    return true;
+  });
+
+  const filtered = deduped.filter(r => {
     const matchQ = r.name.includes(q) || r.cls.toLowerCase().includes(q) || r.coach.includes(q);
     const matchCoach = !resCoachFilter || r.coach === resCoachFilter;
     return matchQ && matchCoach;
@@ -3493,6 +3504,7 @@ async function initReservationsFromDB() {
           status: isCancelled ? 'キャンセル' : '確定',
           badge: isCancelled ? 'badge-d' : 'badge-s',
           memo: displayMemo,
+          userId: r.user_id || null,
         });
       }
     });
