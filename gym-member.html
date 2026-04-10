@@ -187,6 +187,7 @@
     .res-time { font-size: 0.94rem; font-weight: 600; }
     .res-memo { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; display: flex; align-items: flex-start; gap: 5px; }
     .res-memo i { margin-top: 2px; opacity: 0.6; flex-shrink: 0; }
+    .res-time-cancel-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .res-others { font-size: 0.75rem; color: var(--primary-dark); margin-top: 5px; display: flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; }
     .res-others i { opacity: 0.7; font-size: 0.8rem; }
     .res-coach { font-size: 0.8rem; color: var(--text-light); margin-top: 3px; }
@@ -1946,6 +1947,14 @@ async function renderRes() {
     const othersHtml = othersCount !== null
       ? `<div class="res-others"><i class="fas fa-users"></i> あなた以外に${othersCount}名が予約しています</div>`
       : '';
+    const cancelBtnHtml = !cancelled ? (() => {
+        const [ry,rmm,rd2] = r.date.split('-').map(Number);
+        const [rh,rmin]    = r.time.split(':').map(Number);
+        const slotMs = new Date(ry,rmm-1,rd2,rh,rmin).getTime();
+        return nowMs < slotMs - cancelLimit * 3600000
+          ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}','${r.date}','${r.time}')">キャンセル</button>`
+          : `<div class="res-cancel-past"><i class="fas fa-lock"></i> キャンセル期限切れ</div>`;
+      })() : '';
     return `<div class="res-card">
       <div class="res-date-blk">
         <div class="res-month">${rd.getMonth()+1}月</div>
@@ -1953,19 +1962,14 @@ async function renderRes() {
         <div class="res-wd">${WD[rd.getDay()]}曜日</div>
       </div>
       <div class="res-info">
-        <div class="res-time">${escHtml(r.time)}　${escHtml(r.class_name)}</div>
+        <div class="res-time-cancel-row">
+          <div class="res-time">${escHtml(r.time)}　${escHtml(r.class_name)}</div>
+          ${cancelBtnHtml}
+        </div>
         <span class="badge ${cancelled?'badge-ng':'badge-ok'}">${statusLabel}</span>
         ${r.memo ? `<div class="res-memo"><i class="fas fa-sticky-note"></i>${escHtml(r.memo)}</div>` : ''}
         ${othersHtml}
       </div>
-      ${!cancelled ? (() => {
-        const [ry,rmm,rd2] = r.date.split('-').map(Number);
-        const [rh,rmin]    = r.time.split(':').map(Number);
-        const slotMs = new Date(ry,rmm-1,rd2,rh,rmin).getTime();
-        return nowMs < slotMs - cancelLimit * 3600000
-          ? `<button class="btn-cancel-res" onclick="openCancel('${r.id}','${r.date}','${r.time}')">キャンセル</button>`
-          : `<div class="res-cancel-past"><i class="fas fa-lock"></i> キャンセル期限切れ</div>`;
-      })() : ''}
     </div>`;
   }).join('');
   // キャンセル案内メッセージを表示
