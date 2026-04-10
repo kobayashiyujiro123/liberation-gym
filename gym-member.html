@@ -260,7 +260,9 @@
     .wk-slot { padding: 5px 7px; border-radius: 5px; background: rgba(0,188,212,0.08); border-left: 2px solid var(--primary); cursor: pointer; transition: background 0.15s; }
     .wk-slot:hover { background: rgba(0,188,212,0.22); }
     .wk-slot.is-past { opacity: 0.55; cursor: not-allowed; background: #f5f5f5; border-left-color: #ccc; pointer-events: none; }
+    .wk-slot-time-row { display: flex; align-items: center; justify-content: space-between; }
     .wk-slot-time { font-size: 0.72rem; font-weight: 700; color: var(--primary-dark); }
+    .wk-slot-res-count { font-size: 0.6rem; font-weight: 600; color: #9e9e9e; white-space: nowrap; }
     .wk-slot-name { font-size: 0.66rem; color: var(--text-light); }
     .wk-slot-cap { font-size: 0.62rem; color: var(--text-light); margin-top: 2px; }
     .wk-slot-cap.wk-cap-low { color: #e65100; font-weight: 700; }
@@ -2284,8 +2286,9 @@ async function renderMemberWeekly(weekOffset) {
             const capLabel  = isFull ? '満員' : (past || isClosed) ? '受付終了' : `残り${remaining}名`;
             const slotCls   = `wk-slot${past}${isFull?' is-full':''}${isClosed?' is-closed':''}`;
             const clickAttr = !isUnavail ? `onclick="openBkModal('${dateStr}','${slotTime}',${JSON.stringify(slotName).replace(/"/g,'&quot;')})"` : '';
+            const resCountHtml = (past || isClosed) && occupied > 0 ? `<span class="wk-slot-res-count">予約${occupied}名</span>` : '';
             return `<div class="${slotCls}" ${clickAttr}>
-              <div class="wk-slot-time">${slotTime}</div>
+              <div class="wk-slot-time-row"><div class="wk-slot-time">${slotTime}</div>${resCountHtml}</div>
               <div class="wk-slot-name">${escHtml(slotName)}</div>
               <div class="wk-slot-cap ${capCls}">${capLabel}</div>
             </div>`;
@@ -2308,8 +2311,9 @@ async function renderMemberWeekly(weekOffset) {
         const capLabel  = isFull ? '満員' : (past || isClosed) ? '受付終了' : `残り${remaining}名`;
         const slotCls   = `wk-slot${past}${isFull?' is-full':''}${isClosed?' is-closed':''}`;
         const clickAttr = !isUnavail ? `onclick="openBkModal('${dateStr}','${time}',${JSON.stringify(name).replace(/"/g,'&quot;')})"` : '';
+        const resCountHtml = (past || isClosed) && occupied > 0 ? `<span class="wk-slot-res-count">予約${occupied}名</span>` : '';
         return `<div class="${slotCls}" ${clickAttr}>
-          <div class="wk-slot-time">${time}</div>
+          <div class="wk-slot-time-row"><div class="wk-slot-time">${time}</div>${resCountHtml}</div>
           <div class="wk-slot-name">${escHtml(name)}</div>
           <div class="wk-slot-cap ${capCls}">${capLabel}</div>
         </div>`;
