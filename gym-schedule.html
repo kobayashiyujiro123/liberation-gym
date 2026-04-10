@@ -2014,6 +2014,7 @@ function openMemberDetail(id, fromView) {
   document.getElementById('view-member-detail').classList.add('active');
   document.querySelectorAll('.nav-item[id]').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-members').classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 function openMemberEdit(id) {
