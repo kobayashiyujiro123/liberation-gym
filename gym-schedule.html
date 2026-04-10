@@ -1928,6 +1928,7 @@ function getMemberWithProfile(id) {
 
 const ITEMS_PER_PAGE = 10;
 let memberPage = 1;
+let memberListScrollY = 0; // 会員一覧のスクロール位置保存
 
 let currentMemberId = null;
 
@@ -1968,6 +1969,7 @@ function setMemberAvatarEl(el, m) {
 function openMemberDetail(id, fromView) {
   const m = getMemberWithProfile(id);
   if (!m) return;
+  memberListScrollY = window.scrollY; // 一覧のスクロール位置を保存
   currentMemberId = id;
   // breadcrumb をデフォルトに戻す（バースデーから来た場合は openMemberFromBday が上書きする）
   const back = document.getElementById('mem-detail-back');
@@ -3433,6 +3435,9 @@ async function initMembersFromDB() {
     });
   });
   renderMembers();
+  if (memberListScrollY > 0) {
+    requestAnimationFrame(() => { window.scrollTo(0, memberListScrollY); memberListScrollY = 0; });
+  }
   } catch(e) { console.error('initMembersFromDB failed:', e); }
 }
 
