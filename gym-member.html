@@ -187,6 +187,8 @@
     .res-time { font-size: 0.94rem; font-weight: 600; }
     .res-memo { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; display: flex; align-items: flex-start; gap: 5px; }
     .res-memo i { margin-top: 2px; opacity: 0.6; flex-shrink: 0; }
+    .res-others { font-size: 0.75rem; color: var(--primary-dark); margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+    .res-others i { opacity: 0.7; font-size: 0.8rem; }
     .res-coach { font-size: 0.8rem; color: var(--text-light); margin-top: 3px; }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; margin-top: 6px; }
     .badge-ok  { background: #e8f5e9; color: var(--success); }
@@ -1911,10 +1913,32 @@ async function renderRes() {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
     return;
   }
+
+  // 自分以外の予約人数を取得（本番モードのみ）
+  const otherCounts = {};
+  if (!DEMO_MODE) {
+    const confirmedDates = [...new Set(data.filter(r => r.status === 'confirmed').map(r => r.date))];
+    if (confirmedDates.length > 0) {
+      const countRes = await _restAPI('GET', 'reservations', `date=in.(${confirmedDates.join(',')})&status=eq.confirmed&select=date,time`);
+      if (countRes.data) {
+        countRes.data.forEach(cr => {
+          const key = cr.date + '_' + cr.time;
+          otherCounts[key] = (otherCounts[key] || 0) + 1;
+        });
+      }
+    }
+  }
+
   el.innerHTML = data.map(r => {
     const rd = new Date(r.date);
     const cancelled = r.status === 'cancelled';
     const statusLabel = cancelled ? 'キャンセル' : '確定';
+    const othersCount = (!cancelled && !DEMO_MODE)
+      ? Math.max(0, (otherCounts[r.date + '_' + r.time] || 1) - 1)
+      : null;
+    const othersHtml = othersCount !== null
+      ? `<div class="res-others"><i class="fas fa-users"></i> あなた以外に${othersCount}名が予約しています</div>`
+      : '';
     return `<div class="res-card">
       <div class="res-date-blk">
         <div class="res-month">${rd.getMonth()+1}月</div>
@@ -1925,6 +1949,7 @@ async function renderRes() {
         <div class="res-time">${escHtml(r.time)}　${escHtml(r.class_name)}</div>
         <span class="badge ${cancelled?'badge-ng':'badge-ok'}">${statusLabel}</span>
         ${r.memo ? `<div class="res-memo"><i class="fas fa-sticky-note"></i>${escHtml(r.memo)}</div>` : ''}
+        ${othersHtml}
       </div>
       ${!cancelled ? (() => {
         const [ry,rmm,rd2] = r.date.split('-').map(Number);
