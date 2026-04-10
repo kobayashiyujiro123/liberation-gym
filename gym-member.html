@@ -1900,6 +1900,8 @@ async function renderRes() {
   let data;
   if (DEMO_MODE) {
     data = demoReservations.filter(r => r.date >= todayStr && _isVisible(r));
+    const _confirmedDemo = new Set(data.filter(r => r.status === 'confirmed').map(r => r.date));
+    data = data.filter(r => !(r.status === 'cancelled' && _confirmedDemo.has(r.date)));
   } else {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-spinner fa-spin"></i>&nbsp;読み込み中...</div>';
     const res = await _restAPI('GET', 'reservations', `user_id=eq.${user.id}&date=gte.${todayStr}&order=date.asc`);
@@ -1909,6 +1911,11 @@ async function renderRes() {
     }
     data = res.data.filter(_isVisible);
   }
+
+  // 同日に確定予約がある場合はキャンセル済みを非表示
+  const confirmedDatesSet = new Set(data.filter(r => r.status === 'confirmed').map(r => r.date));
+  data = data.filter(r => !(r.status === 'cancelled' && confirmedDatesSet.has(r.date)));
+
   if (!data.length) {
     el.innerHTML = '<div class="res-empty"><i class="fas fa-calendar-times"></i>予約はありません</div>';
     return;
