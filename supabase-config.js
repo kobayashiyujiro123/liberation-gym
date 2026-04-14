@@ -47,4 +47,7 @@ if (DEMO_MODE) {
       detectSessionInUrl: true,
     },
   });
+  // 旧DEMOモードのlocalStorageデータを削除
+  ['demo_scheduleData','demo_dayNotes','demo_holidays','demo_businessHours','demo_reservations']
+    .forEach(k => localStorage.removeItem(k));
 }
