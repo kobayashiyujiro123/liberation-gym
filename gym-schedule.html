@@ -3410,7 +3410,7 @@ async function initFightsFromDB() {
   const token = _getAccessToken();
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/matches?select=*,match_fighters(*)&order=created_at.asc`,
+      `${SUPABASE_URL}/rest/v1/matches?select=*,match_fighters(*)&order=created_at.asc&match_fighters.order=created_at.asc`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
     );
     allFights = res.ok ? await res.json() : [];
