@@ -477,6 +477,40 @@
     .usage-summary-lbl { font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; font-weight: 700; }
     .usage-summary-val { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); line-height: 1; }
     .usage-summary-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 2px; }
+
+    /* FIGHTS */
+    .fight-new-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .fight-new-form .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fight-new-form .form-grid-full { grid-column: 1 / -1; }
+    .fight-new-form .form-actions { margin-top: 16px; display: flex; gap: 10px; }
+    .fight-list { display: flex; flex-direction: column; gap: 12px; }
+    .fight-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .fight-card-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #fafafa; }
+    .fight-date { font-size: 0.78rem; color: var(--text-light); min-width: 90px; }
+    .fight-title { font-weight: 600; font-size: 0.95rem; flex: 1; }
+    .fight-result-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 12px; border-radius: 20px; flex-shrink: 0; }
+    .fight-result-badge.win { background: rgba(67,160,71,0.12); color: var(--success); }
+    .fight-result-badge.lose { background: rgba(229,57,53,0.1); color: var(--danger); }
+    .fight-result-badge.draw { background: rgba(251,140,0,0.1); color: var(--warning); }
+    .fight-result-badge.pending { background: #f5f5f5; color: #9e9e9e; }
+    .fight-card-body { padding: 12px 16px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .fight-fighter { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 80px; }
+    .fight-fighter-label { font-size: 0.65rem; color: var(--text-light); margin-bottom: 3px; }
+    .fight-fighter-name { font-weight: 600; font-size: 0.9rem; text-align: center; }
+    .fight-vs { font-family: 'Oswald', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text-light); padding: 0 12px; flex-shrink: 0; }
+    .fight-card-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fight-result-lbl { font-size: 0.75rem; color: var(--text-light); margin-right: 4px; }
+    .fight-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: #fff; font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s; }
+    .fight-btn.win-btn { border-color: var(--success); color: var(--success); }
+    .fight-btn.win-btn:hover, .fight-btn.win-btn.active { background: var(--success); color: #fff; }
+    .fight-btn.lose-btn { border-color: var(--danger); color: var(--danger); }
+    .fight-btn.lose-btn:hover, .fight-btn.lose-btn.active { background: var(--danger); color: #fff; }
+    .fight-btn.draw-btn { border-color: var(--warning); color: var(--warning); }
+    .fight-btn.draw-btn:hover, .fight-btn.draw-btn.active { background: var(--warning); color: #fff; }
+    .fight-del-btn { margin-left: auto; background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
+    .fight-del-btn:hover { color: var(--danger); }
+    .fight-empty { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.88rem; }
+    .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -523,6 +557,9 @@
     <div class="nav-item" id="nav-birthday" onclick="show('birthday')" data-admin-only>
       <i class="nav-icon fas fa-birthday-cake"></i><span>バースデー</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
+    <div class="nav-item" id="nav-fights" onclick="show('fights')" data-admin-only>
+      <i class="nav-icon fas fa-trophy"></i><span>試合結果</span><i class="nav-arrow fas fa-chevron-right"></i>
+    </div>
     <div class="nav-item" id="nav-userinfo" onclick="show('userinfo')" data-coach-only style="display:none;">
       <i class="nav-icon fas fa-user-circle"></i><span>ユーザ情報</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
@@ -558,6 +595,7 @@
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
+        <div class="dash-card" onclick="show('fights')" data-admin-only><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
         <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">ユーザ情報</div></div>
         <div id="dash-password" class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
       </div>
@@ -1086,6 +1124,45 @@
       </div>
     </div>
 
+    <!-- FIGHTS -->
+    <div class="view" id="view-fights">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+
+      <!-- 新規登録フォーム -->
+      <div class="fight-new-form">
+        <div class="fight-section-title"><i class="fas fa-plus" style="margin-right:6px;"></i>新規試合を登録</div>
+        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">タイトル <span style="color:var(--danger);">*</span></label>
+            <input class="form-ctrl" id="fight-title" type="text" placeholder="例：〇〇大会 第△戦" maxlength="80" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">試合日 <span style="color:var(--danger);">*</span></label>
+            <input class="form-ctrl" id="fight-date" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">出場選手 <span style="color:var(--danger);">*</span></label>
+            <select class="form-ctrl" id="fight-fighter">
+              <option value="">-- 選択してください --</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">対戦相手 <span style="color:var(--danger);">*</span></label>
+            <input class="form-ctrl" id="fight-opponent" type="text" placeholder="相手の名前・所属など" maxlength="80" />
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn-p" onclick="saveFight()"><i class="fas fa-plus"></i> 試合を登録</button>
+        </div>
+      </div>
+
+      <!-- 試合一覧 -->
+      <div class="fight-section-title"><i class="fas fa-list" style="margin-right:6px;"></i>登録済み試合</div>
+      <div class="fight-list" id="fight-list">
+        <div class="fight-empty"><i class="fas fa-trophy" style="font-size:1.6rem;opacity:0.25;display:block;margin-bottom:10px;"></i>試合がまだ登録されていません</div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1152,7 +1229,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -2238,6 +2315,9 @@ function show(name) {
   if (name === 'coach') {
     initCoachesFromDB();
   }
+  if (name === 'fights') {
+    initFightsFromDB();
+  }
   if (name === 'member-schedule') {
     msWeekOffset = 0;
     msSwitchTab(0);
@@ -3249,6 +3329,126 @@ async function initScheduleFromDB() {
     if (calYear === undefined) { const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); }
     renderCalendar();
   } catch(e) { console.warn('initScheduleFromDB failed:', e); }
+}
+
+// ── FIGHTS ───────────────────────────────────────────────
+let allFights = [];
+
+async function initFightsFromDB() {
+  const token = _getAccessToken();
+  // 出場選手セレクトを会員一覧で埋める
+  const sel = document.getElementById('fight-fighter');
+  sel.innerHTML = '<option value="">-- 選択してください --</option>';
+  const active = allMembers.filter(m => m.status !== '退会');
+  active.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/matches?select=*&order=match_date.desc,created_at.desc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+    );
+    allFights = res.ok ? await res.json() : [];
+  } catch(e) { allFights = []; }
+  renderFights();
+}
+
+function renderFights() {
+  const el = document.getElementById('fight-list');
+  if (!allFights.length) {
+    el.innerHTML = '<div class="fight-empty"><i class="fas fa-trophy" style="font-size:1.6rem;opacity:0.25;display:block;margin-bottom:10px;"></i>試合がまだ登録されていません</div>';
+    return;
+  }
+  el.innerHTML = allFights.map(f => {
+    const d = f.match_date ? new Date(f.match_date + 'T00:00:00') : null;
+    const dateStr = d ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}` : '—';
+    const resultMap = { '勝ち': ['win','勝ち'], '負け': ['lose','負け'], '引き分け': ['draw','引き分け'] };
+    const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '結果未入力'];
+    const resultBtns = `
+      <span class="fight-result-lbl">結果：</span>
+      <button class="fight-btn win-btn${f.result==='勝ち'?' active':''}" onclick="updateFightResult('${f.id}','勝ち')">勝ち</button>
+      <button class="fight-btn lose-btn${f.result==='負け'?' active':''}" onclick="updateFightResult('${f.id}','負け')">負け</button>
+      <button class="fight-btn draw-btn${f.result==='引き分け'?' active':''}" onclick="updateFightResult('${f.id}','引き分け')">引き分け</button>
+      ${f.result ? `<button class="fight-btn" style="border-color:#ccc;color:#999;" onclick="updateFightResult('${f.id}',null)">クリア</button>` : ''}
+    `;
+    return `<div class="fight-card" id="fight-card-${f.id}">
+      <div class="fight-card-header">
+        <span class="fight-date">${dateStr}</span>
+        <span class="fight-title">${escHtml(f.title || '')}</span>
+        <span class="fight-result-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      <div class="fight-card-body">
+        <div class="fight-fighter">
+          <div class="fight-fighter-label">出場選手</div>
+          <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
+        </div>
+        <div class="fight-vs">VS</div>
+        <div class="fight-fighter">
+          <div class="fight-fighter-label">対戦相手</div>
+          <div class="fight-fighter-name">${escHtml(f.opponent || '—')}</div>
+        </div>
+      </div>
+      <div class="fight-card-footer">
+        ${resultBtns}
+        <button class="fight-del-btn" onclick="deleteFight('${f.id}')" title="削除"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveFight() {
+  const title    = document.getElementById('fight-title').value.trim();
+  const date     = document.getElementById('fight-date').value;
+  const fighterId = document.getElementById('fight-fighter').value;
+  const opponent = document.getElementById('fight-opponent').value.trim();
+  if (!title || !date || !fighterId || !opponent) {
+    alert('タイトル・試合日・出場選手・対戦相手はすべて必須です');
+    return;
+  }
+  const member = allMembers.find(m => m.id === fighterId);
+  const token = _getAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/matches`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify({ title, match_date: date, fighter_id: fighterId, fighter_name: member ? member.name : '', opponent })
+  });
+  if (!res.ok) { alert('登録に失敗しました'); return; }
+  const rows = await res.json();
+  allFights.unshift(rows[0]);
+  renderFights();
+  document.getElementById('fight-title').value = '';
+  document.getElementById('fight-date').value = '';
+  document.getElementById('fight-fighter').value = '';
+  document.getElementById('fight-opponent').value = '';
+}
+
+async function updateFightResult(id, result) {
+  const token = _getAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ result: result || null })
+  });
+  if (!res.ok) { alert('更新に失敗しました'); return; }
+  const f = allFights.find(f => f.id === id);
+  if (f) f.result = result || null;
+  renderFights();
+}
+
+async function deleteFight(id) {
+  if (!confirm('この試合記録を削除しますか？')) return;
+  const token = _getAccessToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' }
+  });
+  if (!res.ok) { alert('削除に失敗しました'); return; }
+  allFights = allFights.filter(f => f.id !== id);
+  renderFights();
 }
 
 function _getAccessToken() {
