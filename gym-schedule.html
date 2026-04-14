@@ -3427,7 +3427,7 @@ function renderFights() {
   el.innerHTML = allFights.map(match => {
     const d = match.match_date ? new Date(match.match_date + 'T00:00:00') : null;
     const dateStr = d ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}` : '—';
-    const fighters = [...(match.match_fighters || [])].sort((a,b) => (a.created_at||'') < (b.created_at||'') ? -1 : (a.created_at||'') > (b.created_at||'') ? 1 : 0);
+    const fighters = match.match_fighters || [];
     const { cls: sCls, txt: sTxt } = _calcMatchBadge(fighters);
     const summaryBadge = `<span class="fight-result-badge ${sCls}" data-match-badge="${match.id}">${sTxt}</span>`;
 
