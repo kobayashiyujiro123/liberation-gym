@@ -520,6 +520,7 @@
     .fight-del-btn:hover { color: var(--danger); }
     .fight-empty { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.88rem; }
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    @media (max-width: 700px) { #view-fights { padding-bottom: 80px; } }
     .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
     .fight-fighter-row-inner { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
     .fight-fighter-detail-row { padding: 10px 16px 8px; border-left: 4px solid transparent; transition: border-color 0.2s, background 0.2s; }
@@ -3471,6 +3472,9 @@ function renderFights() {
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
         ${fighters.length ? fighterRows : '<div style="padding:14px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>'}
+        ${fighters.length ? `<div style="padding:10px 16px 14px;border-top:1px solid var(--border);text-align:right;">
+          <button class="fight-btn" style="border-color:#ccc;color:#999;font-size:0.75rem;" onclick="event.stopPropagation();clearAllFightResults('${match.id}')"><i class="fas fa-eraser" style="margin-right:4px;"></i>一括クリア</button>
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -3609,6 +3613,37 @@ function _updateMatchSummaryBadge(matchId) {
   const { cls, txt } = _calcMatchBadge(match.match_fighters || []);
   const badge = document.querySelector(`[data-match-badge="${matchId}"]`);
   if (badge) { badge.className = `fight-result-badge ${cls}`; badge.textContent = txt; }
+}
+
+async function clearAllFightResults(matchId) {
+  if (!confirm('この試合の全選手の結果をクリアしますか？')) return;
+  const match = allFights.find(m => m.id === matchId);
+  if (!match) return;
+  const fighters = match.match_fighters || [];
+  const token = _getAccessToken();
+  for (const f of fighters) {
+    if (!f.result) continue;
+    await fetch(`${SUPABASE_URL}/rest/v1/match_fighters?id=eq.${f.id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ result: null })
+    });
+    f.result = null;
+    const row = document.querySelector(`[data-fid="${f.id}"]`);
+    if (row) {
+      row.classList.remove('result-win','result-lose','result-draw');
+      const iconEl = row.querySelector('[data-result-icon]');
+      const textEl = row.querySelector('[data-result-text]');
+      if (iconEl) iconEl.textContent = '';
+      if (textEl) textEl.textContent = '';
+      row.querySelector('.win-btn').classList.remove('active');
+      row.querySelector('.lose-btn').classList.remove('active');
+      row.querySelector('.draw-btn').classList.remove('active');
+      const clearBtn = row.querySelector('[data-clear-btn]');
+      if (clearBtn) clearBtn.style.display = 'none';
+    }
+  }
+  _updateMatchSummaryBadge(matchId);
 }
 
 async function deleteFight(matchId) {
