@@ -1335,6 +1335,7 @@ async function loadUserProfile(authUser, accessToken) {
       monthVisits:  profile.month_visits  || 0,
       startDate:    profile.start_date || (profile.created_at ? profile.created_at.slice(0,10) : null),
       photoUrl:     profile.photo_url     || null,
+      memo:         profile.memo          || '',
     };
     // 利用回数を予約実績から算出（date+time が現在以前の確定予約のみカウント）
     try {
@@ -2061,6 +2062,7 @@ async function renderInfo() {
     <div class="info-row"><div class="info-key">目標</div><div class="info-val">${escHtml(u.goal || '—')}</div></div>
     <div class="info-row"><div class="info-key">戦績</div><div class="info-val">${u.fights}戦 ${u.wins}勝 ${u.losses}敗 ${u.draws}分</div></div>
     ${startStr ? `<div class="info-row"><div class="info-key">システム利用開始日</div><div class="info-val">${startStr}</div></div>` : ''}
+    ${u.memo ? `<div class="info-row"><div class="info-key">メモ</div><div class="info-val">${escHtml(u.memo)}</div></div>` : ''}
   `;
 }
 
