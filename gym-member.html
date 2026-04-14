@@ -83,6 +83,10 @@
     .photo-upload-hint { font-size: 0.76rem; color: var(--text-light); }
     .photo-remove-btn { font-size: 0.74rem; color: #e05555; background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
     /* Info page avatar */
+    .kaicho-memo-banner { display: flex; align-items: flex-start; gap: 10px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+    .kaicho-memo-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+    .kaicho-memo-label { font-size: 0.7rem; font-weight: 700; color: #f57c00; margin-bottom: 3px; letter-spacing: 0.5px; }
+    .kaicho-memo-text { font-size: 0.85rem; color: #5d4037; line-height: 1.55; white-space: pre-wrap; }
     .info-avatar-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
     .info-avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
     .info-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -665,6 +669,13 @@
               <div class="usage-summary-lbl">今月の利用回数</div>
               <div class="usage-summary-val"><span id="info-month-visits">0</span><span class="usage-summary-unit">回</span></div>
             </div>
+          </div>
+        </div>
+        <div class="kaicho-memo-banner" id="kaicho-memo-banner" style="display:none;">
+          <div class="kaicho-memo-icon">📋</div>
+          <div>
+            <div class="kaicho-memo-label">会長メモ</div>
+            <div class="kaicho-memo-text" id="kaicho-memo-text"></div>
           </div>
         </div>
         <div class="info-avatar-wrap"><div class="info-avatar" id="info-avatar"><i class="fas fa-user"></i></div></div>
@@ -2052,6 +2063,13 @@ async function renderInfo() {
   document.getElementById('info-year-visits').textContent   = u.yearVisits  || 0;
   document.getElementById('info-month-visits').textContent  = u.monthVisits || 0;
   document.getElementById('info-start-note').textContent    = startStr ? `${startStr}～のご利用回数です。` : '';
+  const kaichoEl = document.getElementById('kaicho-memo-banner');
+  if (u.memo) {
+    document.getElementById('kaicho-memo-text').textContent = u.memo;
+    kaichoEl.style.display = 'flex';
+  } else {
+    kaichoEl.style.display = 'none';
+  }
   document.getElementById('info-table').innerHTML = `
     <div class="info-row"><div class="info-key">氏名</div><div class="info-val">${escHtml(u.name)}</div></div>
     <div class="info-row"><div class="info-key">メールアドレス</div><div class="info-val">${escHtml(u.email || '—')}</div></div>
@@ -2062,7 +2080,6 @@ async function renderInfo() {
     <div class="info-row"><div class="info-key">目標</div><div class="info-val">${escHtml(u.goal || '—')}</div></div>
     <div class="info-row"><div class="info-key">戦績</div><div class="info-val">${u.fights}戦 ${u.wins}勝 ${u.losses}敗 ${u.draws}分</div></div>
     ${startStr ? `<div class="info-row"><div class="info-key">システム利用開始日</div><div class="info-val">${startStr}</div></div>` : ''}
-    ${u.memo ? `<div class="info-row"><div class="info-key">メモ</div><div class="info-val">${escHtml(u.memo)}</div></div>` : ''}
   `;
 }
 
