@@ -524,7 +524,11 @@
     .fight-fighter-detail-row.result-lose { border-left-color: var(--danger);  background: rgba(229,57,53,0.05); }
     .fight-fighter-detail-row.result-draw { border-left-color: var(--warning); background: rgba(251,140,0,0.05); }
     .fight-fighter-vs-block { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
-    .fight-result-icon { font-size: 1.4rem; margin-right: 6px; line-height: 1; }
+    .fight-result-icon { font-size: 1.2rem; margin-right: 6px; line-height: 1; }
+    .fight-result-text { font-size: 0.78rem; font-weight: 700; margin-right: 4px; min-width: 3em; }
+    .result-win  .fight-result-text { color: var(--success); }
+    .result-lose .fight-result-text { color: var(--danger); }
+    .result-draw .fight-result-text { color: var(--warning); }
     .fight-fighter-name-wrap { display: flex; align-items: center; }
   </style>
 </head>
@@ -3433,6 +3437,7 @@ function renderFights() {
           <div class="fight-fighter">
             <div class="fight-fighter-label">出場選手</div>
             <div class="fight-fighter-name-wrap">
+              <span class="fight-result-text" data-result-text>${f.result || ''}</span>
               <span class="fight-result-icon" data-result-icon>${resultIcon}</span>
               <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
             </div>
@@ -3566,6 +3571,8 @@ async function updateFightResult(fighterId, result) {
   const iconEl = row.querySelector('[data-result-icon]');
   const iconMap = { '勝ち':'🏆', '負け':'😞', '引き分け':'🤝' };
   if (iconEl) iconEl.textContent = result ? (iconMap[result] || '') : '';
+  const textEl = row.querySelector('[data-result-text]');
+  if (textEl) textEl.textContent = result || '';
 
   // 試合ヘッダーのサマリーバッジも更新
   let matchId = null;
