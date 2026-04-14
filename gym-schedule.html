@@ -3374,6 +3374,21 @@ function removeFighterRow(idx) {
 }
 
 async function initFightsFromDB() {
+  // 会員一覧が未ロードなら先に取得
+  if (!allMembers.length) {
+    try {
+      const token = _getAccessToken();
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=id,name,status&role=not.in.(admin,coach)&order=name.asc`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      if (r.ok) {
+        const rows = await r.json();
+        rows.forEach(p => { if (!allMembers.find(m=>m.id===p.id)) allMembers.push({ id:p.id, name:p.name||'', status:p.status||'active' }); });
+      }
+    } catch(e) {}
+  }
+
   // 会員一覧を更新（セレクト用）
   fighterRowCount = 0;
   const wrap = document.getElementById('fight-fighter-rows');
