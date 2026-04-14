@@ -3411,7 +3411,7 @@ function renderFights() {
     const fighterRows = fighters.map(f => {
       const resultMap = { '勝ち': ['win','勝ち'], '負け': ['lose','負け'], '引き分け': ['draw','引き分け'] };
       const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '未入力'];
-      return `<div class="fight-fighter-detail-row">
+      return `<div class="fight-fighter-detail-row" data-fid="${f.id}">
         <div class="fight-fighter-vs-block">
           <div class="fight-fighter">
             <div class="fight-fighter-label">出場選手</div>
@@ -3424,12 +3424,12 @@ function renderFights() {
           </div>
         </div>
         <div class="fight-result-row">
-          <span class="fight-result-badge ${badgeCls}">${badgeTxt}</span>
+          <span class="fight-result-badge ${badgeCls}" data-result-badge>${badgeTxt}</span>
           <span class="fight-result-lbl">結果：</span>
           <button class="fight-btn win-btn${f.result==='勝ち'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','勝ち')">勝ち</button>
           <button class="fight-btn lose-btn${f.result==='負け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','負け')">負け</button>
           <button class="fight-btn draw-btn${f.result==='引き分け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','引き分け')">引き分け</button>
-          ${f.result ? `<button class="fight-btn" style="border-color:#ccc;color:#999;" onclick="event.stopPropagation();updateFightResult('${f.id}',null)">クリア</button>` : ''}
+          <button class="fight-btn" style="border-color:#ccc;color:#999;display:${f.result?'':'none'};" data-clear-btn onclick="event.stopPropagation();updateFightResult('${f.id}',null)">クリア</button>
         </div>
       </div>`;
     }).join('<hr style="border:none;border-top:1px solid var(--border);margin:0;">');
@@ -3520,12 +3520,48 @@ async function updateFightResult(fighterId, result) {
     body: JSON.stringify({ result: result || null })
   });
   if (!res.ok) { alert('更新に失敗しました'); return; }
+
+  // メモリ更新
   for (const match of allFights) {
     const f = (match.match_fighters || []).find(f => f.id === fighterId);
     if (f) { f.result = result || null; break; }
   }
-  renderFights();
-  _restoreFightOpenStates();
+
+  // DOM直接更新（再レンダリングなし → 順番変わらない）
+  const row = document.querySelector(`[data-fid="${fighterId}"]`);
+  if (!row) return;
+  const resultMap = { '勝ち': ['win','勝ち'], '負け': ['lose','負け'], '引き分け': ['draw','引き分け'] };
+  const [badgeCls, badgeTxt] = resultMap[result] || ['pending', '未入力'];
+  const badge = row.querySelector('[data-result-badge]');
+  if (badge) { badge.className = `fight-result-badge ${badgeCls}`; badge.textContent = badgeTxt; }
+  row.querySelector('.win-btn').classList.toggle('active', result === '勝ち');
+  row.querySelector('.lose-btn').classList.toggle('active', result === '負け');
+  row.querySelector('.draw-btn').classList.toggle('active', result === '引き分け');
+  const clearBtn = row.querySelector('[data-clear-btn]');
+  if (clearBtn) clearBtn.style.display = result ? '' : 'none';
+
+  // 試合ヘッダーのサマリーバッジも更新
+  let matchId = null;
+  for (const m of allFights) {
+    if ((m.match_fighters||[]).some(f => f.id === fighterId)) { matchId = m.id; break; }
+  }
+  if (matchId) _updateMatchSummaryBadge(matchId);
+}
+
+function _updateMatchSummaryBadge(matchId) {
+  const match = allFights.find(m => m.id === matchId);
+  if (!match) return;
+  const fighters = match.match_fighters || [];
+  const allDone = fighters.length > 0 && fighters.every(f => f.result);
+  let cls, txt;
+  if (!allDone) { cls = 'pending'; txt = '結果未入力あり'; }
+  else if (fighters.every(f => f.result === '勝ち')) { cls = 'win'; txt = '全勝'; }
+  else if (fighters.every(f => f.result === '負け')) { cls = 'lose'; txt = '全敗'; }
+  else { cls = 'draw'; txt = '結果あり'; }
+  const card = document.getElementById('fight-card-' + matchId);
+  if (!card) return;
+  const badge = card.querySelector('.fight-row .fight-result-badge');
+  if (badge) { badge.className = `fight-result-badge ${cls}`; badge.textContent = txt; }
 }
 
 async function deleteFight(matchId) {
