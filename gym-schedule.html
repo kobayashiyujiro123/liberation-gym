@@ -3329,6 +3329,7 @@ async function initScheduleFromDB() {
 }
 
 // ── FIGHTS ───────────────────────────────────────────────
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 let allFights = [];
 let fighterRowCount = 0;
 
