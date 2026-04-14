@@ -3415,13 +3415,8 @@ function renderFights() {
     const d = match.match_date ? new Date(match.match_date + 'T00:00:00') : null;
     const dateStr = d ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}` : '—';
     const fighters = [...(match.match_fighters || [])].sort((a,b) => (a.created_at||'') < (b.created_at||'') ? -1 : (a.created_at||'') > (b.created_at||'') ? 1 : 0);
-    const allDone = fighters.length > 0 && fighters.every(f => f.result);
-    const summaryBadge = fighters.length === 0 ? '<span class="fight-result-badge pending">選手未登録</span>'
-      : allDone
-        ? (fighters.every(f=>f.result==='勝ち') ? '<span class="fight-result-badge win">全勝</span>'
-         : fighters.every(f=>f.result==='負け') ? '<span class="fight-result-badge lose">全敗</span>'
-         : '<span class="fight-result-badge draw">結果あり</span>')
-        : '<span class="fight-result-badge pending">結果未入力あり</span>';
+    const { cls: sCls, txt: sTxt } = _calcMatchBadge(fighters);
+    const summaryBadge = `<span class="fight-result-badge ${sCls}" data-match-badge="${match.id}">${sTxt}</span>`;
 
     const fighterRows = fighters.map(f => {
       const resultMap = { '勝ち': ['win','勝ち'], '負け': ['lose','負け'], '引き分け': ['draw','引き分け'] };
@@ -3563,19 +3558,26 @@ async function updateFightResult(fighterId, result) {
   if (matchId) _updateMatchSummaryBadge(matchId);
 }
 
+function _calcMatchBadge(fighters) {
+  if (!fighters.length) return { cls: 'pending', txt: '選手未登録' };
+  const withResult = fighters.filter(f => f.result);
+  const wins   = withResult.filter(f => f.result === '勝ち').length;
+  const losses = withResult.filter(f => f.result === '負け').length;
+  const draws  = withResult.filter(f => f.result === '引き分け').length;
+  const total  = withResult.length;
+  if (total === 0) return { cls: 'pending', txt: '結果未入力' };
+  const statTxt = `${total}戦${wins}勝${losses}敗${draws}分`;
+  const allDone = total === fighters.length;
+  if (allDone && wins === total)   return { cls: 'win',  txt: `全勝｜${statTxt}` };
+  if (allDone && losses === total) return { cls: 'lose', txt: `全敗｜${statTxt}` };
+  return { cls: allDone ? 'draw' : 'pending', txt: statTxt };
+}
+
 function _updateMatchSummaryBadge(matchId) {
   const match = allFights.find(m => m.id === matchId);
   if (!match) return;
-  const fighters = match.match_fighters || [];
-  const allDone = fighters.length > 0 && fighters.every(f => f.result);
-  let cls, txt;
-  if (!allDone) { cls = 'pending'; txt = '結果未入力あり'; }
-  else if (fighters.every(f => f.result === '勝ち')) { cls = 'win'; txt = '全勝'; }
-  else if (fighters.every(f => f.result === '負け')) { cls = 'lose'; txt = '全敗'; }
-  else { cls = 'draw'; txt = '結果あり'; }
-  const card = document.getElementById('fight-card-' + matchId);
-  if (!card) return;
-  const badge = card.querySelector('.fight-row .fight-result-badge');
+  const { cls, txt } = _calcMatchBadge(match.match_fighters || []);
+  const badge = document.querySelector(`[data-match-badge="${matchId}"]`);
   if (badge) { badge.className = `fight-result-badge ${cls}`; badge.textContent = txt; }
 }
 
