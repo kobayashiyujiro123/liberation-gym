@@ -3449,7 +3449,6 @@ function renderFights() {
           </div>
         </div>
         <div class="fight-result-row">
-          <span class="fight-result-badge ${badgeCls}" data-result-badge>${badgeTxt}</span>
           <span class="fight-result-lbl">結果：</span>
           <button class="fight-btn win-btn${f.result==='勝ち'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','勝ち')">勝ち</button>
           <button class="fight-btn lose-btn${f.result==='負け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','負け')">負け</button>
