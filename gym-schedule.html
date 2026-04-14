@@ -3449,11 +3449,23 @@ function renderFights() {
   }).join('');
 }
 
+const openFightIds = new Set();
+
 function toggleFightDetail(matchId) {
   const detail = document.getElementById('fight-detail-' + matchId);
   const chev   = document.getElementById('fight-chev-' + matchId);
   const open = detail.classList.toggle('open');
   chev.style.transform = open ? 'rotate(180deg)' : '';
+  if (open) openFightIds.add(matchId); else openFightIds.delete(matchId);
+}
+
+function _restoreFightOpenStates() {
+  openFightIds.forEach(id => {
+    const detail = document.getElementById('fight-detail-' + id);
+    const chev   = document.getElementById('fight-chev-' + id);
+    if (detail) detail.classList.add('open');
+    if (chev)   chev.style.transform = 'rotate(180deg)';
+  });
 }
 
 async function saveFight() {
@@ -3513,6 +3525,7 @@ async function updateFightResult(fighterId, result) {
     if (f) { f.result = result || null; break; }
   }
   renderFights();
+  _restoreFightOpenStates();
 }
 
 async function deleteFight(matchId) {
