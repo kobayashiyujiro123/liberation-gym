@@ -519,8 +519,13 @@
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
     .fight-fighter-row-inner { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
-    .fight-fighter-detail-row { padding: 10px 16px 4px; }
-    .fight-fighter-vs-block { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+    .fight-fighter-detail-row { padding: 10px 16px 8px; border-left: 4px solid transparent; transition: border-color 0.2s, background 0.2s; }
+    .fight-fighter-detail-row.result-win  { border-left-color: var(--success); background: rgba(67,160,71,0.05); }
+    .fight-fighter-detail-row.result-lose { border-left-color: var(--danger);  background: rgba(229,57,53,0.05); }
+    .fight-fighter-detail-row.result-draw { border-left-color: var(--warning); background: rgba(251,140,0,0.05); }
+    .fight-fighter-vs-block { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
+    .fight-result-icon { font-size: 1.4rem; margin-right: 6px; line-height: 1; }
+    .fight-fighter-name-wrap { display: flex; align-items: center; }
   </style>
 </head>
 <body>
@@ -3421,11 +3426,16 @@ function renderFights() {
     const fighterRows = fighters.map(f => {
       const resultMap = { '勝ち': ['win','勝ち'], '負け': ['lose','負け'], '引き分け': ['draw','引き分け'] };
       const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '未入力'];
-      return `<div class="fight-fighter-detail-row" data-fid="${f.id}">
+      const rowCls = f.result === '勝ち' ? 'result-win' : f.result === '負け' ? 'result-lose' : f.result === '引き分け' ? 'result-draw' : '';
+      const resultIcon = { '勝ち': '🏆', '負け': '😞', '引き分け': '🤝' }[f.result] || '';
+      return `<div class="fight-fighter-detail-row ${rowCls}" data-fid="${f.id}">
         <div class="fight-fighter-vs-block">
           <div class="fight-fighter">
             <div class="fight-fighter-label">出場選手</div>
-            <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
+            <div class="fight-fighter-name-wrap">
+              <span class="fight-result-icon" data-result-icon>${resultIcon}</span>
+              <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
+            </div>
           </div>
           <div class="fight-vs">VS</div>
           <div class="fight-fighter">
@@ -3549,6 +3559,13 @@ async function updateFightResult(fighterId, result) {
   row.querySelector('.draw-btn').classList.toggle('active', result === '引き分け');
   const clearBtn = row.querySelector('[data-clear-btn]');
   if (clearBtn) clearBtn.style.display = result ? '' : 'none';
+  // 行の背景色・アイコン更新
+  row.classList.remove('result-win','result-lose','result-draw');
+  const clsMap = { '勝ち':'result-win', '負け':'result-lose', '引き分け':'result-draw' };
+  if (result && clsMap[result]) row.classList.add(clsMap[result]);
+  const iconEl = row.querySelector('[data-result-icon]');
+  const iconMap = { '勝ち':'🏆', '負け':'😞', '引き分け':'🤝' };
+  if (iconEl) iconEl.textContent = result ? (iconMap[result] || '') : '';
 
   // 試合ヘッダーのサマリーバッジも更新
   let matchId = null;
