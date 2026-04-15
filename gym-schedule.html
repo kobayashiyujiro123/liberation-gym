@@ -1151,6 +1151,12 @@
     <div class="view" id="view-fights">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
 
+      <!-- 試合一覧 -->
+      <div class="fight-section-title"><i class="fas fa-list" style="margin-right:6px;"></i>登録済み試合</div>
+      <div class="fight-list" id="fight-list" style="margin-bottom:28px;">
+        <div class="fight-empty"><i class="fas fa-trophy" style="font-size:1.6rem;opacity:0.25;display:block;margin-bottom:10px;"></i>試合がまだ登録されていません</div>
+      </div>
+
       <!-- 新規登録フォーム -->
       <div class="fight-new-form">
         <div class="fight-section-title"><i class="fas fa-plus" style="margin-right:6px;"></i>新規試合を登録</div>
@@ -1170,12 +1176,6 @@
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
           <button class="btn-p" onclick="saveFight()"><i class="fas fa-save"></i> 試合を登録</button>
         </div>
-      </div>
-
-      <!-- 試合一覧 -->
-      <div class="fight-section-title"><i class="fas fa-list" style="margin-right:6px;"></i>登録済み試合</div>
-      <div class="fight-list" id="fight-list">
-        <div class="fight-empty"><i class="fas fa-trophy" style="font-size:1.6rem;opacity:0.25;display:block;margin-bottom:10px;"></i>試合がまだ登録されていません</div>
       </div>
     </div>
 
