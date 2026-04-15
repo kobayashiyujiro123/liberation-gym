@@ -530,10 +530,18 @@
     .fight-row-num-val { font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--primary-dark); line-height: 1; }
     .fight-drag-handle { cursor: grab; color: #ccc; font-size: 1rem; padding: 4px; flex-shrink: 0; padding-bottom: 10px; touch-action: none; }
     .fight-drag-handle:active { cursor: grabbing; }
-    .fight-fighter-detail-row { padding: 10px 16px 8px; border-left: 4px solid transparent; transition: border-color 0.2s, background 0.2s; }
+    .fight-fighter-detail-row { display: flex; align-items: stretch; border-left: 4px solid transparent; transition: border-color 0.2s, background 0.2s; }
+    .fight-fighter-detail-row + .fight-fighter-detail-row { border-top: 1px solid var(--border); }
     .fight-fighter-detail-row.result-win  { border-left-color: var(--success); background: rgba(67,160,71,0.05); }
     .fight-fighter-detail-row.result-lose { border-left-color: var(--danger);  background: rgba(229,57,53,0.05); }
     .fight-fighter-detail-row.result-draw { border-left-color: var(--warning); background: rgba(251,140,0,0.05); }
+    .fight-fighter-detail-row.detail-dragging { opacity: 0.35; }
+    .fight-fighter-detail-row.detail-drag-over { box-shadow: 0 -3px 0 0 var(--primary); }
+    .fight-detail-left-bar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 10px 8px; min-width: 42px; background: rgba(0,0,0,0.02); border-right: 1px solid var(--border); flex-shrink: 0; }
+    .fight-detail-num { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); line-height: 1; }
+    .fight-detail-grip { color: #ccc; font-size: 0.85rem; cursor: grab; }
+    .fight-detail-grip:active { cursor: grabbing; }
+    .fight-detail-content { flex: 1; padding: 10px 16px 8px; min-width: 0; }
     .fight-fighter-vs-block { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
     .fight-result-icon { font-size: 1.2rem; margin-right: 6px; line-height: 1; }
     .fight-result-text { font-size: 0.78rem; font-weight: 700; margin-right: 4px; min-width: 3em; }
@@ -3450,7 +3458,7 @@ async function initFightsFromDB() {
   const token = _getAccessToken();
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/matches?select=*,match_fighters(*)&order=created_at.asc&match_fighters.order=created_at.asc`,
+      `${SUPABASE_URL}/rest/v1/matches?select=*,match_fighters(*)&order=created_at.asc&match_fighters.order=sort_order.asc,created_at.asc`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
     );
     allFights = res.ok ? await res.json() : [];
@@ -3476,31 +3484,37 @@ function renderFights() {
       const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '未入力'];
       const rowCls = f.result === '勝ち' ? 'result-win' : f.result === '負け' ? 'result-lose' : f.result === '引き分け' ? 'result-draw' : '';
       const resultIcon = { '勝ち': '🏆', '負け': '😞', '引き分け': '🤝' }[f.result] || '';
-      return `<div class="fight-fighter-detail-row ${rowCls}" data-fid="${f.id}">
-        <div class="fight-fighter-vs-block">
-          <div class="fight-fighter">
-            <div class="fight-fighter-label">出場選手</div>
-            <div class="fight-fighter-name-wrap">
-              <span class="fight-result-text" data-result-text>${f.result || ''}</span>
-              <span class="fight-result-icon" data-result-icon>${resultIcon}</span>
-              <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
+      return `<div class="fight-fighter-detail-row ${rowCls}" data-fid="${f.id}" draggable="true">
+        <div class="fight-detail-left-bar">
+          <span class="fight-detail-num" data-detail-num></span>
+          <i class="fas fa-grip-vertical fight-detail-grip"></i>
+        </div>
+        <div class="fight-detail-content">
+          <div class="fight-fighter-vs-block">
+            <div class="fight-fighter">
+              <div class="fight-fighter-label">出場選手</div>
+              <div class="fight-fighter-name-wrap">
+                <span class="fight-result-text" data-result-text>${f.result || ''}</span>
+                <span class="fight-result-icon" data-result-icon>${resultIcon}</span>
+                <div class="fight-fighter-name">${escHtml(f.fighter_name || '—')}</div>
+              </div>
+            </div>
+            <div class="fight-vs">VS</div>
+            <div class="fight-fighter">
+              <div class="fight-fighter-label">対戦相手</div>
+              <div class="fight-fighter-name">${escHtml(f.opponent || '—')}</div>
             </div>
           </div>
-          <div class="fight-vs">VS</div>
-          <div class="fight-fighter">
-            <div class="fight-fighter-label">対戦相手</div>
-            <div class="fight-fighter-name">${escHtml(f.opponent || '—')}</div>
+          <div class="fight-result-row">
+            <span class="fight-result-lbl">結果：</span>
+            <button class="fight-btn win-btn${f.result==='勝ち'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','勝ち')">勝ち</button>
+            <button class="fight-btn lose-btn${f.result==='負け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','負け')">負け</button>
+            <button class="fight-btn draw-btn${f.result==='引き分け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','引き分け')">引き分け</button>
+            <button class="fight-btn" style="border-color:#ccc;color:#999;display:${f.result?'':'none'};" data-clear-btn onclick="event.stopPropagation();updateFightResult('${f.id}',null)">クリア</button>
           </div>
         </div>
-        <div class="fight-result-row">
-          <span class="fight-result-lbl">結果：</span>
-          <button class="fight-btn win-btn${f.result==='勝ち'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','勝ち')">勝ち</button>
-          <button class="fight-btn lose-btn${f.result==='負け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','負け')">負け</button>
-          <button class="fight-btn draw-btn${f.result==='引き分け'?' active':''}" onclick="event.stopPropagation();updateFightResult('${f.id}','引き分け')">引き分け</button>
-          <button class="fight-btn" style="border-color:#ccc;color:#999;display:${f.result?'':'none'};" data-clear-btn onclick="event.stopPropagation();updateFightResult('${f.id}',null)">クリア</button>
-        </div>
       </div>`;
-    }).join('<hr style="border:none;border-top:1px solid var(--border);margin:0;">');
+    }).join('');
 
     return `<div class="fight-card" id="fight-card-${match.id}">
       <div class="fight-row" onclick="toggleFightDetail('${match.id}')">
@@ -3511,7 +3525,9 @@ function renderFights() {
         <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
-        ${fighters.length ? fighterRows : '<div style="padding:14px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>'}
+        <div class="fight-fighters-container" id="fight-fighters-${match.id}">
+          ${fighters.length ? fighterRows : '<div style="padding:14px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>'}
+        </div>
         ${fighters.length ? `<div style="padding:10px 16px 14px;border-top:1px solid var(--border);text-align:right;">
           <button class="fight-btn" style="border-color:#ccc;color:#999;font-size:0.75rem;" onclick="event.stopPropagation();clearAllFightResults('${match.id}')"><i class="fas fa-eraser" style="margin-right:4px;"></i>一括クリア</button>
         </div>` : ''}
@@ -3522,6 +3538,74 @@ function renderFights() {
 
 const openFightIds = new Set();
 
+let _detailDragSrc = null;
+
+function _initFightDrag(matchId) {
+  const container = document.getElementById('fight-fighters-' + matchId);
+  if (!container) return;
+  const rows = [...container.querySelectorAll('.fight-fighter-detail-row')];
+  rows.forEach((row, i) => {
+    const numEl = row.querySelector('[data-detail-num]');
+    if (numEl) numEl.textContent = i + 1;
+    if (row.dataset.dragInit) return;
+    row.dataset.dragInit = '1';
+    row.addEventListener('dragstart', e => {
+      _detailDragSrc = row;
+      row.classList.add('detail-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.stopPropagation();
+    });
+    row.addEventListener('dragend', () => {
+      _detailDragSrc = null;
+      row.classList.remove('detail-dragging');
+      container.querySelectorAll('.fight-fighter-detail-row').forEach(r => r.classList.remove('detail-drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (row !== _detailDragSrc) {
+        container.querySelectorAll('.fight-fighter-detail-row').forEach(r => r.classList.remove('detail-drag-over'));
+        row.classList.add('detail-drag-over');
+      }
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('detail-drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      row.classList.remove('detail-drag-over');
+      if (!_detailDragSrc || _detailDragSrc === row) return;
+      const allRows = [...container.querySelectorAll('.fight-fighter-detail-row')];
+      const srcIdx = allRows.indexOf(_detailDragSrc);
+      const tgtIdx = allRows.indexOf(row);
+      if (srcIdx < tgtIdx) container.insertBefore(_detailDragSrc, row.nextSibling);
+      else container.insertBefore(_detailDragSrc, row);
+      [...container.querySelectorAll('.fight-fighter-detail-row')].forEach((r, i) => {
+        const el = r.querySelector('[data-detail-num]');
+        if (el) el.textContent = i + 1;
+      });
+      _saveFighterOrder(matchId);
+    });
+  });
+}
+
+async function _saveFighterOrder(matchId) {
+  const container = document.getElementById('fight-fighters-' + matchId);
+  if (!container) return;
+  const rows = [...container.querySelectorAll('.fight-fighter-detail-row')];
+  const token = _getAccessToken();
+  const match = allFights.find(m => m.id === matchId);
+  for (let i = 0; i < rows.length; i++) {
+    const fid = rows[i].dataset.fid;
+    if (match) {
+      const f = (match.match_fighters || []).find(f => f.id === fid);
+      if (f) f.sort_order = i;
+    }
+    await fetch(`${SUPABASE_URL}/rest/v1/match_fighters?id=eq.${fid}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ sort_order: i })
+    });
+  }
+}
+
 function toggleFightDetail(matchId) {
   const card   = document.getElementById('fight-card-' + matchId);
   const detail = document.getElementById('fight-detail-' + matchId);
@@ -3529,7 +3613,8 @@ function toggleFightDetail(matchId) {
   const open = detail.classList.toggle('open');
   card.classList.toggle('is-open', open);
   chev.style.transform = open ? 'rotate(180deg)' : '';
-  if (open) openFightIds.add(matchId); else openFightIds.delete(matchId);
+  if (open) { openFightIds.add(matchId); _initFightDrag(matchId); }
+  else openFightIds.delete(matchId);
 }
 
 function _restoreFightOpenStates() {
@@ -3537,7 +3622,7 @@ function _restoreFightOpenStates() {
     const card   = document.getElementById('fight-card-' + id);
     const detail = document.getElementById('fight-detail-' + id);
     const chev   = document.getElementById('fight-chev-' + id);
-    if (detail) detail.classList.add('open');
+    if (detail) { detail.classList.add('open'); _initFightDrag(id); }
     if (card)   card.classList.add('is-open');
     if (chev)   chev.style.transform = 'rotate(180deg)';
   });
