@@ -521,8 +521,15 @@
     .fight-empty { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.88rem; }
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     @media (max-width: 700px) { #view-fights { padding-bottom: 80px; } }
-    .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; transition: opacity 0.15s, box-shadow 0.15s; }
+    .fight-fighter-row.dragging { opacity: 0.4; }
+    .fight-fighter-row.drag-over { box-shadow: 0 -3px 0 var(--primary); }
     .fight-fighter-row-inner { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+    .fight-row-num { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; padding-bottom: 6px; }
+    .fight-row-num-label { font-size: 0.7rem; color: var(--text-light); }
+    .fight-row-num-val { font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--primary-dark); line-height: 1; }
+    .fight-drag-handle { cursor: grab; color: #ccc; font-size: 1rem; padding: 4px; flex-shrink: 0; padding-bottom: 10px; touch-action: none; }
+    .fight-drag-handle:active { cursor: grabbing; }
     .fight-fighter-detail-row { padding: 10px 16px 8px; border-left: 4px solid transparent; transition: border-color 0.2s, background 0.2s; }
     .fight-fighter-detail-row.result-win  { border-left-color: var(--success); background: rgba(67,160,71,0.05); }
     .fight-fighter-detail-row.result-lose { border-left-color: var(--danger);  background: rgba(229,57,53,0.05); }
@@ -3358,6 +3365,8 @@ function _fightMemberOptions(selectedId) {
     active.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('');
 }
 
+let _dragSrc = null;
+
 function addFighterRow(fighterId, opponent) {
   fighterRowCount++;
   const idx = fighterRowCount;
@@ -3365,25 +3374,56 @@ function addFighterRow(fighterId, opponent) {
   const row = document.createElement('div');
   row.className = 'fight-fighter-row';
   row.id = 'fighter-row-' + idx;
+  row.draggable = true;
   row.innerHTML = `
     <div class="fight-fighter-row-inner">
-      <div class="form-group" style="flex:1;min-width:140px;">
+      <div class="fight-row-num">
+        <span class="fight-row-num-label">No.</span>
+        <span class="fight-row-num-val fight-num-display"></span>
+      </div>
+      <div class="fight-drag-handle" title="ドラッグして並び替え"><i class="fas fa-grip-vertical"></i></div>
+      <div class="form-group" style="flex:1;min-width:120px;">
         <label class="form-label" style="font-size:0.75rem;">出場選手</label>
         <select class="form-ctrl fight-sel-member">${_fightMemberOptions(fighterId || '')}</select>
       </div>
       <div style="display:flex;align-items:center;padding-top:20px;color:var(--text-light);font-weight:700;font-size:0.9rem;">VS</div>
-      <div class="form-group" style="flex:1;min-width:140px;">
+      <div class="form-group" style="flex:1;min-width:120px;">
         <label class="form-label" style="font-size:0.75rem;">対戦相手 <span style="font-weight:400;color:var(--text-light);">（任意）</span></label>
         <input class="form-ctrl fight-inp-opponent" type="text" placeholder="相手の名前・所属" maxlength="80" value="${escHtml(opponent || '')}" />
       </div>
       <button type="button" onclick="removeFighterRow(${idx})" style="margin-top:20px;background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:6px;flex-shrink:0;" title="削除"><i class="fas fa-times-circle"></i></button>
     </div>`;
+  row.addEventListener('dragstart', e => { _dragSrc = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+  row.addEventListener('dragend',   () => { _dragSrc = null; row.classList.remove('dragging'); document.querySelectorAll('.fight-fighter-row').forEach(r => r.classList.remove('drag-over')); });
+  row.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (row !== _dragSrc) row.classList.add('drag-over'); });
+  row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+  row.addEventListener('drop', e => {
+    e.preventDefault();
+    row.classList.remove('drag-over');
+    if (!_dragSrc || _dragSrc === row) return;
+    const rows = [...wrap.children];
+    const srcIdx = rows.indexOf(_dragSrc);
+    const tgtIdx = rows.indexOf(row);
+    if (srcIdx < tgtIdx) wrap.insertBefore(_dragSrc, row.nextSibling);
+    else wrap.insertBefore(_dragSrc, row);
+    _updateFighterNumbers();
+  });
   wrap.appendChild(row);
+  _updateFighterNumbers();
+}
+
+function _updateFighterNumbers() {
+  const wrap = document.getElementById('fight-fighter-rows');
+  if (!wrap) return;
+  [...wrap.children].forEach((row, i) => {
+    const el = row.querySelector('.fight-num-display');
+    if (el) el.textContent = i + 1;
+  });
 }
 
 function removeFighterRow(idx) {
   const el = document.getElementById('fighter-row-' + idx);
-  if (el) el.remove();
+  if (el) { el.remove(); _updateFighterNumbers(); }
 }
 
 async function initFightsFromDB() {
