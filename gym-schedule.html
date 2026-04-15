@@ -3374,6 +3374,50 @@ function _fightMemberOptions(selectedId) {
     active.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('');
 }
 
+// ===== タッチ対応ドラッグ&ドロップ共通ヘルパー =====
+function _attachTouchDrag({ handle, row, container, draggingClass, dragOverClass, rowSelector, afterDrop }) {
+  let startY, clone, origTop;
+  handle.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const rect = row.getBoundingClientRect();
+    startY = e.touches[0].clientY;
+    origTop = rect.top;
+    clone = row.cloneNode(true);
+    Object.assign(clone.style, {
+      position: 'fixed', left: rect.left + 'px', top: rect.top + 'px',
+      width: rect.width + 'px', opacity: '0.82', pointerEvents: 'none',
+      zIndex: '9999', boxShadow: '0 6px 20px rgba(0,0,0,0.22)',
+      borderRadius: '8px', background: '#fff', margin: '0', transition: 'none',
+    });
+    document.body.appendChild(clone);
+    row.classList.add(draggingClass);
+  }, { passive: false });
+  handle.addEventListener('touchmove', e => {
+    if (!clone) return;
+    e.preventDefault();
+    const dy = e.touches[0].clientY - startY;
+    clone.style.top = (origTop + dy) + 'px';
+    clone.style.display = 'none';
+    const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+    clone.style.display = '';
+    container.querySelectorAll(rowSelector).forEach(r => r.classList.remove(dragOverClass));
+    if (el) {
+      const target = el.closest(rowSelector);
+      if (target && target !== row && container.contains(target)) {
+        target.classList.add(dragOverClass);
+      }
+    }
+  }, { passive: false });
+  handle.addEventListener('touchend', () => {
+    if (!clone) return;
+    clone.remove(); clone = null;
+    row.classList.remove(draggingClass);
+    const targetRow = container.querySelector('.' + dragOverClass);
+    container.querySelectorAll(rowSelector).forEach(r => r.classList.remove(dragOverClass));
+    if (targetRow && targetRow !== row) afterDrop(row, targetRow, container);
+  }, { passive: false });
+}
+
 let _dragSrc = null;
 
 function addFighterRow(fighterId, opponent) {
@@ -3417,6 +3461,22 @@ function addFighterRow(fighterId, opponent) {
     else wrap.insertBefore(_dragSrc, row);
     _updateFighterNumbers();
   });
+  // タッチ対応
+  const handle = row.querySelector('.fight-drag-handle');
+  if (handle) {
+    _attachTouchDrag({
+      handle, row, container: wrap,
+      draggingClass: 'dragging', dragOverClass: 'drag-over',
+      rowSelector: '.fight-fighter-row',
+      afterDrop: (src, tgt, cont) => {
+        const rows = [...cont.children];
+        const sIdx = rows.indexOf(src), tIdx = rows.indexOf(tgt);
+        if (sIdx < tIdx) cont.insertBefore(src, tgt.nextSibling);
+        else cont.insertBefore(src, tgt);
+        _updateFighterNumbers();
+      }
+    });
+  }
   wrap.appendChild(row);
   _updateFighterNumbers();
 }
@@ -3584,6 +3644,26 @@ function _initFightDrag(matchId) {
       });
       _saveFighterOrder(matchId);
     });
+    // タッチ対応
+    const grip = row.querySelector('.fight-detail-grip');
+    if (grip) {
+      _attachTouchDrag({
+        handle: grip, row, container,
+        draggingClass: 'detail-dragging', dragOverClass: 'detail-drag-over',
+        rowSelector: '.fight-fighter-detail-row',
+        afterDrop: (src, tgt, cont) => {
+          const allRows = [...cont.querySelectorAll('.fight-fighter-detail-row')];
+          const sIdx = allRows.indexOf(src), tIdx = allRows.indexOf(tgt);
+          if (sIdx < tIdx) cont.insertBefore(src, tgt.nextSibling);
+          else cont.insertBefore(src, tgt);
+          [...cont.querySelectorAll('.fight-fighter-detail-row')].forEach((r, i) => {
+            const el = r.querySelector('[data-detail-num]');
+            if (el) el.textContent = i + 1;
+          });
+          _saveFighterOrder(matchId);
+        }
+      });
+    }
   });
 }
 
