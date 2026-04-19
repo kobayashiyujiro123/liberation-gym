@@ -533,6 +533,8 @@
     .fight-del-btn:hover { color: var(--danger); }
     .fight-edit-btn { background: none; border: 1.5px solid #ddd; color: #888; cursor: pointer; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; transition: all 0.15s; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
     .fight-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .fight-result-edit-btn { border-color: var(--success); color: var(--success); }
+    .fight-result-edit-btn:hover { background: var(--success); color: #fff; border-color: var(--success); }
     /* 試合編集モーダル */
     .fight-edit-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
     .fight-edit-modal-overlay.open { display:flex; }
@@ -3609,7 +3611,8 @@ function renderFights() {
           ${summaryBadge}
         </div>
         <div class="fight-row-actions">
-          <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">編集する</button>
+          <button class="fight-edit-btn fight-result-edit-btn" onclick="event.stopPropagation();openFightDetail('${match.id}')">結果を編集</button>
+          <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">対戦カードを編集</button>
           <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
         </div>
       </div>
@@ -3713,6 +3716,18 @@ async function _saveFighterOrder(matchId) {
       body: JSON.stringify({ sort_order: i })
     });
   }
+}
+
+function openFightDetail(matchId) {
+  const detail = document.getElementById('fight-detail-' + matchId);
+  if (detail && !detail.classList.contains('open')) {
+    toggleFightDetail(matchId);
+  }
+  // すでに開いていればそのまま、スクロールして見せる
+  setTimeout(() => {
+    const card = document.getElementById('fight-card-' + matchId);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 function toggleFightDetail(matchId) {
