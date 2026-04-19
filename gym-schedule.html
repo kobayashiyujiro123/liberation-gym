@@ -526,8 +526,17 @@
     .fight-fighter-detail-row.result-ko-lose { border-left-color: #7b1fa2; background: rgba(123,31,162,0.06); }
     .fight-fighter-detail-row.result-lose    { border-left-color: var(--danger);  background: rgba(229,57,53,0.05); }
     .fight-fighter-detail-row.result-draw    { border-left-color: var(--warning); background: rgba(251,140,0,0.05); }
-    .fight-del-btn { margin-left: auto; background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
+    .fight-del-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
     .fight-del-btn:hover { color: var(--danger); }
+    .fight-edit-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
+    .fight-edit-btn:hover { color: var(--primary); }
+    /* 試合編集モーダル */
+    .fight-edit-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+    .fight-edit-modal-overlay.open { display:flex; }
+    .fight-edit-modal { background:#fff; border-radius:14px; padding:24px; width:100%; max-width:600px; margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.22); }
+    .fight-edit-modal-title { font-size:1rem; font-weight:700; color:var(--primary-dark); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+    .fight-edit-fighter-row { background:#f9f9f9; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; }
+    .fight-edit-fighter-row + .fight-edit-fighter-row { margin-top:8px; }
     .fight-empty { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.88rem; }
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     @media (max-width: 700px) { #view-fights { padding-bottom: 80px; } }
@@ -3595,6 +3604,7 @@ function renderFights() {
         <span class="fight-title">${escHtml(match.title || '')}</span>
         ${summaryBadge}
         <i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}"></i>
+        <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')" title="編集"><i class="fas fa-edit"></i></button>
         <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
@@ -3869,6 +3879,137 @@ async function clearAllFightResults(matchId) {
     }
   }
   _updateMatchSummaryBadge(matchId);
+}
+
+// ===== 試合編集モーダル =====
+let _editFighterCount = 0;
+
+function _fightEditMemberOptions(selectedId) {
+  const active = allMembers.filter(m => m.status !== '退会');
+  return '<option value="">-- 選択 --</option>' +
+    active.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('');
+}
+
+function addFightEditFighterRow(fighterId, opponent, existingFid) {
+  _editFighterCount++;
+  const wrap = document.getElementById('fight-edit-fighter-rows');
+  const row = document.createElement('div');
+  row.className = 'fight-edit-fighter-row';
+  if (existingFid) row.dataset.fid = existingFid;
+  row.innerHTML = `
+    <div class="form-group" style="flex:1;min-width:120px;">
+      <label class="form-label" style="font-size:0.73rem;">出場選手</label>
+      <select class="form-ctrl fight-edit-sel">${_fightEditMemberOptions(fighterId || '')}</select>
+    </div>
+    <div class="form-group" style="flex:1;min-width:100px;">
+      <label class="form-label" style="font-size:0.73rem;">対戦相手 <span style="font-weight:400;color:var(--text-light);">(任意)</span></label>
+      <input class="form-ctrl fight-edit-opp" type="text" placeholder="相手の名前・所属" maxlength="80" value="${escHtml(opponent || '')}">
+    </div>
+    <button type="button" onclick="this.closest('.fight-edit-fighter-row').remove()" style="margin-bottom:2px;background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:6px;flex-shrink:0;" title="削除"><i class="fas fa-times-circle"></i></button>`;
+  wrap.appendChild(row);
+}
+
+async function openFightEditModal(matchId) {
+  const match = allFights.find(m => m.id === matchId);
+  if (!match) return;
+  if (allMembers.length === 0) {
+    const token = _getAccessToken();
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,name,status&order=name.asc`, { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } });
+    if (r.ok) allMembers = await r.json();
+  }
+  document.getElementById('fight-edit-match-id').value = matchId;
+  document.getElementById('fight-edit-title').value = match.title || '';
+  document.getElementById('fight-edit-date').value = match.match_date || '';
+  _editFighterCount = 0;
+  const wrap = document.getElementById('fight-edit-fighter-rows');
+  wrap.innerHTML = '';
+  const fighters = match.match_fighters || [];
+  if (fighters.length) {
+    fighters.forEach(f => addFightEditFighterRow(f.fighter_id, f.opponent, f.id));
+  } else {
+    addFightEditFighterRow();
+  }
+  document.getElementById('fight-edit-modal-overlay').classList.add('open');
+}
+
+function closeFightEditModal() {
+  document.getElementById('fight-edit-modal-overlay').classList.remove('open');
+}
+
+async function saveFightEdit() {
+  const matchId = document.getElementById('fight-edit-match-id').value;
+  const title   = document.getElementById('fight-edit-title').value.trim();
+  const date    = document.getElementById('fight-edit-date').value;
+  if (!title || !date) { alert('タイトルと試合日は必須です'); return; }
+
+  const rows = document.querySelectorAll('#fight-edit-fighter-rows .fight-edit-fighter-row');
+  const newFighters = [];
+  for (const row of rows) {
+    const fid  = row.querySelector('.fight-edit-sel').value;
+    const opp  = row.querySelector('.fight-edit-opp').value.trim();
+    if (!fid) { alert('出場選手を選択してください'); return; }
+    const member = allMembers.find(m => m.id === fid);
+    newFighters.push({ existingFid: row.dataset.fid || null, fighter_id: fid, fighter_name: member ? member.name : '', opponent: opp });
+  }
+  if (!newFighters.length) { alert('選手を1名以上追加してください'); return; }
+
+  const token = _getAccessToken();
+  // matches更新
+  const mRes = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${matchId}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ title, match_date: date })
+  });
+  if (!mRes.ok) { alert('試合情報の更新に失敗しました'); return; }
+
+  const match = allFights.find(m => m.id === matchId);
+  const existingIds = (match.match_fighters || []).map(f => f.id);
+  const newExistingIds = newFighters.filter(f => f.existingFid).map(f => f.existingFid);
+
+  // 削除された選手をDELETE
+  for (const oldId of existingIds) {
+    if (!newExistingIds.includes(oldId)) {
+      await fetch(`${SUPABASE_URL}/rest/v1/match_fighters?id=eq.${oldId}`, {
+        method: 'DELETE', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' }
+      });
+    }
+  }
+
+  // 既存選手をPATCH、新規選手をPOST
+  const updatedFighters = [];
+  for (let i = 0; i < newFighters.length; i++) {
+    const f = newFighters[i];
+    if (f.existingFid) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/match_fighters?id=eq.${f.existingFid}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ fighter_id: f.fighter_id, fighter_name: f.fighter_name, opponent: f.opponent, sort_order: i })
+      });
+      if (r.ok) { const d = await r.json(); if (d[0]) updatedFighters.push(d[0]); }
+    } else {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/match_fighters`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ match_id: matchId, fighter_id: f.fighter_id, fighter_name: f.fighter_name, opponent: f.opponent, sort_order: i })
+      });
+      if (r.ok) { const d = await r.json(); if (d[0]) updatedFighters.push(d[0]); }
+    }
+  }
+
+  // メモリ更新
+  if (match) {
+    match.title = title;
+    match.match_date = date;
+    // 既存選手のresultを引き継ぐ
+    updatedFighters.forEach(uf => {
+      const old = (match.match_fighters || []).find(f => f.id === uf.id);
+      if (old) uf.result = old.result;
+    });
+    match.match_fighters = updatedFighters;
+  }
+
+  closeFightEditModal();
+  renderFights();
 }
 
 async function deleteFight(matchId) {
@@ -4507,6 +4648,29 @@ function msCloseBkSuccess() {
     <div class="ms-bk-modal-sub" id="ms-bk-success-detail" style="margin-bottom:6px;"></div>
     <div class="ms-bk-btns">
       <button class="ms-bk-btn-ok" onclick="msCloseBkSuccess()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- 試合編集モーダル -->
+<div class="fight-edit-modal-overlay" id="fight-edit-modal-overlay" onclick="if(event.target===this)closeFightEditModal()">
+  <div class="fight-edit-modal">
+    <div class="fight-edit-modal-title"><i class="fas fa-edit" style="color:var(--primary);"></i>試合を編集</div>
+    <input type="hidden" id="fight-edit-match-id">
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">試合タイトル <span style="color:var(--danger);">*</span></label>
+      <input class="form-ctrl" type="text" id="fight-edit-title" placeholder="例：〇〇大会" maxlength="100">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label class="form-label">試合日 <span style="color:var(--danger);">*</span></label>
+      <input class="form-ctrl" type="date" id="fight-edit-date">
+    </div>
+    <div style="font-size:0.75rem;font-weight:700;color:var(--primary);letter-spacing:0.5px;margin-bottom:8px;">出場選手</div>
+    <div id="fight-edit-fighter-rows" style="display:flex;flex-direction:column;gap:0;"></div>
+    <button type="button" onclick="addFightEditFighterRow()" style="margin-top:10px;background:none;border:1.5px dashed var(--primary);color:var(--primary);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;width:100%;"><i class="fas fa-plus" style="margin-right:6px;"></i>選手を追加</button>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveFightEdit()" style="flex:1;"><i class="fas fa-save" style="margin-right:6px;"></i>保存</button>
+      <button class="btn" onclick="closeFightEditModal()" style="flex:1;background:#f5f5f5;color:#666;border:none;">キャンセル</button>
     </div>
   </div>
 </div>
