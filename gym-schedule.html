@@ -487,8 +487,9 @@
     .fight-card { background: var(--card-bg); border-bottom: 1px solid var(--border); transition: border-color 0.2s; }
     .fight-card:last-child { border-bottom: none; }
     .fight-card.is-open { background: #f0fafb; }
-    .fight-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; cursor: pointer; transition: background 0.15s; min-height: 0; }
-    .fight-row-main { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .fight-row { display: flex; flex-direction: column; gap: 3px; padding: 8px 12px; cursor: pointer; transition: background 0.15s; min-height: 0; }
+    .fight-row-line1 { font-weight: 600; font-size: 0.88rem; word-break: break-all; }
+    .fight-row-line2 { display: flex; align-items: center; gap: 8px; }
     .fight-row-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
     .fight-row:hover { background: #f5feff; }
     .fight-card.is-open .fight-row { background: rgba(0,151,167,0.08); }
@@ -3602,11 +3603,10 @@ function renderFights() {
 
     return `<div class="fight-card" id="fight-card-${match.id}">
       <div class="fight-row" onclick="toggleFightDetail('${match.id}')">
-        <div class="fight-row-main">
+        <div class="fight-row-line1">${escHtml(match.title || '')}<i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}" style="margin-left:6px;"></i></div>
+        <div class="fight-row-line2">
           <span class="fight-date">${dateStr}</span>
-          <span class="fight-title">${escHtml(match.title || '')}</span>
           ${summaryBadge}
-          <i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}"></i>
         </div>
         <div class="fight-row-actions">
           <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">編集する</button>
@@ -3838,7 +3838,7 @@ function _calcMatchBadge(fighters) {
   const total  = withResult.length;
   if (total === 0) return { cls: 'pending', txt: '結果未入力' };
   const statTxt = koWins > 0
-    ? `${total}戦${wins}勝(KO${koWins})${losses}敗${draws}分`
+    ? `${total}戦${wins}勝(${koWins}KO)${losses}敗${draws}分`
     : `${total}戦${wins}勝${losses}敗${draws}分`;
   const allDone = total === fighters.length;
   if (allDone && wins === total)   return { cls: 'win',  txt: `全勝｜${statTxt}` };
