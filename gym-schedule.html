@@ -528,8 +528,8 @@
     .fight-fighter-detail-row.result-draw    { border-left-color: var(--warning); background: rgba(251,140,0,0.05); }
     .fight-del-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
     .fight-del-btn:hover { color: var(--danger); }
-    .fight-edit-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; transition: color 0.15s; }
-    .fight-edit-btn:hover { color: var(--primary); }
+    .fight-edit-btn { background: none; border: 1.5px solid #ddd; color: #888; cursor: pointer; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; transition: all 0.15s; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
+    .fight-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
     /* 試合編集モーダル */
     .fight-edit-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
     .fight-edit-modal-overlay.open { display:flex; }
@@ -3604,7 +3604,7 @@ function renderFights() {
         <span class="fight-title">${escHtml(match.title || '')}</span>
         ${summaryBadge}
         <i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}"></i>
-        <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')" title="編集"><i class="fas fa-edit"></i></button>
+        <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">編集する</button>
         <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
