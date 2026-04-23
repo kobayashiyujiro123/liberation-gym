@@ -620,7 +620,7 @@
       <i class="nav-icon fas fa-users"></i><span>会員管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-coach" onclick="show('coach')" data-admin-only>
-      <i class="nav-icon fas fa-dumbbell"></i><span>コーチ管理</span><i class="nav-arrow fas fa-chevron-right"></i>
+      <i class="nav-icon fas fa-dumbbell"></i><span>トレーナー管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
     <div class="nav-item" id="nav-notice" onclick="show('notice')" data-admin-only>
       <i class="nav-icon fas fa-bell"></i><span>お知らせ作成</span><i class="nav-arrow fas fa-chevron-right"></i>
@@ -663,7 +663,7 @@
         <div id="dash-member-schedule" class="dash-card" onclick="show('member-schedule')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div id="dash-reservation" class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
         <div id="dash-members" class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
-        <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">コーチ管理</div></div>
+        <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">トレーナー管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
         <div class="dash-card" onclick="show('fights')" data-admin-only><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
@@ -785,7 +785,7 @@
       </div>
 
       <div class="search-bar" style="margin-top:16px;">
-        <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="res-search" placeholder="会員名・コーチ名で検索..." oninput="renderReservations()" /></div>
+        <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="res-search" placeholder="会員名・トレーナー名で検索..." oninput="renderReservations()" /></div>
         <button class="btn-p" id="res-add-btn" onclick="openAddResModal()"><i class="fas fa-plus"></i> 予約追加</button>
       </div>
       <div class="res-coach-tabs" id="res-coach-tabs"></div>
@@ -856,7 +856,7 @@
             <div class="mem-field-row"><div class="mem-field-label">今月利用回数</div><div class="mem-field-val" id="md-visits-month"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">退会日</div><div class="mem-field-val" id="md-left"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">状況ステータス</div><div class="mem-field-val" id="md-status"></div></div>
-            <div class="mem-field-row"><div class="mem-field-label">担当コーチ</div><div class="mem-field-val" id="md-coach"></div></div>
+            <div class="mem-field-row"><div class="mem-field-label">担当トレーナー</div><div class="mem-field-val" id="md-coach"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">予約状況閲覧権限</div><div class="mem-field-val"><div class="mem-toggle" id="md-toggle"><div class="mem-toggle-knob"></div></div></div></div>
           </div>
           <div class="mem-detail-actions" id="mem-detail-edit-btn">
@@ -900,7 +900,7 @@
               <div class="mem-field-row"><div class="mem-field-label">状況ステータス</div>
                 <select class="form-ctrl mem-edit-inp" id="me-status"><option>有効</option><option>休会</option><option>退会</option></select>
               </div>
-              <div class="mem-field-row"><div class="mem-field-label">担当コーチ</div>
+              <div class="mem-field-row"><div class="mem-field-label">担当トレーナー</div>
                 <select class="form-ctrl mem-edit-inp" id="me-coach">
                   <option value="">未割当</option>
                 </select>
@@ -1059,8 +1059,8 @@
     <div class="view" id="view-coach">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div class="search-bar">
-        <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="coach-search" placeholder="コーチ名・専門で検索..." oninput="renderCoaches()" /></div>
-        <button class="btn-p" onclick="openCoachInvite()"><i class="fas fa-plus"></i> コーチ追加</button>
+        <div class="search-wrap"><i class="fas fa-search"></i><input class="search-inp" id="coach-search" placeholder="トレーナー名・専門で検索..." oninput="renderCoaches()" /></div>
+        <button class="btn-p" onclick="openCoachInvite()"><i class="fas fa-plus"></i> トレーナー追加</button>
       </div>
       <div class="data-wrap" style="overflow-x:auto;">
         <table class="data-table">
@@ -1077,7 +1077,7 @@
     <!-- COACH DETAIL -->
     <div class="view" id="view-coach-detail">
       <div class="mem-detail-breadcrumb">
-        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> コーチ一覧に戻る</span>
+        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トレーナー一覧に戻る</span>
       </div>
       <div class="coach-detail-wrap">
         <!-- プロフィールカード -->
@@ -1109,14 +1109,14 @@
     <!-- COACH INVITE (メールアドレス送信画面) -->
     <div class="view" id="view-coach-invite">
       <div class="mem-detail-breadcrumb">
-        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> コーチ一覧に戻る</span>
+        <span onclick="show('coach')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トレーナー一覧に戻る</span>
       </div>
       <div class="form-card" style="max-width:520px;margin-top:24px;">
         <div style="text-align:center;margin-bottom:28px;">
           <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
             <i class="fas fa-envelope" style="color:#fff;font-size:1.6rem;"></i>
           </div>
-          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">コーチ招待メールを送信</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">トレーナー招待メールを送信</div>
           <div style="font-size:0.85rem;color:var(--text-light);line-height:1.6;">招待するコーチのメールアドレスを入力してください。<br>登録用リンクを記載したメールが送信されます。</div>
         </div>
         <div class="form-group">
@@ -1136,7 +1136,7 @@
       </div>
     </div>
 
-    <!-- COACH REGISTER (コーチ情報入力画面 ― メールリンク先) -->
+    <!-- COACH REGISTER (トレーナー情報入力画面 ― メールリンク先) -->
     <div class="view" id="view-coach-register">
       <div class="mem-detail-breadcrumb">
         <span onclick="show('coach-invite')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> メール送信画面に戻る</span>
@@ -1146,7 +1146,7 @@
           <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
             <i class="fas fa-user-tie" style="color:#fff;font-size:1.6rem;"></i>
           </div>
-          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">コーチ情報の登録</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;">トレーナー情報の登録</div>
           <div style="font-size:0.85rem;color:var(--text-light);">以下の情報を入力して登録を完了してください</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -1293,7 +1293,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'コーチ管理', 'coach-invite':'コーチ招待メール送信', 'coach-register':'コーチ情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'トレーナー管理', 'coach-invite':'トレーナー招待メール送信', 'coach-register':'トレーナー情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -1590,7 +1590,7 @@ const _savedResDate = sessionStorage.getItem('resSelectedDate');
 let resSelectedDate = (resDates.includes(_savedResDate) ? _savedResDate : resDates[0]);
 let resPage = 1;
 const RES_PER_PAGE = 5;
-let resCoachFilter = ''; // '' = 全て、コーチ名 = フィルター中
+let resCoachFilter = ''; // '' = 全て、トレーナー名 = フィルター中
 
 function buildDayTabs() {
   const now = new Date(); now.setHours(0,0,0,0);
@@ -2181,7 +2181,7 @@ function openMemberEdit(id) {
   document.getElementById('me-tel-disp').textContent          = m.tel || '';
   // 編集可能フィールド
   document.getElementById('me-status').value       = m.status;
-  // 担当コーチのドロップダウンを allCoaches から動的生成
+  // 担当トレーナーのドロップダウンを allCoaches から動的生成
   const coachSel = document.getElementById('me-coach');
   coachSel.innerHTML = '<option value="">未割当</option>' +
     allCoaches.filter(c => c.status === '在籍中').map(c => `<option value="${c.name}">${c.name}</option>`).join('');
@@ -2372,7 +2372,7 @@ function show(name) {
   if (name === 'birthday') {
     renderBirthdays();
   }
-  // 会員管理・コーチ管理を開くたびにDBから最新データを再取得
+  // 会員管理・トレーナー管理を開くたびにDBから最新データを再取得
   if (name === 'members') {
     initMembersFromDB();
   }
@@ -2847,7 +2847,7 @@ function makeBdayCard(m, isToday) {
   const cardStyle = isToday && isMale ? 'style="cursor:pointer;border-color:rgba(21,101,192,0.4);box-shadow:0 0 0 3px rgba(21,101,192,0.08);"'
                   : isToday && isFemale ? 'style="cursor:pointer;border-color:rgba(186,104,200,0.4);box-shadow:0 0 0 3px rgba(240,98,146,0.08);"'
                   : 'style="cursor:pointer;"';
-  const roleTag = m.isCoach ? '<span style="font-size:0.68rem;background:rgba(0,188,212,0.12);color:var(--primary-dark);border-radius:4px;padding:1px 6px;margin-left:4px;">コーチ</span>' : '';
+  const roleTag = m.isCoach ? '<span style="font-size:0.68rem;background:rgba(0,188,212,0.12);color:var(--primary-dark);border-radius:4px;padding:1px 6px;margin-left:4px;">トレーナー</span>' : '';
   const onclick = m.isCoach ? `openCoachDetail('${m.id}')` : `openMemberFromBday('${m.name}')`;
   return `
     <div class="${cardClass}" ${cardStyle} onclick="${onclick}">
@@ -2928,7 +2928,7 @@ function renderCoaches() {
         <button class="act-btn del" onclick="deleteCoach('${c.id}','${c.name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${(c.email||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')"><i class="fas fa-trash"></i> 削除</button>
       </td>
     </tr>`).join('')
-  : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当するコーチが見つかりません</td></tr>';
+  : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">該当するトレーナーが見つかりません</td></tr>';
 
   let pgHtml = `<button class="pg-btn" onclick="coachGoPage(${coachPage-1})" ${coachPage===1?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-left"></i></button>`;
   for (let i = 1; i <= totalPages; i++) {
@@ -2965,7 +2965,7 @@ function renderCoaches() {
           </div>
         </div>
       </div>`;
-    }).join('') : '<div style="text-align:center;padding:24px;color:var(--text-light);">該当するコーチが見つかりません</div>';
+    }).join('') : '<div style="text-align:center;padding:24px;color:var(--text-light);">該当するトレーナーが見つかりません</div>';
   }
   if (coachSpPag) coachSpPag.innerHTML = pgHtml;
 }
@@ -3115,7 +3115,7 @@ function submitCoachRegister() {
   // 一覧に戻ってトースト表示
   show('coach');
   renderCoaches();
-  showAdminToast(`${name} を新しいコーチとして登録しました`);
+  showAdminToast(`${name} を新しいトレーナーとして登録しました`);
 }
 
 function openCoachDetail(id) {
@@ -4134,7 +4134,7 @@ async function initNoticesFromDB() {
 }
 
 async function deleteCoach(coachId, coachName, coachEmail) {
-  if (!confirm(`コーチ「${coachName}」を削除しますか？\nこの操作は元に戻せません。`)) return;
+  if (!confirm(`トレーナー「${coachName}」を削除しますか？\nこの操作は元に戻せません。`)) return;
   try {
     const token = _getAccessToken();
     const h = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
@@ -4152,7 +4152,7 @@ async function deleteCoach(coachId, coachName, coachEmail) {
         }
       }
     }
-    showAdminToast(`コーチ「${coachName}」を削除しました。※Supabase Authのユーザーは管理ダッシュボードから別途削除してください。`, 5000);
+    showAdminToast(`トレーナー「${coachName}」を削除しました。※Supabase Authのユーザーは管理ダッシュボードから別途削除してください。`, 5000);
     await initCoachesFromDB();
   } catch(e) {
     console.error('deleteCoach failed:', e);
@@ -4321,7 +4321,7 @@ async function initReservationsFromDB() {
       if (resData[key]) {
         const isCancelled = r.status === 'cancelled';
         const member = memberMap[r.user_id] || {};
-        // coachはreservationsのcoach列を優先し、なければメンバーの担当コーチ名で補完
+        // coachはreservationsのcoach列を優先し、なければメンバーの担当トレーナー名で補完
         const coachName = r.coach || member.coach || '';
         // user_idなし手動追加の場合: memoの "__name__:xxx" プレフィックスから名前を復元
         let displayName = member.name || '';

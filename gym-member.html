@@ -1062,7 +1062,7 @@ function enterApp() {
   _scheduleTokenRefresh();
   document.getElementById('sb-name').textContent = user.name || '';
   const _roleEl = document.getElementById('sb-role');
-  if (_roleEl) _roleEl.textContent = user.role === 'coach' ? 'コーチ' : '会員';
+  if (_roleEl) _roleEl.textContent = user.role === 'coach' ? 'トレーナー' : '会員';
   // コーチ/会員で表示要素を切り替え
   const _isCoach = user.role === 'coach';
   // ã³ã¼ãåãlocalStorageã«ä¿å­ï¼gym-scheduleã§ä½¿ç¨ï¼
