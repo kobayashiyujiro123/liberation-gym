@@ -85,26 +85,13 @@
     .an-rank-count { font-weight:700;color:var(--primary);font-size:1rem; }
     .an-rank-bar-bg { height:5px;background:var(--bg);border-radius:3px;flex:1;overflow:hidden; }
     .an-rank-bar-fill { height:100%;background:var(--primary);border-radius:3px;transition:width 0.4s; }
-    /* Time-slot bar chart */
-    .an-timechart { display:flex;align-items:flex-end;gap:3px;height:140px;padding:8px 0 0;overflow-x:auto; }
-    .an-bar-col { display:flex;flex-direction:column;align-items:center;flex:1;min-width:26px;max-width:48px; }
-    .an-bar-area { width:100%;flex:1;display:flex;align-items:flex-end;height:100px; }
-    .an-bar { width:100%;background:var(--primary);border-radius:3px 3px 0 0;transition:height 0.35s;opacity:0.85; }
-    .an-bar:hover { opacity:1; }
-    .an-bar-h { font-size:0.6rem;color:var(--text-light);margin-top:4px;white-space:nowrap; }
-    .an-bar-v { font-size:0.6rem;color:var(--primary);font-weight:600;min-height:14px; }
-    /* Daily chart */
-    .an-daychart { display:flex;align-items:flex-end;gap:2px;height:90px;overflow-x:auto;padding:8px 2px 0; }
-    .an-day-col { display:flex;flex-direction:column;align-items:center;flex:1;min-width:12px;max-width:22px; }
-    .an-day-area { width:100%;display:flex;align-items:flex-end;height:60px; }
-    .an-day-bar { width:100%;background:var(--primary-light);border-radius:2px 2px 0 0;opacity:0.7;transition:height 0.3s; }
-    .an-day-bar.has-data { opacity:1; }
-    .an-day-l { font-size:0.5rem;color:var(--text-light);margin-top:3px; }
+    /* SVG chart containers */
+    .an-chart-wrap { width:100%;overflow-x:auto; }
+    .an-chart-wrap svg { display:block;width:100%;height:auto;min-width:300px; }
     .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
     @media(max-width:680px){
       .an-stats-grid { grid-template-columns:repeat(3,1fr); }
       .an-stat-val { font-size:1.4rem; }
-      .an-bar-col { min-width:20px; }
     }
 
     /* DASHBOARD */
@@ -1313,7 +1300,7 @@
         <div class="an-stats-grid">
           <div class="an-stat-card">
             <div class="an-stat-val" id="an-total">—</div>
-            <div class="an-stat-lbl">総来館回数</div>
+            <div class="an-stat-lbl">総利用回数</div>
           </div>
           <div class="an-stat-card">
             <div class="an-stat-val" id="an-days">—</div>
@@ -1335,13 +1322,13 @@
       <!-- 時間帯別グラフ -->
       <div class="an-section">
         <div class="an-section-title"><i class="fas fa-clock"></i>時間帯別 ご利用人数</div>
-        <div class="an-timechart" id="an-time-chart"><div class="an-loading">読み込み中...</div></div>
+        <div class="an-chart-wrap" id="an-time-chart"><div class="an-loading">読み込み中...</div></div>
       </div>
 
       <!-- 日別グラフ -->
       <div class="an-section">
-        <div class="an-section-title"><i class="fas fa-calendar-day"></i>日別 来館数</div>
-        <div class="an-daychart" id="an-daily-chart"><div class="an-loading">読み込み中...</div></div>
+        <div class="an-section-title"><i class="fas fa-calendar-day"></i>日別 利用数</div>
+        <div class="an-chart-wrap" id="an-daily-chart"><div class="an-loading">読み込み中...</div></div>
       </div>
     </div>
 
@@ -3349,6 +3336,111 @@ function analyticsChangeMonth(delta) {
   renderAnalytics();
 }
 
+function _buildTimeChartSVG(hourCount) {
+  const hours = Array.from({length: 17}, (_, i) => i + 7); // 7〜23
+  const maxVal = Math.max(...hours.map(h => hourCount[h] || 0), 1);
+  const VW = 600, VH = 210;
+  const mT = 28, mR = 10, mB = 42, mL = 40;
+  const cW = VW - mL - mR, cH = VH - mT - mB;
+  const barW = cW / hours.length;
+  const barPad = Math.max(3, barW * 0.18);
+
+  // Y軸グリッド（0〜max を4分割）
+  const ticks = 4;
+  let grid = '', yLabels = '';
+  for (let i = 0; i <= ticks; i++) {
+    const val = Math.round(maxVal * i / ticks);
+    const y   = mT + cH * (1 - i / ticks);
+    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="#e8e8e8" stroke-width="${i === 0 ? 1.5 : 1}"/>`;
+    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${val}</text>`;
+  }
+
+  // バー + ラベル
+  let bars = '';
+  hours.forEach((h, i) => {
+    const cnt  = hourCount[h] || 0;
+    const barH = cnt > 0 ? Math.max((cnt / maxVal) * cH, 4) : 0;
+    const x    = mL + i * barW + barPad;
+    const w    = barW - barPad * 2;
+    const y    = mT + cH - barH;
+    const showXLabel = (i % 2 === 0); // 1時間おきにラベル
+
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(barH,0).toFixed(1)}" rx="3" fill="url(#tGrad)" opacity="${cnt > 0 ? 0.88 : 0.15}"/>`;
+    if (cnt > 0) {
+      bars += `<text x="${(x + w/2).toFixed(1)}" y="${(y - 5).toFixed(1)}" font-size="11" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
+    }
+    if (showXLabel) {
+      bars += `<text x="${(x + w/2).toFixed(1)}" y="${(VH - mB + 16).toFixed(1)}" font-size="11" fill="#888" text-anchor="middle">${h}時</text>`;
+    }
+  });
+
+  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0097a7"/>
+        <stop offset="100%" stop-color="#00bcd4" stop-opacity="0.55"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
+    ${bars}
+    <text x="${mL - 7}" y="${mT - 8}" font-size="10" fill="#bbb" text-anchor="end">人</text>
+  </svg>`;
+}
+
+function _buildDayChartSVG(dayCount, lastDay) {
+  const days   = Array.from({length: lastDay}, (_, i) => i + 1);
+  const maxVal = Math.max(...days.map(d => dayCount[d] || 0), 1);
+  const VW = 600, VH = 160;
+  const mT = 24, mR = 10, mB = 36, mL = 40;
+  const cW = VW - mL - mR, cH = VH - mT - mB;
+  const barW = cW / days.length;
+  const barPad = Math.max(1.5, barW * 0.15);
+
+  // Y軸グリッド（3分割）
+  const ticks = 3;
+  let grid = '', yLabels = '';
+  for (let i = 0; i <= ticks; i++) {
+    const val = Math.round(maxVal * i / ticks);
+    const y   = mT + cH * (1 - i / ticks);
+    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="#e8e8e8" stroke-width="${i === 0 ? 1.5 : 1}"/>`;
+    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${val}</text>`;
+  }
+
+  let bars = '';
+  days.forEach((d, i) => {
+    const cnt  = dayCount[d] || 0;
+    const barH = cnt > 0 ? Math.max((cnt / maxVal) * cH, 4) : 0;
+    const x    = mL + i * barW + barPad;
+    const w    = barW - barPad * 2;
+    const y    = mT + cH - barH;
+    // X軸ラベルは5の倍数 or 1日
+    const showXLabel = (d === 1 || d % 5 === 0);
+
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(barH,0).toFixed(1)}" rx="2" fill="url(#dGrad)" opacity="${cnt > 0 ? 0.85 : 0.12}"/>`;
+    if (cnt > 0) {
+      bars += `<text x="${(x + w/2).toFixed(1)}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
+    }
+    if (showXLabel) {
+      bars += `<text x="${(x + w/2).toFixed(1)}" y="${(VH - mB + 14).toFixed(1)}" font-size="10" fill="#888" text-anchor="middle">${d}</text>`;
+    }
+  });
+
+  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="dGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#00bcd4"/>
+        <stop offset="100%" stop-color="#0097a7" stop-opacity="0.5"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
+    ${yLabels}
+    ${bars}
+    <text x="${mL - 7}" y="${mT - 8}" font-size="10" fill="#bbb" text-anchor="end">人</text>
+  </svg>`;
+}
+
 async function renderAnalytics() {
   const pad = n => String(n).padStart(2,'0');
   const key = `${analyticsYear}-${pad(analyticsMonth)}`;
@@ -3425,48 +3517,22 @@ async function renderAnalytics() {
     }).join('');
   }
 
-  // ── 時間帯別グラフ（7〜23時） ──
+  // ── 時間帯別グラフ（SVG） ──
   const hourCount = {};
   for (let h = 7; h <= 23; h++) hourCount[h] = 0;
   rows.forEach(r => {
-    if (r.time) {
-      const h = parseInt(r.time.split(':')[0], 10);
-      if (h >= 7 && h <= 23) hourCount[h]++;
-    }
+    if (r.time) { const h = parseInt(r.time.split(':')[0], 10); if (h >= 7 && h <= 23) hourCount[h]++; }
   });
-  const hours  = Object.keys(hourCount).map(Number);
-  const maxH   = Math.max(...hours.map(h => hourCount[h]), 1);
-  const timeEl = document.getElementById('an-time-chart');
-  timeEl.innerHTML = hours.map(h => {
-    const cnt = hourCount[h];
-    const pct = Math.round(cnt / maxH * 100);
-    return `<div class="an-bar-col">
-      <div class="an-bar-v">${cnt > 0 ? cnt : ''}</div>
-      <div class="an-bar-area"><div class="an-bar" style="height:${pct}%;" title="${h}時: ${cnt}人"></div></div>
-      <div class="an-bar-h">${h}時</div>
-    </div>`;
-  }).join('');
+  document.getElementById('an-time-chart').innerHTML = _buildTimeChartSVG(hourCount);
 
-  // ── 日別グラフ ──
+  // ── 日別グラフ（SVG） ──
   const lastDay = new Date(analyticsYear, analyticsMonth, 0).getDate();
   const dayCount = {};
   for (let d = 1; d <= lastDay; d++) dayCount[d] = 0;
   rows.forEach(r => {
-    if (r.date) {
-      const d = parseInt(r.date.split('-')[2], 10);
-      if (d >= 1 && d <= lastDay) dayCount[d]++;
-    }
+    if (r.date) { const d = parseInt(r.date.split('-')[2], 10); if (d >= 1 && d <= lastDay) dayCount[d]++; }
   });
-  const maxD   = Math.max(...Object.values(dayCount), 1);
-  const dailyEl = document.getElementById('an-daily-chart');
-  dailyEl.innerHTML = Array.from({length: lastDay}, (_,i) => i+1).map(d => {
-    const cnt = dayCount[d];
-    const pct = cnt > 0 ? Math.max(Math.round(cnt / maxD * 100), 5) : 0;
-    return `<div class="an-day-col">
-      <div class="an-day-area"><div class="an-day-bar ${cnt>0?'has-data':''}" style="height:${pct}%;" title="${d}日: ${cnt}人"></div></div>
-      <div class="an-day-l">${d}</div>
-    </div>`;
-  }).join('');
+  document.getElementById('an-daily-chart').innerHTML = _buildDayChartSVG(dayCount, lastDay);
 }
 
 // ===== COACH PHOTO HELPERS =====
