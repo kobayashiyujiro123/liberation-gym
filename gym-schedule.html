@@ -3692,7 +3692,7 @@ function _buildDayChartSVG(dayCount, lastDay, year, month) {
     // 色: 祝日・日曜=赤系, 土曜=オレンジ系, 平日=ティール
     const barColor = (isHol || dow === 0) ? '#ef5350' : dow === 6 ? '#ff9800' : '#0097a7';
     const barColorLight = (isHol || dow === 0) ? '#ef9a9a' : dow === 6 ? '#ffcc80' : '#00bcd4';
-    const lblColor = (isHol || dow === 0) ? '#c62828' : dow === 6 ? '#e65100' : '#888';
+    const lblColor = (isHol || dow === 0) ? '#c62828' : dow === 6 ? '#e65100' : '#0097a7';
     const gradId = `dg${i}`;
 
     const barH = cnt > 0 ? Math.max((cnt / maxTick) * cH, 4) : 0;
