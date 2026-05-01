@@ -540,6 +540,39 @@
     .usage-summary-lbl { font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; font-weight: 700; }
     .usage-summary-val { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); line-height: 1; }
     .usage-summary-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 2px; }
+    .ui-detail-btn { width:100%; padding:9px 16px; background:none; border:none; border-top:1px solid var(--border); color:var(--primary); font-size:0.8rem; font-family:'Noto Sans JP',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background 0.15s; }
+    .ui-detail-btn:hover { background:var(--bg); }
+    /* ── 利用詳細 ボトムシートモーダル ── */
+    .ui-detail-modal { position:fixed; inset:0; z-index:600; display:flex; flex-direction:column; justify-content:flex-end; }
+    .ui-detail-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.45); }
+    .ui-detail-sheet { position:relative; background:var(--card-bg); border-radius:20px 20px 0 0; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 -4px 24px rgba(0,0,0,0.15); }
+    .ui-detail-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .ui-detail-title { font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:500; color:var(--text); letter-spacing:.5px; }
+    .ui-detail-close { background:var(--bg); border:none; cursor:pointer; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-light); font-size:0.85rem; transition:background 0.15s; }
+    .ui-detail-close:hover { background:var(--border); }
+    .ui-detail-body { overflow-y:auto; padding:20px 20px 32px; -webkit-overflow-scrolling:touch; }
+    .ui-detail-section { margin-bottom:22px; }
+    .ui-detail-section:last-child { margin-bottom:0; }
+    .ui-detail-section-title { font-size:0.72rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .ui-detail-summary-count { text-align:center; padding:8px 0 4px; }
+    .ui-detail-wh-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ui-detail-wh-card { border-radius:10px; padding:14px 10px; text-align:center; }
+    .ui-detail-wh-card.weekday { background:#e0f7fa; }
+    .ui-detail-wh-card.holiday { background:#ffebee; }
+    .ui-detail-wh-val { font-family:'Oswald',sans-serif; font-size:2rem; font-weight:600; line-height:1.1; }
+    .ui-detail-wh-card.weekday .ui-detail-wh-val { color:#006978; }
+    .ui-detail-wh-card.holiday .ui-detail-wh-val { color:#c62828; }
+    .ui-detail-wh-lbl { font-size:0.71rem; color:var(--text-light); margin-top:4px; }
+    .ui-detail-time-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .ui-detail-time-label { width:34px; font-size:0.76rem; color:var(--text-light); text-align:right; flex-shrink:0; }
+    .ui-detail-time-bar-bg { flex:1; height:7px; background:var(--bg); border-radius:4px; overflow:hidden; }
+    .ui-detail-time-bar-fill { height:100%; background:var(--primary); border-radius:4px; transition:width .4s; }
+    .ui-detail-time-count { width:20px; font-size:0.75rem; color:var(--primary); font-weight:700; text-align:right; flex-shrink:0; }
+    .ui-detail-date-grid { display:flex; flex-wrap:wrap; gap:6px; }
+    .ui-detail-date-chip { padding:5px 11px; border-radius:20px; font-size:0.79rem; font-weight:600; }
+    .ui-detail-date-chip.weekday { background:#e0f7fa; color:#006978; }
+    .ui-detail-date-chip.saturday { background:#fff3e0; color:#e65100; }
+    .ui-detail-date-chip.holiday { background:#ffebee; color:#c62828; }
 
     /* FIGHTS */
     .fight-new-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
@@ -1028,6 +1061,21 @@
             <div class="usage-summary-lbl">今月の利用回数</div>
             <div class="usage-summary-val"><span id="ui-month-visits">0</span><span class="usage-summary-unit">回</span></div>
           </div>
+        </div>
+        <button class="ui-detail-btn" onclick="openUiDetail()">
+          <i class="fas fa-chart-line"></i>先月の利用詳細を見る
+        </button>
+      </div>
+
+      <!-- 利用詳細 ボトムシートモーダル -->
+      <div id="ui-detail-modal" class="ui-detail-modal" style="display:none;">
+        <div class="ui-detail-backdrop" onclick="closeUiDetail()"></div>
+        <div class="ui-detail-sheet">
+          <div class="ui-detail-header">
+            <span class="ui-detail-title" id="ui-detail-title-month">先月の利用詳細</span>
+            <button class="ui-detail-close" onclick="closeUiDetail()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ui-detail-body" id="ui-detail-body"></div>
         </div>
       </div>
       <div class="form-card" style="max-width:none;">
@@ -1574,11 +1622,16 @@ if (DEMO_MODE) {
                 `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${encodeURIComponent(sess.user.id)}&status=eq.confirmed&date=lte.${todayStr}&select=date,time`,
                 { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
               );
-              const resRows = resRes.ok ? await resRes.json() : [];
+              const _rawRows = resRes.ok ? await resRes.json() : [];
+              // 来館済み（予約時間到達済み）のみ
+              _coachResRows = _rawRows.filter(r => {
+                if (!r.date) return false;
+                if (r.date < todayStr) return true;
+                if (r.date > todayStr) return false;
+                return (r.time || '00:00') <= nowTime;
+              });
               let total = 0, year = 0, month = 0;
-              for (const r of resRows) {
-                if (r.date > todayStr) continue;
-                if (r.date === todayStr && (r.time || '00:00') > nowTime) continue;
+              for (const r of _coachResRows) {
                 total++;
                 const [ry, rm] = r.date.split('-').map(Number);
                 if (ry === curYear) { year++; if (rm === curMonth) month++; }
@@ -3336,6 +3389,115 @@ async function saveCoachEdit() {
     body: JSON.stringify({ status: statusRevMap[c.status] || 'active', email: c.email, tel: c.tel, photo_url: photoUrl })
   });
   openCoachDetail(currentCoachId);
+}
+
+// ===== ユーザ情報 利用詳細モーダル =====
+let _coachResRows = []; // 来館済み予約データ（coach userinfo 用）
+
+function openUiDetail() {
+  const now  = new Date();
+  // 先月を計算
+  let lm = now.getMonth(); // 0-based → これが「先月」(0=1月=先月なら前年12月)
+  let ly = now.getFullYear();
+  if (lm === 0) { lm = 12; ly--; } // 1月なら前年12月
+  const lmStr   = `${ly}-${String(lm).padStart(2,'0')}`;
+  const monthName = `${ly}年${lm}月`;
+  const lastMonthRows = _coachResRows.filter(r => r.date && r.date.startsWith(lmStr));
+
+  // 平日・休日祝日カウント
+  const dowLabel = ['日','月','火','水','木','金','土'];
+  let weekdayCnt = 0, holidayCnt = 0;
+  for (const r of lastMonthRows) {
+    const [ry, rm, rd] = r.date.split('-').map(Number);
+    const dow  = new Date(ry, rm - 1, rd).getDay();
+    const isH  = _isJpHoliday(ry, rm, rd);
+    if (isH || dow === 0 || dow === 6) holidayCnt++; else weekdayCnt++;
+  }
+
+  // 時間帯集計
+  const hourMap = {};
+  for (const r of lastMonthRows) {
+    const h = r.time ? parseInt(r.time.split(':')[0]) : null;
+    if (h !== null && !isNaN(h)) hourMap[h] = (hourMap[h] || 0) + 1;
+  }
+  const usedHours  = Object.keys(hourMap).map(Number).sort((a, b) => a - b);
+  const maxHourCnt = usedHours.length ? Math.max(...usedHours.map(h => hourMap[h])) : 1;
+
+  // 利用日（ユニーク）
+  const uniqueDates = [...new Set(lastMonthRows.map(r => r.date))].sort();
+
+  // ── HTML 構築 ──
+  document.getElementById('ui-detail-title-month').textContent = `${monthName} 利用詳細`;
+  let html = '';
+
+  if (lastMonthRows.length === 0) {
+    html = `<div style="text-align:center;padding:36px 0;color:var(--text-light);font-size:0.88rem;">${monthName}の利用記録はありません</div>`;
+  } else {
+    // 利用回数サマリー
+    html += `<div class="ui-detail-section">
+      <div class="ui-detail-section-title"><i class="fas fa-calendar-alt"></i>${monthName} の利用回数</div>
+      <div class="ui-detail-summary-count">
+        <span style="font-family:'Oswald',sans-serif;font-size:3rem;font-weight:600;color:var(--primary);line-height:1;">${lastMonthRows.length}</span>
+        <span style="font-size:1rem;color:var(--text-light);margin-left:6px;">回</span>
+      </div>
+    </div>`;
+
+    // 平日・休日祝日
+    html += `<div class="ui-detail-section">
+      <div class="ui-detail-section-title"><i class="fas fa-sun"></i>平日・休日祝日</div>
+      <div class="ui-detail-wh-grid">
+        <div class="ui-detail-wh-card weekday">
+          <div class="ui-detail-wh-val">${weekdayCnt}</div>
+          <div class="ui-detail-wh-lbl">平日</div>
+        </div>
+        <div class="ui-detail-wh-card holiday">
+          <div class="ui-detail-wh-val">${holidayCnt}</div>
+          <div class="ui-detail-wh-lbl">土・日・祝日</div>
+        </div>
+      </div>
+    </div>`;
+
+    // 利用時間帯
+    if (usedHours.length) {
+      let timeRows = '';
+      for (const h of usedHours) {
+        const cnt  = hourMap[h];
+        const barW = Math.round(cnt / maxHourCnt * 100);
+        timeRows += `<div class="ui-detail-time-row">
+          <span class="ui-detail-time-label">${h}時</span>
+          <div class="ui-detail-time-bar-bg"><div class="ui-detail-time-bar-fill" style="width:${barW}%;"></div></div>
+          <span class="ui-detail-time-count">${cnt}</span>
+        </div>`;
+      }
+      html += `<div class="ui-detail-section">
+        <div class="ui-detail-section-title"><i class="fas fa-clock"></i>利用時間帯</div>
+        ${timeRows}
+      </div>`;
+    }
+
+    // 利用日チップ
+    let chips = '';
+    for (const dateStr of uniqueDates) {
+      const [dy, dm, dd] = dateStr.split('-').map(Number);
+      const dow  = new Date(dy, dm - 1, dd).getDay();
+      const isH  = _isJpHoliday(dy, dm, dd);
+      const cls  = (isH || dow === 0) ? 'holiday' : dow === 6 ? 'saturday' : 'weekday';
+      chips += `<span class="ui-detail-date-chip ${cls}">${dm}/${dd}(${dowLabel[dow]})</span>`;
+    }
+    html += `<div class="ui-detail-section">
+      <div class="ui-detail-section-title"><i class="fas fa-calendar-check"></i>利用日</div>
+      <div class="ui-detail-date-grid">${chips}</div>
+    </div>`;
+  }
+
+  document.getElementById('ui-detail-body').innerHTML = html;
+  document.getElementById('ui-detail-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUiDetail() {
+  document.getElementById('ui-detail-modal').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 // ===== ANALYTICS / ご利用状況 =====
