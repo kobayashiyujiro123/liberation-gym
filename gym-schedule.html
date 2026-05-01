@@ -3327,8 +3327,11 @@ async function saveCoachEdit() {
 }
 
 // ===== ANALYTICS / ご利用状況 =====
-let analyticsYear  = new Date().getFullYear();
-let analyticsMonth = new Date().getMonth() + 1;
+// デフォルトは前月（今月は未完了のため）
+const _anNow = new Date();
+let analyticsMonth = _anNow.getMonth(); // getMonth() は 0-based → 0 = 1月 → 前月
+let analyticsYear  = _anNow.getFullYear();
+if (analyticsMonth === 0) { analyticsMonth = 12; analyticsYear--; } // 1月の場合は前年12月
 const _analyticsCache = {};
 
 function initAnalytics() {
@@ -3336,6 +3339,10 @@ function initAnalytics() {
 }
 
 function analyticsChangeMonth(delta) {
+  // 当月より先には進めない
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth() + 1;
+  if (delta > 0 && (analyticsYear > curY || (analyticsYear === curY && analyticsMonth >= curM))) return;
   analyticsMonth += delta;
   if (analyticsMonth > 12) { analyticsMonth = 1; analyticsYear++; }
   if (analyticsMonth < 1)  { analyticsMonth = 12; analyticsYear--; }
@@ -3346,6 +3353,16 @@ async function renderAnalytics() {
   const pad = n => String(n).padStart(2,'0');
   const key = `${analyticsYear}-${pad(analyticsMonth)}`;
   document.getElementById('an-month-label').textContent = `${analyticsYear}年${analyticsMonth}月`;
+
+  // 次月ボタン: 当月なら無効化
+  const _anNowC = new Date();
+  const _isCurrentMonth = analyticsYear === _anNowC.getFullYear() && analyticsMonth === _anNowC.getMonth() + 1;
+  const _nextBtn = document.querySelector('#view-analytics .an-nav-btn:last-of-type');
+  if (_nextBtn) {
+    _nextBtn.disabled = _isCurrentMonth;
+    _nextBtn.style.opacity = _isCurrentMonth ? '0.35' : '';
+    _nextBtn.style.cursor  = _isCurrentMonth ? 'not-allowed' : '';
+  }
 
   // 読み込み中表示
   ['an-ranking','an-time-chart','an-daily-chart'].forEach(id => {
