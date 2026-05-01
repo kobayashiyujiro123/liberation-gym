@@ -550,6 +550,11 @@
     .ui-detail-title { font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:500; color:var(--text); letter-spacing:.5px; }
     .ui-detail-close { background:var(--bg); border:none; cursor:pointer; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-light); font-size:0.85rem; transition:background 0.15s; }
     .ui-detail-close:hover { background:var(--border); }
+    .ui-detail-month-nav { display:flex; align-items:center; justify-content:center; gap:14px; padding:10px 16px; border-bottom:1px solid var(--border); background:#fafafa; flex-shrink:0; }
+    .ui-detail-month-label { font-weight:700; font-size:0.97rem; color:var(--text); min-width:110px; text-align:center; }
+    .ui-detail-month-btn { background:#fff; border:1px solid var(--border); border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-light); font-size:0.78rem; transition:all 0.15s; }
+    .ui-detail-month-btn:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+    .ui-detail-month-btn:disabled { opacity:0.3; cursor:not-allowed; }
     .ui-detail-body { overflow-y:auto; padding:20px 20px 32px; -webkit-overflow-scrolling:touch; }
     .ui-detail-section { margin-bottom:22px; }
     .ui-detail-section:last-child { margin-bottom:0; }
@@ -1063,7 +1068,7 @@
           </div>
         </div>
         <button class="ui-detail-btn" onclick="openUiDetail()">
-          <i class="fas fa-chart-line"></i>先月の利用詳細を見る
+          <i class="fas fa-chart-line"></i>利用詳細を見る
         </button>
       </div>
 
@@ -1072,8 +1077,13 @@
         <div class="ui-detail-backdrop" onclick="closeUiDetail()"></div>
         <div class="ui-detail-sheet">
           <div class="ui-detail-header">
-            <span class="ui-detail-title" id="ui-detail-title-month">先月の利用詳細</span>
+            <span class="ui-detail-title">利用詳細</span>
             <button class="ui-detail-close" onclick="closeUiDetail()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ui-detail-month-nav">
+            <button class="ui-detail-month-btn" id="coach-detail-prev" onclick="coachDetailChangeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+            <span class="ui-detail-month-label" id="coach-detail-month-label">—</span>
+            <button class="ui-detail-month-btn" id="coach-detail-next" onclick="coachDetailChangeMonth(1)"><i class="fas fa-chevron-right"></i></button>
           </div>
           <div class="ui-detail-body" id="ui-detail-body"></div>
         </div>
@@ -3393,21 +3403,49 @@ async function saveCoachEdit() {
 
 // ===== ユーザ情報 利用詳細モーダル =====
 let _coachResRows = []; // 来館済み予約データ（coach userinfo 用）
+let _cdYear, _cdMonth; // 利用詳細モーダルの表示中の年月
 
 function openUiDetail() {
-  const now  = new Date();
-  // 先月を計算
-  let lm = now.getMonth(); // 0-based → これが「先月」(0=1月=先月なら前年12月)
-  let ly = now.getFullYear();
-  if (lm === 0) { lm = 12; ly--; } // 1月なら前年12月
-  const lmStr   = `${ly}-${String(lm).padStart(2,'0')}`;
-  const monthName = `${ly}年${lm}月`;
-  const lastMonthRows = _coachResRows.filter(r => r.date && r.date.startsWith(lmStr));
+  // デフォルト: 前月
+  const now = new Date();
+  _cdMonth = now.getMonth(); // 0-based → これが前月の1-based月
+  _cdYear  = now.getFullYear();
+  if (_cdMonth === 0) { _cdMonth = 12; _cdYear--; }
+
+  document.getElementById('ui-detail-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  _renderCoachDetail();
+}
+
+function coachDetailChangeMonth(delta) {
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth() + 1;
+  if (delta > 0 && (_cdYear > curY || (_cdYear === curY && _cdMonth >= curM))) return;
+  _cdMonth += delta;
+  if (_cdMonth > 12) { _cdMonth = 1; _cdYear++; }
+  if (_cdMonth < 1)  { _cdMonth = 12; _cdYear--; }
+  _renderCoachDetail();
+}
+
+function _renderCoachDetail() {
+  const p2 = n => String(n).padStart(2,'0');
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth() + 1;
+  const monthName = `${_cdYear}年${_cdMonth}月`;
+  const mStr = `${_cdYear}-${p2(_cdMonth)}`;
+
+  // 月ラベル・次月ボタン更新
+  document.getElementById('coach-detail-month-label').textContent = monthName;
+  const nextBtn = document.getElementById('coach-detail-next');
+  if (nextBtn) nextBtn.disabled = (_cdYear === curY && _cdMonth >= curM);
+
+  // 対象月の行をフィルター（_coachResRows は来館済みのみ）
+  const monthRows = _coachResRows.filter(r => r.date && r.date.startsWith(mStr));
 
   // 平日・休日祝日カウント
   const dowLabel = ['日','月','火','水','木','金','土'];
   let weekdayCnt = 0, holidayCnt = 0;
-  for (const r of lastMonthRows) {
+  for (const r of monthRows) {
     const [ry, rm, rd] = r.date.split('-').map(Number);
     const dow  = new Date(ry, rm - 1, rd).getDay();
     const isH  = _isJpHoliday(ry, rm, rd);
@@ -3416,7 +3454,7 @@ function openUiDetail() {
 
   // 時間帯集計
   const hourMap = {};
-  for (const r of lastMonthRows) {
+  for (const r of monthRows) {
     const h = r.time ? parseInt(r.time.split(':')[0]) : null;
     if (h !== null && !isNaN(h)) hourMap[h] = (hourMap[h] || 0) + 1;
   }
@@ -3424,20 +3462,19 @@ function openUiDetail() {
   const maxHourCnt = usedHours.length ? Math.max(...usedHours.map(h => hourMap[h])) : 1;
 
   // 利用日（ユニーク）
-  const uniqueDates = [...new Set(lastMonthRows.map(r => r.date))].sort();
+  const uniqueDates = [...new Set(monthRows.map(r => r.date))].sort();
 
   // ── HTML 構築 ──
-  document.getElementById('ui-detail-title-month').textContent = `${monthName} 利用詳細`;
   let html = '';
 
-  if (lastMonthRows.length === 0) {
+  if (monthRows.length === 0) {
     html = `<div style="text-align:center;padding:36px 0;color:var(--text-light);font-size:0.88rem;">${monthName}の利用記録はありません</div>`;
   } else {
     // 利用回数サマリー
     html += `<div class="ui-detail-section">
       <div class="ui-detail-section-title"><i class="fas fa-calendar-alt"></i>${monthName} の利用回数</div>
       <div class="ui-detail-summary-count">
-        <span style="font-family:'Oswald',sans-serif;font-size:3rem;font-weight:600;color:var(--primary);line-height:1;">${lastMonthRows.length}</span>
+        <span style="font-family:'Oswald',sans-serif;font-size:3rem;font-weight:600;color:var(--primary);line-height:1;">${monthRows.length}</span>
         <span style="font-size:1rem;color:var(--text-light);margin-left:6px;">回</span>
       </div>
     </div>`;
@@ -3491,8 +3528,6 @@ function openUiDetail() {
   }
 
   document.getElementById('ui-detail-body').innerHTML = html;
-  document.getElementById('ui-detail-modal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
 }
 
 function closeUiDetail() {
