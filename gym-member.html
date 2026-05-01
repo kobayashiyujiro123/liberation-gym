@@ -166,6 +166,39 @@
     .usage-summary-val { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); line-height: 1; }
     .usage-summary-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 2px; }
 
+    /* 利用詳細ボタン */
+    .ui-detail-btn { width:100%; padding:9px 16px; background:none; border:none; border-top:1px solid var(--border); color:var(--primary); font-size:0.8rem; font-family:'Noto Sans JP',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:background 0.15s; }
+    .ui-detail-btn:hover { background:#f5f5f5; }
+    /* 利用詳細 ボトムシートモーダル */
+    .ui-detail-modal { position:fixed; inset:0; z-index:600; display:flex; flex-direction:column; justify-content:flex-end; }
+    .ui-detail-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.45); }
+    .ui-detail-sheet { position:relative; background:#fff; border-radius:20px 20px 0 0; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 -4px 24px rgba(0,0,0,0.15); }
+    .ui-detail-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .ui-detail-title { font-size:1rem; font-weight:700; color:#333; letter-spacing:.3px; }
+    .ui-detail-close { background:#f5f5f5; border:none; cursor:pointer; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#888; font-size:0.85rem; }
+    .ui-detail-body { overflow-y:auto; padding:20px 20px 36px; -webkit-overflow-scrolling:touch; }
+    .ui-detail-section { margin-bottom:22px; }
+    .ui-detail-section:last-child { margin-bottom:0; }
+    .ui-detail-section-title { font-size:0.72rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .ui-detail-wh-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ui-detail-wh-card { border-radius:10px; padding:14px 10px; text-align:center; }
+    .ui-detail-wh-card.weekday { background:#e0f7fa; }
+    .ui-detail-wh-card.holiday { background:#ffebee; }
+    .ui-detail-wh-val { font-size:2rem; font-weight:700; line-height:1.1; }
+    .ui-detail-wh-card.weekday .ui-detail-wh-val { color:#006978; }
+    .ui-detail-wh-card.holiday .ui-detail-wh-val { color:#c62828; }
+    .ui-detail-wh-lbl { font-size:0.71rem; color:#888; margin-top:4px; }
+    .ui-detail-time-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .ui-detail-time-label { width:34px; font-size:0.76rem; color:#888; text-align:right; flex-shrink:0; }
+    .ui-detail-time-bar-bg { flex:1; height:7px; background:#f5f5f5; border-radius:4px; overflow:hidden; }
+    .ui-detail-time-bar-fill { height:100%; background:var(--primary); border-radius:4px; }
+    .ui-detail-time-count { width:20px; font-size:0.75rem; color:var(--primary); font-weight:700; text-align:right; flex-shrink:0; }
+    .ui-detail-date-grid { display:flex; flex-wrap:wrap; gap:6px; }
+    .ui-detail-date-chip { padding:5px 11px; border-radius:20px; font-size:0.79rem; font-weight:600; }
+    .ui-detail-date-chip.weekday { background:#e0f7fa; color:#006978; }
+    .ui-detail-date-chip.saturday { background:#fff3e0; color:#e65100; }
+    .ui-detail-date-chip.holiday { background:#ffebee; color:#c62828; }
+
     /* Edit form */
     .edit-form { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); max-width: 600px; }
     .edit-row { margin-bottom: 16px; }
@@ -670,7 +703,23 @@
               <div class="usage-summary-val"><span id="info-month-visits">0</span><span class="usage-summary-unit">回</span></div>
             </div>
           </div>
+          <button class="ui-detail-btn" onclick="openMemberUiDetail()">
+            <i class="fas fa-chart-line"></i>先月の利用詳細を見る
+          </button>
         </div>
+
+        <!-- 利用詳細 ボトムシートモーダル -->
+        <div id="member-detail-modal" class="ui-detail-modal" style="display:none;">
+          <div class="ui-detail-backdrop" onclick="closeMemberUiDetail()"></div>
+          <div class="ui-detail-sheet">
+            <div class="ui-detail-header">
+              <span class="ui-detail-title" id="member-detail-title">先月の利用詳細</span>
+              <button class="ui-detail-close" onclick="closeMemberUiDetail()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ui-detail-body" id="member-detail-body"></div>
+          </div>
+        </div>
+
         <div class="kaicho-memo-banner" id="kaicho-memo-banner" style="display:none;">
           <div class="kaicho-memo-icon">📋</div>
           <div>
@@ -1357,6 +1406,7 @@ async function loadUserProfile(authUser, accessToken) {
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
       );
       const resRows = resRes.ok ? await resRes.json() : [];
+      _memberResRows = resRows; // 詳細モーダル用に保持
       const _vc = _calcVisitsFromReservations(resRows, user.startDate);
       user.totalVisits  = _vc.total;
       user.yearVisits   = _vc.year;
@@ -1541,6 +1591,121 @@ if (DEMO_MODE) {
 
 function _localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ===== 利用詳細モーダル（会員向け）=====
+let _memberResRows = [];
+
+const _mHolCache = {};
+function _getMemberHolidaysForYear(y) {
+  if (_mHolCache[y]) return _mHolCache[y];
+  const hols = {};
+  const p2 = n => String(n).padStart(2,'0');
+  const add = (m,d) => { hols[`${y}-${p2(m)}-${p2(d)}`] = true; };
+  add(1,1); add(2,11); add(2,23); add(3,20);
+  add(4,29); add(5,3); add(5,4); add(5,5);
+  add(8,11); add(9,23); add(11,3); add(11,23);
+  const nthMon = (mo,n) => { let c=0; for(let d=1;d<=31;d++){const dt=new Date(y,mo-1,d);if(dt.getMonth()!==mo-1)break;if(dt.getDay()===1&&++c===n){add(mo,d);break;}} };
+  nthMon(1,2); nthMon(7,3); nthMon(9,3); nthMon(10,2);
+  const base = new Set(Object.keys(hols));
+  for (const k of [...base].sort()) {
+    const [,km,kd] = k.split('-').map(Number);
+    if (new Date(y,km-1,kd).getDay()!==0) continue;
+    let nd=kd+1,nm=km,ny=y;
+    for(;;){if(nd>new Date(ny,nm,0).getDate()){nd=1;nm++;if(nm>12){nm=1;ny++;}}const nk=`${ny}-${p2(nm)}-${p2(nd)}`;if(!hols[nk]&&new Date(ny,nm-1,nd).getDay()!==0){hols[nk]=true;break;}nd++;}
+  }
+  return (_mHolCache[y]=hols);
+}
+function _isMemberHoliday(y,m,d) {
+  return !!_getMemberHolidaysForYear(y)[`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`];
+}
+
+function openMemberUiDetail() {
+  const now = new Date();
+  let lm = now.getMonth(), ly = now.getFullYear();
+  if (lm===0){lm=12;ly--;} // 1月→前年12月
+  const lmStr = `${ly}-${String(lm).padStart(2,'0')}`;
+  const monthName = `${ly}年${lm}月`;
+  const p2 = n => String(n).padStart(2,'0');
+  const todayStr = `${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}`;
+  const nowTime  = `${p2(now.getHours())}:${p2(now.getMinutes())}`;
+
+  // 来館済みかつ先月のデータ
+  const rows = _memberResRows.filter(r => {
+    if (!r.date || !r.date.startsWith(lmStr)) return false;
+    if (r.date > todayStr) return false;
+    if (r.date === todayStr) return (r.time||'00:00') <= nowTime;
+    return true;
+  });
+
+  const dowLabel = ['日','月','火','水','木','金','土'];
+  let weekdayCnt=0, holidayCnt=0;
+  for (const r of rows) {
+    const [ry,rm,rd]=r.date.split('-').map(Number);
+    const dow=new Date(ry,rm-1,rd).getDay();
+    (_isMemberHoliday(ry,rm,rd)||dow===0||dow===6) ? holidayCnt++ : weekdayCnt++;
+  }
+
+  const hourMap={};
+  for (const r of rows) {
+    const h=r.time?parseInt(r.time.split(':')[0]):null;
+    if(h!==null&&!isNaN(h)) hourMap[h]=(hourMap[h]||0)+1;
+  }
+  const usedHours=Object.keys(hourMap).map(Number).sort((a,b)=>a-b);
+  const maxH=usedHours.length?Math.max(...usedHours.map(h=>hourMap[h])):1;
+  const uniqueDates=[...new Set(rows.map(r=>r.date))].sort();
+
+  document.getElementById('member-detail-title').textContent = `${monthName} 利用詳細`;
+  let html='';
+
+  if (!rows.length) {
+    html=`<div style="text-align:center;padding:36px 0;color:#888;font-size:0.88rem;">${monthName}の利用記録はありません</div>`;
+  } else {
+    html+=`<div class="ui-detail-section">
+      <div class="ui-detail-section-title"><i class="fas fa-calendar-alt"></i>${monthName} の利用回数</div>
+      <div style="text-align:center;padding:8px 0 4px;">
+        <span style="font-size:3rem;font-weight:700;color:var(--primary);line-height:1;">${rows.length}</span>
+        <span style="font-size:1rem;color:#888;margin-left:6px;">回</span>
+      </div></div>`;
+
+    html+=`<div class="ui-detail-section">
+      <div class="ui-detail-section-title"><i class="fas fa-sun"></i>平日・休日祝日</div>
+      <div class="ui-detail-wh-grid">
+        <div class="ui-detail-wh-card weekday"><div class="ui-detail-wh-val">${weekdayCnt}</div><div class="ui-detail-wh-lbl">平日</div></div>
+        <div class="ui-detail-wh-card holiday"><div class="ui-detail-wh-val">${holidayCnt}</div><div class="ui-detail-wh-lbl">土・日・祝日</div></div>
+      </div></div>`;
+
+    if (usedHours.length) {
+      let timeRows='';
+      for (const h of usedHours) {
+        const cnt=hourMap[h], barW=Math.round(cnt/maxH*100);
+        timeRows+=`<div class="ui-detail-time-row">
+          <span class="ui-detail-time-label">${h}時</span>
+          <div class="ui-detail-time-bar-bg"><div class="ui-detail-time-bar-fill" style="width:${barW}%;"></div></div>
+          <span class="ui-detail-time-count">${cnt}</span></div>`;
+      }
+      html+=`<div class="ui-detail-section"><div class="ui-detail-section-title"><i class="fas fa-clock"></i>利用時間帯</div>${timeRows}</div>`;
+    }
+
+    let chips='';
+    for (const dateStr of uniqueDates) {
+      const [dy,dm,dd]=dateStr.split('-').map(Number);
+      const dow=new Date(dy,dm-1,dd).getDay();
+      const isH=_isMemberHoliday(dy,dm,dd);
+      const cls=(isH||dow===0)?'holiday':dow===6?'saturday':'weekday';
+      chips+=`<span class="ui-detail-date-chip ${cls}">${dm}/${dd}(${dowLabel[dow]})</span>`;
+    }
+    html+=`<div class="ui-detail-section"><div class="ui-detail-section-title"><i class="fas fa-calendar-check"></i>利用日</div><div class="ui-detail-date-grid">${chips}</div></div>`;
+  }
+
+  document.getElementById('member-detail-body').innerHTML = html;
+  document.getElementById('member-detail-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMemberUiDetail() {
+  document.getElementById('member-detail-modal').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function _calcVisitsFromReservations(rows, startDate) {
