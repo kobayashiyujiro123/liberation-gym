@@ -3339,28 +3339,28 @@ function analyticsChangeMonth(delta) {
 function _buildTimeChartSVG(hourCount) {
   const hours  = Array.from({length: 24}, (_, i) => i); // 0〜23 全24時間
   const maxVal = Math.max(...hours.map(h => hourCount[h] || 0), 1);
-  // 24本バー: 横幅を広めに取り、X軸ラベルは斜め表示
-  const VW = 700, VH = 230;
-  const mT = 28, mR = 12, mB = 56, mL = 42; // mB広めにしてラベルを斜めに
+  // 水平ラベル対応: mBを最小限に
+  const VW = 700, VH = 195;
+  const mT = 28, mR = 12, mB = 26, mL = 42;
   const cW = VW - mL - mR, cH = VH - mT - mB;
   const barW   = cW / hours.length;
   const barPad = Math.max(2, barW * 0.14);
 
-  // Y軸グリッド
-  const ticks = 4;
+  // Y軸グリッド（5刻み）
+  const tickStep = Math.max(1, Math.ceil(maxVal / 5) <= 2 ? 1 : 5);
+  const maxTick  = Math.ceil(maxVal / tickStep) * tickStep;
   let grid = '', yLabels = '';
-  for (let i = 0; i <= ticks; i++) {
-    const val = Math.round(maxVal * i / ticks);
-    const y   = mT + cH * (1 - i / ticks);
-    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="#e8e8e8" stroke-width="${i === 0 ? 1.5 : 1}"/>`;
-    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${val}</text>`;
+  for (let v = 0; v <= maxTick; v += tickStep) {
+    const y = mT + cH * (1 - v / maxTick);
+    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="${v===0?'#ccc':'#e8e8e8'}" stroke-width="${v===0?1.5:1}"/>`;
+    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${v}</text>`;
   }
 
-  // バー＋ラベル（全時間・X軸は斜め）
+  // バー＋ラベル（X軸は水平）
   let bars = '';
   hours.forEach((h, i) => {
     const cnt  = hourCount[h] || 0;
-    const barH = cnt > 0 ? Math.max((cnt / maxVal) * cH, 4) : 0;
+    const barH = cnt > 0 ? Math.max((cnt / maxTick) * cH, 4) : 0;
     const x    = mL + i * barW + barPad;
     const w    = barW - barPad * 2;
     const y    = mT + cH - barH;
@@ -3370,10 +3370,8 @@ function _buildTimeChartSVG(hourCount) {
     if (cnt > 0) {
       bars += `<text x="${cx}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
     }
-    // X軸ラベル: 全時間を斜め45°で表示
-    const lx = parseFloat(cx);
-    const ly = mT + cH + 10;
-    bars += `<text transform="rotate(-45 ${lx.toFixed(1)} ${ly})" x="${lx.toFixed(1)}" y="${ly}" font-size="11" fill="#888" text-anchor="end">${h}時</text>`;
+    // X軸: 水平表示（数字のみ・font-size 9）
+    bars += `<text x="${cx}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#888" text-anchor="middle">${h}</text>`;
   });
 
   return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
@@ -3386,101 +3384,79 @@ function _buildTimeChartSVG(hourCount) {
     ${grid}${yLabels}
     <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
     ${bars}
+    <text x="${VW - mR}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#aaa" text-anchor="start"> 時</text>
     <text x="${mL - 7}" y="${mT - 10}" font-size="10" fill="#bbb" text-anchor="end">人</text>
   </svg>`;
 }
 
-function _buildDayChartSVG(dayCount, lastDay) {
-  const days   = Array.from({length: lastDay}, (_, i) => i + 1);
-  const maxVal = Math.max(...days.map(d => dayCount[d] || 0), 1);
-  // 全日ラベルを斜め表示 → mBを広めに
-  const VW = 700, VH = 200;
-  const mT = 24, mR = 12, mB = 50, mL = 42;
-  const cW = VW - mL - mR, cH = VH - mT - mB;
-  const barW   = cW / days.length;
-  const barPad = Math.max(1.5, barW * 0.13);
+// 日本の祝日判定（振替休日・ハッピーマンデー対応）
+const _jpHolCache = {};
+function _getJpHolidaysForYear(y) {
+  if (_jpHolCache[y]) return _jpHolCache[y];
+  const hols = {};
+  const pad2 = n => String(n).padStart(2, '0');
+  const add  = (m, d) => { hols[`${y}-${pad2(m)}-${pad2(d)}`] = true; };
 
-  // Y軸グリッド
-  const ticks = 3;
-  let grid = '', yLabels = '';
-  for (let i = 0; i <= ticks; i++) {
-    const val = Math.round(maxVal * i / ticks);
-    const y   = mT + cH * (1 - i / ticks);
-    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="#e8e8e8" stroke-width="${i === 0 ? 1.5 : 1}"/>`;
-    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${val}</text>`;
+  // 固定祝日
+  add(1,1);  add(2,11); add(2,23); add(3,20);
+  add(4,29); add(5,3);  add(5,4);  add(5,5);
+  add(8,11); add(9,23); add(11,3); add(11,23);
+
+  // ハッピーマンデー（第N月曜）
+  const nthMon = (mo, n) => {
+    let c = 0;
+    for (let dd = 1; dd <= 31; dd++) {
+      const dt = new Date(y, mo - 1, dd);
+      if (dt.getMonth() !== mo - 1) break;
+      if (dt.getDay() === 1 && ++c === n) { add(mo, dd); break; }
+    }
+  };
+  nthMon(1, 2);  // 成人の日: 1月第2月曜
+  nthMon(7, 3);  // 海の日: 7月第3月曜
+  nthMon(9, 3);  // 敬老の日: 9月第3月曜
+  nthMon(10, 2); // スポーツの日: 10月第2月曜
+
+  // 振替休日: 日曜祝日 → 翌平日・非祝日を振替休日に
+  // 例: 5/3(日) → 5/4(月)も祝日 → 5/5(火)も祝日 → 5/6(水)が振替休日
+  const base = new Set(Object.keys(hols));
+  for (const k of [...base].sort()) {
+    const [, km, kd] = k.split('-').map(Number);
+    if (new Date(y, km - 1, kd).getDay() !== 0) continue; // 日曜以外スキップ
+    let nd = kd + 1, nm = km, ny = y;
+    for (;;) {
+      if (nd > new Date(ny, nm, 0).getDate()) { nd = 1; nm++; if (nm > 12) { nm = 1; ny++; } }
+      const nk = `${ny}-${pad2(nm)}-${pad2(nd)}`;
+      if (!hols[nk] && new Date(ny, nm - 1, nd).getDay() !== 0) { hols[nk] = true; break; }
+      nd++;
+    }
   }
 
-  let bars = '';
-  days.forEach((d, i) => {
-    const cnt  = dayCount[d] || 0;
-    const barH = cnt > 0 ? Math.max((cnt / maxVal) * cH, 4) : 0;
-    const x    = mL + i * barW + barPad;
-    const w    = barW - barPad * 2;
-    const y    = mT + cH - barH;
-    const cx   = (x + w / 2).toFixed(1);
-
-    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(barH,0).toFixed(1)}" rx="2" fill="url(#dGrad)" opacity="${cnt > 0 ? 0.85 : 0.12}"/>`;
-    if (cnt > 0) {
-      bars += `<text x="${cx}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
-    }
-    // X軸ラベル: 全日を斜め45°で表示
-    const lx = parseFloat(cx);
-    const ly = mT + cH + 10;
-    bars += `<text transform="rotate(-45 ${lx.toFixed(1)} ${ly})" x="${lx.toFixed(1)}" y="${ly}" font-size="11" fill="#888" text-anchor="end">${d}</text>`;
-  });
-
-  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="dGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#00bcd4"/>
-        <stop offset="100%" stop-color="#0097a7" stop-opacity="0.5"/>
-      </linearGradient>
-    </defs>
-    ${grid}
-    <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
-    ${yLabels}
-    ${bars}
-    <text x="${mL - 7}" y="${mT - 10}" font-size="10" fill="#bbb" text-anchor="end">人</text>
-  </svg>`;
+  return (_jpHolCache[y] = hols);
 }
 
-// 日本の祝日判定（簡易版: 固定祝日 + 振替休日は省略）
 function _isJpHoliday(y, m, d) {
-  const fixed = {
-    '1-1':true,'2-11':true,'2-23':true,'3-20':true,'4-29':true,
-    '5-3':true,'5-4':true,'5-5':true,'8-11':true,'11-3':true,'11-23':true,'12-23':true
-  };
-  if (fixed[`${m}-${d}`]) return true;
-  // 移動祝日: ハッピーマンデー等（簡易）
-  const dow = new Date(y, m-1, d).getDay();
-  // 成人の日: 1月第2月曜
-  if (m===1 && dow===1 && d>=8  && d<=14) return true;
-  // 海の日: 7月第3月曜
-  if (m===7 && dow===1 && d>=15 && d<=21) return true;
-  // 敬老の日: 9月第3月曜
-  if (m===9 && dow===1 && d>=15 && d<=21) return true;
-  // スポーツの日: 10月第2月曜
-  if (m===10&& dow===1 && d>=8  && d<=14) return true;
-  return false;
+  const hols = _getJpHolidaysForYear(y);
+  return !!hols[`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`];
 }
 
 function _buildDayChartSVG(dayCount, lastDay, year, month) {
   const days   = Array.from({length: lastDay}, (_, i) => i + 1);
-  const maxVal = Math.max(...days.map(d => dayCount[d] || 0), 1);
+  const rawMax = Math.max(...days.map(d => dayCount[d] || 0), 1);
+  // Y軸は5刻み
+  const tickStep = 5;
+  const maxTick  = Math.ceil(rawMax / tickStep) * tickStep;
   const VW = 700, VH = 210;
   const mT = 24, mR = 12, mB = 56, mL = 42;
   const cW = VW - mL - mR, cH = VH - mT - mB;
   const barW   = cW / days.length;
   const barPad = Math.max(1.5, barW * 0.13);
 
-  // Y軸グリッド
-  const ticks = 3;
+  // Y軸グリッド（5刻み）
   let grid = '', yLabels = '';
-  for (let i = 0; i <= ticks; i++) {
-    const val = Math.round(maxVal * i / ticks);
-    const y   = mT + cH * (1 - i / ticks);
-    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="#e8e8e8" stroke-width="${i === 0 ? 1.5 : 1}"/>`;
-    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${val}</text>`;
+  for (let v = 0; v <= maxTick; v += tickStep) {
+    const y = mT + cH * (1 - v / maxTick);
+    grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="${v===0?'#ccc':'#e8e8e8'}" stroke-width="${v===0?1.5:1}"/>`;
+    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${v}</text>`;
   }
 
   let bars = '';
@@ -3494,7 +3470,7 @@ function _buildDayChartSVG(dayCount, lastDay, year, month) {
     const lblColor = (isHol || dow === 0) ? '#c62828' : dow === 6 ? '#e65100' : '#888';
     const gradId = `dg${i}`;
 
-    const barH = cnt > 0 ? Math.max((cnt / maxVal) * cH, 4) : 0;
+    const barH = cnt > 0 ? Math.max((cnt / maxTick) * cH, 4) : 0;
     const x    = mL + i * barW + barPad;
     const w    = barW - barPad * 2;
     const y    = mT + cH - barH;
