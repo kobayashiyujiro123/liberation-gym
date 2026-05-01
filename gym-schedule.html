@@ -3554,6 +3554,10 @@ async function renderAnalytics() {
   document.getElementById('an-days').textContent  = '—';
   document.getElementById('an-members').textContent = '—';
 
+  // 当月はリアルタイム性が必要なためキャッシュを使わず毎回取得
+  const _isCurrentMonthKey = key === `${new Date().getFullYear()}-${pad(new Date().getMonth()+1)}`;
+  if (_isCurrentMonthKey) delete _analyticsCache[key];
+
   // キャッシュがなければ取得
   if (!_analyticsCache[key]) {
     const startStr = `${analyticsYear}-${pad(analyticsMonth)}-01`;
@@ -3569,7 +3573,15 @@ async function renderAnalytics() {
     } catch(e) { _analyticsCache[key] = []; }
   }
 
-  const rows = _analyticsCache[key];
+  // 予約時間に達したもののみカウント（来館済み扱い）
+  const _now     = new Date();
+  const _today   = `${_now.getFullYear()}-${pad(_now.getMonth()+1)}-${pad(_now.getDate())}`;
+  const _nowTime = `${pad(_now.getHours())}:${pad(_now.getMinutes())}`;
+  const rows = _analyticsCache[key].filter(r => {
+    if (r.date < _today) return true;          // 過去日: 全件カウント
+    if (r.date > _today) return false;         // 未来日: 除外
+    return r.time <= _nowTime;                 // 当日: 予約時間を過ぎたものだけ
+  });
 
   // ── サマリー ──
   const totalVisits   = rows.length;
