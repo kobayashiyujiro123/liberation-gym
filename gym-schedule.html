@@ -66,6 +66,47 @@
     .view.active { display: block; }
     .page-title { font-family: 'Oswald', sans-serif; font-size: 1.45rem; font-weight: 500; margin-bottom: 24px; letter-spacing: 1px; }
 
+    /* ANALYTICS / ご利用状況 */
+    .an-month-nav { display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:22px; }
+    .an-month-label { font-family:'Oswald',sans-serif;font-size:1.4rem;font-weight:500;min-width:160px;text-align:center;letter-spacing:1px; }
+    .an-nav-btn { background:var(--card-bg);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-light);transition:all 0.15s;font-size:0.88rem; }
+    .an-nav-btn:hover { border-color:var(--primary);color:var(--primary); }
+    .an-section { background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:18px; }
+    .an-section-title { font-size:0.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:7px; }
+    .an-stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+    .an-stat-card { background:var(--bg);border-radius:10px;padding:18px 10px;text-align:center; }
+    .an-stat-val { font-family:'Oswald',sans-serif;font-size:2rem;font-weight:600;color:var(--primary);line-height:1.1; }
+    .an-stat-lbl { font-size:0.73rem;color:var(--text-light);margin-top:5px; }
+    .an-rank-row { display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border); }
+    .an-rank-row:last-child { border-bottom:none; }
+    .an-rank-medal { font-size:1.5rem;flex-shrink:0;width:30px;text-align:center; }
+    .an-rank-num { width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:0.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .an-rank-name { flex:1;font-weight:600;font-size:0.92rem; }
+    .an-rank-count { font-weight:700;color:var(--primary);font-size:1rem; }
+    .an-rank-bar-bg { height:5px;background:var(--bg);border-radius:3px;flex:1;overflow:hidden; }
+    .an-rank-bar-fill { height:100%;background:var(--primary);border-radius:3px;transition:width 0.4s; }
+    /* Time-slot bar chart */
+    .an-timechart { display:flex;align-items:flex-end;gap:3px;height:140px;padding:8px 0 0;overflow-x:auto; }
+    .an-bar-col { display:flex;flex-direction:column;align-items:center;flex:1;min-width:26px;max-width:48px; }
+    .an-bar-area { width:100%;flex:1;display:flex;align-items:flex-end;height:100px; }
+    .an-bar { width:100%;background:var(--primary);border-radius:3px 3px 0 0;transition:height 0.35s;opacity:0.85; }
+    .an-bar:hover { opacity:1; }
+    .an-bar-h { font-size:0.6rem;color:var(--text-light);margin-top:4px;white-space:nowrap; }
+    .an-bar-v { font-size:0.6rem;color:var(--primary);font-weight:600;min-height:14px; }
+    /* Daily chart */
+    .an-daychart { display:flex;align-items:flex-end;gap:2px;height:90px;overflow-x:auto;padding:8px 2px 0; }
+    .an-day-col { display:flex;flex-direction:column;align-items:center;flex:1;min-width:12px;max-width:22px; }
+    .an-day-area { width:100%;display:flex;align-items:flex-end;height:60px; }
+    .an-day-bar { width:100%;background:var(--primary-light);border-radius:2px 2px 0 0;opacity:0.7;transition:height 0.3s; }
+    .an-day-bar.has-data { opacity:1; }
+    .an-day-l { font-size:0.5rem;color:var(--text-light);margin-top:3px; }
+    .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
+    @media(max-width:680px){
+      .an-stats-grid { grid-template-columns:repeat(3,1fr); }
+      .an-stat-val { font-size:1.4rem; }
+      .an-bar-col { min-width:20px; }
+    }
+
     /* DASHBOARD */
     .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .dash-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 28px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; text-align: center; }
@@ -641,6 +682,9 @@
     <div class="nav-item" id="nav-fights" onclick="show('fights')" data-admin-only>
       <i class="nav-icon fas fa-trophy"></i><span>試合結果</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
+    <div class="nav-item" id="nav-analytics" onclick="show('analytics')" data-admin-only>
+      <i class="nav-icon fas fa-chart-bar"></i><span>ご利用状況</span><i class="nav-arrow fas fa-chevron-right"></i>
+    </div>
     <div class="nav-item" id="nav-userinfo" onclick="show('userinfo')" data-coach-only style="display:none;">
       <i class="nav-icon fas fa-user-circle"></i><span>ユーザ情報</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
@@ -677,6 +721,7 @@
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
         <div class="dash-card" onclick="show('fights')" data-admin-only><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
+        <div class="dash-card" onclick="show('analytics')" data-admin-only><div class="dash-icon"><i class="fas fa-chart-bar"></i></div><div class="dash-label">ご利用状況</div></div>
         <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">ユーザ情報</div></div>
         <div id="dash-password" class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
       </div>
@@ -1251,6 +1296,55 @@
       </div>
     </div>
 
+    <!-- ANALYTICS / ご利用状況 -->
+    <div class="view" id="view-analytics">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+
+      <!-- 月ナビゲーション -->
+      <div class="an-month-nav">
+        <button class="an-nav-btn" onclick="analyticsChangeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <span class="an-month-label" id="an-month-label">—</span>
+        <button class="an-nav-btn" onclick="analyticsChangeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <!-- 月次サマリー -->
+      <div class="an-section">
+        <div class="an-section-title"><i class="fas fa-chart-bar"></i>月次サマリー</div>
+        <div class="an-stats-grid">
+          <div class="an-stat-card">
+            <div class="an-stat-val" id="an-total">—</div>
+            <div class="an-stat-lbl">総来館回数</div>
+          </div>
+          <div class="an-stat-card">
+            <div class="an-stat-val" id="an-days">—</div>
+            <div class="an-stat-lbl">営業日数</div>
+          </div>
+          <div class="an-stat-card">
+            <div class="an-stat-val" id="an-members">—</div>
+            <div class="an-stat-lbl">利用会員数</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ランキング TOP3 -->
+      <div class="an-section">
+        <div class="an-section-title"><i class="fas fa-crown"></i>来館回数ランキング TOP 3</div>
+        <div id="an-ranking"><div class="an-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div></div>
+      </div>
+
+      <!-- 時間帯別グラフ -->
+      <div class="an-section">
+        <div class="an-section-title"><i class="fas fa-clock"></i>時間帯別 ご利用人数</div>
+        <div class="an-timechart" id="an-time-chart"><div class="an-loading">読み込み中...</div></div>
+      </div>
+
+      <!-- 日別グラフ -->
+      <div class="an-section">
+        <div class="an-section-title"><i class="fas fa-calendar-day"></i>日別 来館数</div>
+        <div class="an-daychart" id="an-daily-chart"><div class="an-loading">読み込み中...</div></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1317,7 +1411,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'トレーナー管理', 'coach-invite':'トレーナー招待メール送信', 'coach-register':'トレーナー情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'トレーナー管理', 'coach-invite':'トレーナー招待メール送信', 'coach-register':'トレーナー情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理', analytics:'ご利用状況' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -2406,6 +2500,9 @@ function show(name) {
   if (name === 'fights') {
     initFightsFromDB();
   }
+  if (name === 'analytics') {
+    initAnalytics();
+  }
   if (name === 'member-schedule') {
     msWeekOffset = 0;
     msSwitchTab(0);
@@ -3229,6 +3326,132 @@ async function saveCoachEdit() {
   openCoachDetail(currentCoachId);
 }
 
+// ===== ANALYTICS / ご利用状況 =====
+let analyticsYear  = new Date().getFullYear();
+let analyticsMonth = new Date().getMonth() + 1;
+const _analyticsCache = {};
+
+function initAnalytics() {
+  renderAnalytics();
+}
+
+function analyticsChangeMonth(delta) {
+  analyticsMonth += delta;
+  if (analyticsMonth > 12) { analyticsMonth = 1; analyticsYear++; }
+  if (analyticsMonth < 1)  { analyticsMonth = 12; analyticsYear--; }
+  renderAnalytics();
+}
+
+async function renderAnalytics() {
+  const pad = n => String(n).padStart(2,'0');
+  const key = `${analyticsYear}-${pad(analyticsMonth)}`;
+  document.getElementById('an-month-label').textContent = `${analyticsYear}年${analyticsMonth}月`;
+
+  // 読み込み中表示
+  ['an-ranking','an-time-chart','an-daily-chart'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="an-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+  });
+  document.getElementById('an-total').textContent = '—';
+  document.getElementById('an-days').textContent  = '—';
+  document.getElementById('an-members').textContent = '—';
+
+  // キャッシュがなければ取得
+  if (!_analyticsCache[key]) {
+    const startStr = `${analyticsYear}-${pad(analyticsMonth)}-01`;
+    const lastDay  = new Date(analyticsYear, analyticsMonth, 0).getDate();
+    const endStr   = `${analyticsYear}-${pad(analyticsMonth)}-${pad(lastDay)}`;
+    const token    = _getAdminToken();
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed&date=gte.${startStr}&date=lte.${endStr}`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      _analyticsCache[key] = res.ok ? await res.json() : [];
+    } catch(e) { _analyticsCache[key] = []; }
+  }
+
+  const rows = _analyticsCache[key];
+
+  // ── サマリー ──
+  const totalVisits   = rows.length;
+  const operatingDays = new Set(rows.map(r => r.date)).size;
+  const uniqueMembers = new Set(rows.map(r => r.user_id)).size;
+  document.getElementById('an-total').textContent   = totalVisits + '回';
+  document.getElementById('an-days').textContent    = operatingDays + '日';
+  document.getElementById('an-members').textContent = uniqueMembers + '名';
+
+  // ── TOP3 ランキング ──
+  const countByUser = {};
+  rows.forEach(r => { countByUser[r.user_id] = (countByUser[r.user_id] || 0) + 1; });
+  const sorted  = Object.entries(countByUser).sort((a,b) => b[1]-a[1]);
+  const top3    = sorted.slice(0,3);
+  const max1    = top3.length ? top3[0][1] : 1;
+  const medals  = ['🥇','🥈','🥉'];
+  const rankEl  = document.getElementById('an-ranking');
+  if (!top3.length) {
+    rankEl.innerHTML = '<div style="color:var(--text-light);font-size:0.85rem;padding:12px 0;text-align:center;">この月のデータがありません</div>';
+  } else {
+    rankEl.innerHTML = top3.map(([uid, cnt], i) => {
+      const member = allMembers.find(m => m.id === uid);
+      const name   = member ? escHtml(member.name) : uid.slice(0,8) + '…';
+      const barW   = Math.round(cnt / max1 * 100);
+      return `<div class="an-rank-row">
+        <span class="an-rank-medal">${medals[i]}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;">
+            <span class="an-rank-name">${name}</span>
+            <span class="an-rank-count">${cnt}回</span>
+          </div>
+          <div class="an-rank-bar-bg"><div class="an-rank-bar-fill" style="width:${barW}%;"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 時間帯別グラフ（7〜23時） ──
+  const hourCount = {};
+  for (let h = 7; h <= 23; h++) hourCount[h] = 0;
+  rows.forEach(r => {
+    if (r.time) {
+      const h = parseInt(r.time.split(':')[0], 10);
+      if (h >= 7 && h <= 23) hourCount[h]++;
+    }
+  });
+  const hours  = Object.keys(hourCount).map(Number);
+  const maxH   = Math.max(...hours.map(h => hourCount[h]), 1);
+  const timeEl = document.getElementById('an-time-chart');
+  timeEl.innerHTML = hours.map(h => {
+    const cnt = hourCount[h];
+    const pct = Math.round(cnt / maxH * 100);
+    return `<div class="an-bar-col">
+      <div class="an-bar-v">${cnt > 0 ? cnt : ''}</div>
+      <div class="an-bar-area"><div class="an-bar" style="height:${pct}%;" title="${h}時: ${cnt}人"></div></div>
+      <div class="an-bar-h">${h}時</div>
+    </div>`;
+  }).join('');
+
+  // ── 日別グラフ ──
+  const lastDay = new Date(analyticsYear, analyticsMonth, 0).getDate();
+  const dayCount = {};
+  for (let d = 1; d <= lastDay; d++) dayCount[d] = 0;
+  rows.forEach(r => {
+    if (r.date) {
+      const d = parseInt(r.date.split('-')[2], 10);
+      if (d >= 1 && d <= lastDay) dayCount[d]++;
+    }
+  });
+  const maxD   = Math.max(...Object.values(dayCount), 1);
+  const dailyEl = document.getElementById('an-daily-chart');
+  dailyEl.innerHTML = Array.from({length: lastDay}, (_,i) => i+1).map(d => {
+    const cnt = dayCount[d];
+    const pct = cnt > 0 ? Math.max(Math.round(cnt / maxD * 100), 5) : 0;
+    return `<div class="an-day-col">
+      <div class="an-day-area"><div class="an-day-bar ${cnt>0?'has-data':''}" style="height:${pct}%;" title="${d}日: ${cnt}人"></div></div>
+      <div class="an-day-l">${d}</div>
+    </div>`;
+  }).join('');
+}
+
 // ===== COACH PHOTO HELPERS =====
 function handleCoachPhotoChange(input) {
   const file = input.files[0];
@@ -3381,7 +3604,7 @@ async function deleteNotice(id) {
 }
 
 // リロード時にハッシュからページを復元
-const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights'];
+const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights','analytics'];
 
 async function saveBasicInfo() {
   await saveBasicInfoToDB();
