@@ -3362,16 +3362,18 @@ function analyticsChangeMonth(delta) {
 }
 
 function _buildTimeChartSVG(hourCount) {
-  const hours  = Array.from({length: 24}, (_, i) => i); // 0〜23 全24時間
-  const maxVal = Math.max(...hours.map(h => hourCount[h] || 0), 1);
-  // 水平ラベル対応: mBを最小限に
+  // データのある時間帯のみ表示
+  const hours = Array.from({length: 24}, (_, i) => i).filter(h => (hourCount[h] || 0) > 0);
+  if (!hours.length) return '<div style="color:var(--text-light);font-size:0.85rem;padding:28px;text-align:center;">データがありません</div>';
+
+  const maxVal = Math.max(...hours.map(h => hourCount[h]), 1);
   const VW = 700, VH = 195;
   const mT = 28, mR = 12, mB = 26, mL = 42;
   const cW = VW - mL - mR, cH = VH - mT - mB;
   const barW   = cW / hours.length;
   const barPad = Math.max(2, barW * 0.14);
 
-  // Y軸グリッド（5刻み）
+  // Y軸グリッド
   const tickStep = Math.max(1, Math.ceil(maxVal / 5) <= 2 ? 1 : 5);
   const maxTick  = Math.ceil(maxVal / tickStep) * tickStep;
   let grid = '', yLabels = '';
@@ -3384,18 +3386,15 @@ function _buildTimeChartSVG(hourCount) {
   // バー＋ラベル（X軸は水平）
   let bars = '';
   hours.forEach((h, i) => {
-    const cnt  = hourCount[h] || 0;
-    const barH = cnt > 0 ? Math.max((cnt / maxTick) * cH, 4) : 0;
+    const cnt  = hourCount[h];
+    const barH = Math.max((cnt / maxTick) * cH, 4);
     const x    = mL + i * barW + barPad;
     const w    = barW - barPad * 2;
     const y    = mT + cH - barH;
     const cx   = (x + w / 2).toFixed(1);
 
-    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(barH,0).toFixed(1)}" rx="3" fill="url(#tGrad)" opacity="${cnt > 0 ? 0.88 : 0.13}"/>`;
-    if (cnt > 0) {
-      bars += `<text x="${cx}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
-    }
-    // X軸: 水平表示（数字のみ・font-size 9）
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="url(#tGrad)" opacity="0.88"/>`;
+    bars += `<text x="${cx}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
     bars += `<text x="${cx}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#888" text-anchor="middle">${h}</text>`;
   });
 
