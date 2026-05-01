@@ -3497,13 +3497,28 @@ async function renderAnalytics() {
   const max1    = top3.length ? top3[0][1] : 1;
   const medals  = ['🥇','🥈','🥉'];
   const rankEl  = document.getElementById('an-ranking');
+
   if (!top3.length) {
     rankEl.innerHTML = '<div style="color:var(--text-light);font-size:0.85rem;padding:12px 0;text-align:center;">この月のデータがありません</div>';
   } else {
+    // allMembers にいないIDはSupabaseから名前を補完取得
+    const unknownIds = top3.map(([uid]) => uid).filter(uid => !allMembers.find(m => m.id === uid));
+    const nameMap = {};
+    allMembers.forEach(m => { nameMap[m.id] = m.name; });
+    if (unknownIds.length) {
+      try {
+        const token = _getAdminToken();
+        const idFilter = unknownIds.map(id => `"${id}"`).join(',');
+        const r2 = await fetch(
+          `${SUPABASE_URL}/rest/v1/profiles?select=id,name&id=in.(${idFilter})`,
+          { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+        );
+        if (r2.ok) { const ps = await r2.json(); ps.forEach(p => { if (p.name) nameMap[p.id] = p.name; }); }
+      } catch(e) {}
+    }
     rankEl.innerHTML = top3.map(([uid, cnt], i) => {
-      const member = allMembers.find(m => m.id === uid);
-      const name   = member ? escHtml(member.name) : uid.slice(0,8) + '…';
-      const barW   = Math.round(cnt / max1 * 100);
+      const name = escHtml(nameMap[uid] || uid.slice(0,8) + '…');
+      const barW = Math.round(cnt / max1 * 100);
       return `<div class="an-rank-row">
         <span class="an-rank-medal">${medals[i]}</span>
         <div style="flex:1;min-width:0;">
