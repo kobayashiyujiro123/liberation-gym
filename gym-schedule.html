@@ -259,7 +259,17 @@
     /* COACH DETAIL / EDIT */
     .coach-detail-wrap { display: flex; flex-direction: column; gap: 0; }
     .coach-profile-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
-    .coach-profile-av { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; }
+    .coach-profile-av { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    /* Coach photo upload */
+    .coach-photo-upload-area { display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border); }
+    .coach-photo-circle { position:relative;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#fff;overflow:hidden;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    .coach-photo-circle img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .coach-photo-overlay { position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;opacity:0;transition:opacity 0.18s;border-radius:50%; }
+    .coach-photo-circle:hover .coach-photo-overlay { opacity:1; }
+    .coach-photo-overlay i { font-size:1.2rem;color:#fff; }
+    .coach-photo-overlay span { font-size:0.62rem;color:rgba(255,255,255,0.9);font-weight:600; }
+    .coach-photo-hint { font-size:0.76rem;color:var(--text-light); }
+    .coach-photo-remove-btn { font-size:0.74rem;color:#e05555;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline; }
     .coach-profile-id { font-size: 0.72rem; color: var(--text-light); letter-spacing: 1px; font-family: 'Oswald', sans-serif; }
     .coach-profile-name { font-family: 'Oswald', sans-serif; font-size: 1.6rem; font-weight: 500; line-height: 1.2; margin-top: 2px; }
     .coach-profile-specialty { font-size: 0.85rem; color: var(--primary); margin-top: 4px; font-weight: 500; }
@@ -1177,6 +1187,20 @@
         <button class="btn-o" onclick="openCoachDetail(currentCoachId)"><i class="fas fa-arrow-left"></i> 詳細に戻る</button>
       </div>
       <div class="form-card" style="max-width:700px;">
+        <!-- 写真アップロード -->
+        <div class="coach-photo-upload-area">
+          <input type="file" id="ce-photo-input" accept="image/*" style="display:none;" onchange="handleCoachPhotoChange(this)">
+          <div class="coach-photo-circle" id="ce-photo-circle" onclick="document.getElementById('ce-photo-input').click()">
+            <i class="fas fa-user" id="ce-photo-icon"></i>
+            <img id="ce-photo-preview" src="" alt="" style="display:none;">
+            <div class="coach-photo-overlay">
+              <i class="fas fa-camera"></i>
+              <span>変更</span>
+            </div>
+          </div>
+          <div class="coach-photo-hint">タップして写真を選択（JPG / PNG）</div>
+          <button class="coach-photo-remove-btn" id="ce-photo-remove-btn" style="display:none;" onclick="removeCoachPhoto()">写真を削除</button>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div class="form-group"><label class="form-label">ステータス</label>
             <select class="form-ctrl" id="ce-status">
@@ -2917,7 +2941,7 @@ function renderCoaches() {
   const tbody = document.getElementById('coach-tbody');
   tbody.innerHTML = items.length ? items.map(c => `
     <tr class="clickable-row" onclick="openCoachDetail('${c.id}')">
-      <td><div class="m-cell"><div class="m-av" style="background:${c.color}">${c.name.slice(0,2)}</div>${c.name}</div></td>
+      <td><div class="m-cell">${c.photo_url ? `<div class="m-av" style="overflow:hidden;"><img src="${c.photo_url}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>` : `<div class="m-av" style="background:${c.color}">${c.name.slice(0,2)}</div>`}${c.name}</div></td>
       <td>${fmtDate(c.birthday)}</td>
       <td>${calcAge(c.birthday)}</td>
       <td>${c.classes}</td>
@@ -2946,7 +2970,7 @@ function renderCoaches() {
       const safeEmail = (c.email||'').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       return `<div class="coach-card" onclick="openCoachDetail('${c.id}')">
         <div class="coach-card-top">
-          <div class="m-av" style="width:44px;height:44px;font-size:0.85rem;flex-shrink:0;background:${c.color}">${c.name.slice(0,2)}</div>
+          ${c.photo_url ? `<div class="m-av" style="width:44px;height:44px;font-size:0.85rem;flex-shrink:0;overflow:hidden;"><img src="${c.photo_url}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>` : `<div class="m-av" style="width:44px;height:44px;font-size:0.85rem;flex-shrink:0;background:${c.color}">${c.name.slice(0,2)}</div>`}
           <div class="coach-card-info">
             <div class="coach-card-name">${c.name}</div>
             <div class="coach-card-sub">${c.specialty || ''}</div>
@@ -3123,8 +3147,14 @@ function openCoachDetail(id) {
   if (!c) return;
   currentCoachId = id;
 
-  document.getElementById('cd-avatar').style.background = c.color;
-  document.getElementById('cd-avatar').textContent = c.name.slice(0,2);
+  const _cdAv = document.getElementById('cd-avatar');
+  if (c.photo_url) {
+    _cdAv.style.background = 'transparent';
+    _cdAv.innerHTML = `<img src="${c.photo_url}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  } else {
+    _cdAv.style.background = c.color;
+    _cdAv.textContent = c.name.slice(0,2);
+  }
   document.getElementById('cd-name').textContent = c.name;
   document.getElementById('cd-status-badge').innerHTML = `<span class="badge ${c.badge}">${c.status}</span>`;
   document.getElementById('cd-classes').textContent = c.classes + ' 名';
@@ -3151,6 +3181,24 @@ function openCoachEdit(id) {
   document.getElementById('ce-tel').value      = c.tel;
   document.getElementById('ce-status').value   = c.status;
 
+  // 写真プレビュー
+  const _ceImg    = document.getElementById('ce-photo-preview');
+  const _ceIcon   = document.getElementById('ce-photo-icon');
+  const _ceRmBtn  = document.getElementById('ce-photo-remove-btn');
+  const _ceCircle = document.getElementById('ce-photo-circle');
+  if (c.photo_url) {
+    _ceImg.src = c.photo_url; _ceImg.style.display = '';
+    _ceIcon.style.display = 'none';
+    _ceRmBtn.style.display = '';
+    _ceCircle.style.background = 'transparent';
+  } else {
+    _ceImg.src = ''; _ceImg.style.display = 'none';
+    _ceIcon.style.display = '';
+    _ceRmBtn.style.display = 'none';
+    _ceCircle.style.background = c.color;
+  }
+  document.getElementById('ce-photo-input').value = '';
+
   document.getElementById('heading').textContent = c.name + ' — 編集';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-coach-edit').classList.add('active');
@@ -3165,14 +3213,66 @@ async function saveCoachEdit() {
   c.badge  = c.status === '在籍中' ? 'badge-s' : c.status === '休暇中' ? 'badge-w' : 'badge-d';
   c.email  = document.getElementById('ce-email').value.trim();
   c.tel    = document.getElementById('ce-tel').value.trim();
+
+  // 写真
+  const _pImg = document.getElementById('ce-photo-preview');
+  const photoUrl = (_pImg && _pImg.style.display !== 'none' && _pImg.src && !_pImg.src.endsWith(window.location.pathname)) ? _pImg.src : null;
+  c.photo_url = photoUrl;
+
   const statusRevMap = { '在籍中': 'active', '休暇中': 'on_leave', '退職': 'resigned' };
   const token = _getAdminToken();
   await fetch(`${SUPABASE_URL}/rest/v1/coaches?id=eq.${c.id}`, {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ status: statusRevMap[c.status] || 'active', email: c.email, tel: c.tel })
+    body: JSON.stringify({ status: statusRevMap[c.status] || 'active', email: c.email, tel: c.tel, photo_url: photoUrl })
   });
   openCoachDetail(currentCoachId);
+}
+
+// ===== COACH PHOTO HELPERS =====
+function handleCoachPhotoChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以内にしてください。'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const tmpImg = new Image();
+    tmpImg.onload = () => {
+      const MAX = 400;
+      let w = tmpImg.width, h = tmpImg.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(tmpImg, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      const prev   = document.getElementById('ce-photo-preview');
+      const icon   = document.getElementById('ce-photo-icon');
+      const rmBtn  = document.getElementById('ce-photo-remove-btn');
+      const circle = document.getElementById('ce-photo-circle');
+      prev.src = dataUrl; prev.style.display = '';
+      icon.style.display = 'none';
+      rmBtn.style.display = '';
+      circle.style.background = 'transparent';
+    };
+    tmpImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCoachPhoto() {
+  const prev   = document.getElementById('ce-photo-preview');
+  const icon   = document.getElementById('ce-photo-icon');
+  const rmBtn  = document.getElementById('ce-photo-remove-btn');
+  const circle = document.getElementById('ce-photo-circle');
+  const c = allCoaches.find(c => c.id === currentCoachId);
+  prev.src = ''; prev.style.display = 'none';
+  icon.style.display = '';
+  rmBtn.style.display = 'none';
+  circle.style.background = c ? c.color : 'var(--primary)';
+  document.getElementById('ce-photo-input').value = '';
 }
 
 // ===== NOTICE LOGIC =====
@@ -4201,6 +4301,7 @@ async function initCoachesFromDB() {
         badge: badgeMap[c.status] || 'badge-s', email: c.email || '', tel: c.tel || '',
         joined: c.joined_at || '', color: colors[i % colors.length],
         birthday: coachBirthdayMap[c.name] || '',
+        photo_url: c.photo_url || null,
       });
     });
     renderCoaches();
