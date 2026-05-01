@@ -86,12 +86,37 @@
     .an-rank-bar-bg { height:5px;background:var(--bg);border-radius:3px;flex:1;overflow:hidden; }
     .an-rank-bar-fill { height:100%;background:var(--primary);border-radius:3px;transition:width 0.4s; }
     /* SVG chart containers */
-    .an-chart-wrap { width:100%;overflow-x:auto; }
-    .an-chart-wrap svg { display:block;width:100%;height:auto;min-width:300px; }
+    .an-chart-wrap { width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch; }
+    .an-chart-wrap svg { display:block;width:100%;height:auto;min-width:480px; }
     .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
-    @media(max-width:680px){
-      .an-stats-grid { grid-template-columns:repeat(3,1fr); }
-      .an-stat-val { font-size:1.4rem; }
+
+    /* ─── ご利用状況 スマホ対応 ─── */
+    @media (max-width:680px) {
+      /* 月ナビ */
+      .an-month-nav { gap:10px;margin-bottom:14px; }
+      .an-month-label { font-size:1.1rem;min-width:120px; }
+      /* セクション */
+      .an-section { padding:14px 12px;margin-bottom:12px;border-radius:10px; }
+      .an-section-title { font-size:0.73rem;margin-bottom:10px;flex-wrap:wrap;gap:5px; }
+      /* サマリーカード */
+      .an-stats-grid { gap:7px; }
+      .an-stat-card { padding:13px 6px;border-radius:8px; }
+      .an-stat-val { font-size:1.45rem; }
+      .an-stat-lbl { font-size:0.67rem;margin-top:4px; }
+      /* ランキング */
+      .an-rank-row { gap:8px;padding:9px 0; }
+      .an-rank-medal { font-size:1.2rem;width:24px; }
+      .an-rank-name { font-size:0.84rem; }
+      .an-rank-count { font-size:0.9rem;white-space:nowrap; }
+      .an-rank-bar-bg { display:none; } /* モバイルでは進捗バー省略 */
+      /* チャート: スクロール可能に */
+      .an-chart-wrap { border-radius:6px; }
+    }
+    @media (max-width:400px) {
+      .an-month-label { font-size:0.95rem;min-width:100px; }
+      .an-stat-val { font-size:1.2rem; }
+      .an-stat-lbl { font-size:0.62rem; }
+      .an-stat-card { padding:10px 4px; }
     }
 
     /* DASHBOARD */
