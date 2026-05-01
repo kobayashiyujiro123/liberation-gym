@@ -3579,20 +3579,27 @@ async function renderAnalytics() {
   document.getElementById('an-days').textContent    = operatingDays + '日';
   document.getElementById('an-members').textContent = uniqueMembers + '名';
 
-  // ── TOP3 ランキング ──
+  // ── ランキング（同回数は同順位） ──
   const countByUser = {};
   rows.forEach(r => { countByUser[r.user_id] = (countByUser[r.user_id] || 0) + 1; });
-  const sorted  = Object.entries(countByUser).sort((a,b) => b[1]-a[1]);
-  const top3    = sorted.slice(0,3);
-  const max1    = top3.length ? top3[0][1] : 1;
-  const medals  = ['🥇','🥈','🥉'];
-  const rankEl  = document.getElementById('an-ranking');
+  const sorted = Object.entries(countByUser).sort((a, b) => b[1] - a[1]);
 
-  if (!top3.length) {
+  // 各エントリに順位を付与（同回数 → 同順位）
+  const withRank = sorted.map(([uid, cnt]) => ({
+    uid, cnt,
+    rank: 1 + sorted.filter(([, c]) => c > cnt).length
+  }));
+  // 3位以内（同率含む）を抽出
+  const topEntries = withRank.filter(e => e.rank <= 3);
+  const max1   = topEntries.length ? topEntries[0].cnt : 1;
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  const rankEl = document.getElementById('an-ranking');
+
+  if (!topEntries.length) {
     rankEl.innerHTML = '<div style="color:var(--text-light);font-size:0.85rem;padding:12px 0;text-align:center;">この月のデータがありません</div>';
   } else {
     // allMembers にいないIDはSupabaseから名前を補完取得
-    const unknownIds = top3.map(([uid]) => uid).filter(uid => !allMembers.find(m => m.id === uid));
+    const unknownIds = topEntries.map(e => e.uid).filter(uid => !allMembers.find(m => m.id === uid));
     const nameMap = {};
     allMembers.forEach(m => { nameMap[m.id] = m.name; });
     if (unknownIds.length) {
@@ -3606,11 +3613,11 @@ async function renderAnalytics() {
         if (r2.ok) { const ps = await r2.json(); ps.forEach(p => { if (p.name) nameMap[p.id] = p.name; }); }
       } catch(e) {}
     }
-    rankEl.innerHTML = top3.map(([uid, cnt], i) => {
-      const name = escHtml(nameMap[uid] || uid.slice(0,8) + '…');
+    rankEl.innerHTML = topEntries.map(({ uid, cnt, rank }) => {
+      const name = escHtml(nameMap[uid] || uid.slice(0, 8) + '…');
       const barW = Math.round(cnt / max1 * 100);
       return `<div class="an-rank-row">
-        <span class="an-rank-medal">${medals[i]}</span>
+        <span class="an-rank-medal">${medals[rank]}</span>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;">
             <span class="an-rank-name">${name}</span>
