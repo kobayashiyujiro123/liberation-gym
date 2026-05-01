@@ -87,7 +87,7 @@
     .an-rank-bar-fill { height:100%;background:var(--primary);border-radius:3px;transition:width 0.4s; }
     /* SVG chart containers */
     .an-chart-wrap { width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch; }
-    .an-chart-wrap svg { display:block;width:100%;height:auto;min-width:480px; }
+    .an-chart-wrap svg { display:block;width:100%;height:auto; }
     .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
 
     /* ─── ご利用状況 スマホ対応 ─── */
@@ -3367,7 +3367,10 @@ function _buildTimeChartSVG(hourCount) {
   if (!hours.length) return '<div style="color:var(--text-light);font-size:0.85rem;padding:28px;text-align:center;">データがありません</div>';
 
   const maxVal = Math.max(...hours.map(h => hourCount[h]), 1);
-  const VW = 700, VH = 195;
+  // バー数に応じてSVG幅を動的計算（1バー26px基準・最小240px）
+  const BAR_SLOT = 26;
+  const VW = Math.max(42 + 12 + hours.length * BAR_SLOT, 240);
+  const VH = 195;
   const mT = 28, mR = 12, mB = 26, mL = 42;
   const cW = VW - mL - mR, cH = VH - mT - mB;
   const barW   = cW / hours.length;
@@ -3398,7 +3401,7 @@ function _buildTimeChartSVG(hourCount) {
     bars += `<text x="${cx}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#888" text-anchor="middle">${h}</text>`;
   });
 
-  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${VW} ${VH}" style="display:block;width:100%;height:auto;min-width:0;" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#0097a7"/>
@@ -3520,7 +3523,7 @@ function _buildDayChartSVG(dayCount, lastDay, year, month) {
     <rect x="${mL+90}" y="${legY-9}" width="10" height="10" rx="2" fill="#ef5350"/>
     <text x="${mL+104}" y="${legY}" font-size="10" fill="#666">日・祝</text>`;
 
-  return `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${VW} ${VH}" style="display:block;width:100%;height:auto;min-width:480px;" xmlns="http://www.w3.org/2000/svg">
     ${grid}${yLabels}
     <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
     ${bars}
