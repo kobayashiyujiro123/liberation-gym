@@ -176,6 +176,11 @@
     .ui-detail-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
     .ui-detail-title { font-size:1rem; font-weight:700; color:#333; letter-spacing:.3px; }
     .ui-detail-close { background:#f5f5f5; border:none; cursor:pointer; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#888; font-size:0.85rem; }
+    .ui-detail-month-nav { display:flex; align-items:center; justify-content:center; gap:14px; padding:10px 16px; border-bottom:1px solid var(--border); background:#fafafa; flex-shrink:0; }
+    .ui-detail-month-label { font-weight:700; font-size:0.97rem; color:#333; min-width:110px; text-align:center; }
+    .ui-detail-month-btn { background:#fff; border:1px solid var(--border); border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#888; font-size:0.78rem; transition:all 0.15s; }
+    .ui-detail-month-btn:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+    .ui-detail-month-btn:disabled { opacity:0.3; cursor:not-allowed; }
     .ui-detail-body { overflow-y:auto; padding:20px 20px 36px; -webkit-overflow-scrolling:touch; }
     .ui-detail-section { margin-bottom:22px; }
     .ui-detail-section:last-child { margin-bottom:0; }
@@ -704,7 +709,7 @@
             </div>
           </div>
           <button class="ui-detail-btn" onclick="openMemberUiDetail()">
-            <i class="fas fa-chart-line"></i>先月の利用詳細を見る
+            <i class="fas fa-chart-line"></i>利用詳細を見る
           </button>
         </div>
 
@@ -713,8 +718,13 @@
           <div class="ui-detail-backdrop" onclick="closeMemberUiDetail()"></div>
           <div class="ui-detail-sheet">
             <div class="ui-detail-header">
-              <span class="ui-detail-title" id="member-detail-title">先月の利用詳細</span>
+              <span class="ui-detail-title">利用詳細</span>
               <button class="ui-detail-close" onclick="closeMemberUiDetail()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ui-detail-month-nav">
+              <button class="ui-detail-month-btn" id="member-detail-prev" onclick="memberDetailChangeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+              <span class="ui-detail-month-label" id="member-detail-month-label">—</span>
+              <button class="ui-detail-month-btn" id="member-detail-next" onclick="memberDetailChangeMonth(1)"><i class="fas fa-chevron-right"></i></button>
             </div>
             <div class="ui-detail-body" id="member-detail-body"></div>
           </div>
@@ -1620,25 +1630,49 @@ function _isMemberHoliday(y,m,d) {
   return !!_getMemberHolidaysForYear(y)[`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`];
 }
 
-async function openMemberUiDetail() {
-  // まずモーダルを開いてローディング表示
+// 利用詳細モーダルの表示中の年月
+let _mdYear, _mdMonth;
+
+function openMemberUiDetail() {
+  // デフォルト: 前月（当月はデータ未確定のため）
+  const now = new Date();
+  _mdMonth = now.getMonth();       // 0-based → これが前月の1-based月
+  _mdYear  = now.getFullYear();
+  if (_mdMonth === 0) { _mdMonth = 12; _mdYear--; }
+
   document.getElementById('member-detail-modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  _renderMemberDetail();
+}
+
+function memberDetailChangeMonth(delta) {
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth() + 1;
+  if (delta > 0 && (_mdYear > curY || (_mdYear === curY && _mdMonth >= curM))) return;
+  _mdMonth += delta;
+  if (_mdMonth > 12) { _mdMonth = 1; _mdYear++; }
+  if (_mdMonth < 1)  { _mdMonth = 12; _mdYear--; }
+  _renderMemberDetail();
+}
+
+async function _renderMemberDetail() {
+  const p2 = n => String(n).padStart(2,'0');
+  const monthName = `${_mdYear}年${_mdMonth}月`;
+  const startStr  = `${_mdYear}-${p2(_mdMonth)}-01`;
+  const endStr    = `${_mdYear}-${p2(_mdMonth)}-${p2(new Date(_mdYear, _mdMonth, 0).getDate())}`;
+  const now       = new Date();
+  const curY      = now.getFullYear(), curM = now.getMonth() + 1;
+
+  // 月ラベル・次月ボタン更新
+  document.getElementById('member-detail-month-label').textContent = monthName;
+  const nextBtn = document.getElementById('member-detail-next');
+  if (nextBtn) nextBtn.disabled = (_mdYear === curY && _mdMonth >= curM);
+
+  // ローディング
   document.getElementById('member-detail-body').innerHTML =
     '<div style="text-align:center;padding:40px 0;color:#888;"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
 
-  const now = new Date();
-  const p2  = n => String(n).padStart(2,'0');
-  // 先月を計算
-  let lm = now.getMonth(), ly = now.getFullYear(); // getMonth()は0-based → これが先月の1-based月
-  if (lm === 0) { lm = 12; ly--; }                // 1月(0)なら前年12月
-  const lmStr    = `${ly}-${p2(lm)}`;
-  const monthName = `${ly}年${lm}月`;
-  const lastDay  = new Date(ly, lm, 0).getDate();
-  const startStr = `${lmStr}-01`;
-  const endStr   = `${lmStr}-${p2(lastDay)}`;
-
-  // Supabaseから先月データを直接取得
+  // Supabaseから取得
   let rows = [];
   try {
     const token = _getToken();
@@ -1652,77 +1686,77 @@ async function openMemberUiDetail() {
     }
   } catch(e) { console.warn('detail fetch error:', e); }
 
-  // ── 集計 ──
-  const dowLabel = ['日','月','火','水','木','金','土'];
+  // 当月なら予約時間到達済みのみ
+  if (_mdYear === curY && _mdMonth === curM) {
+    const todayStr = `${curY}-${p2(curM)}-${p2(now.getDate())}`;
+    const nowTime  = `${p2(now.getHours())}:${p2(now.getMinutes())}`;
+    rows = rows.filter(r => {
+      if (r.date < todayStr) return true;
+      if (r.date > todayStr) return false;
+      return (r.time||'00:00') <= nowTime;
+    });
+  }
+
+  // 集計
+  const dowLabel  = ['日','月','火','水','木','金','土'];
   let weekdayCnt = 0, holidayCnt = 0;
   for (const r of rows) {
     const [ry,rm,rd] = r.date.split('-').map(Number);
-    const dow = new Date(ry, rm-1, rd).getDay();
-    (_isMemberHoliday(ry,rm,rd) || dow===0 || dow===6) ? holidayCnt++ : weekdayCnt++;
+    const dow = new Date(ry,rm-1,rd).getDay();
+    (_isMemberHoliday(ry,rm,rd)||dow===0||dow===6) ? holidayCnt++ : weekdayCnt++;
   }
   const hourMap = {};
   for (const r of rows) {
     const h = r.time ? parseInt(r.time.split(':')[0]) : null;
-    if (h !== null && !isNaN(h)) hourMap[h] = (hourMap[h]||0) + 1;
+    if (h !== null && !isNaN(h)) hourMap[h] = (hourMap[h]||0)+1;
   }
-  const usedHours  = Object.keys(hourMap).map(Number).sort((a,b) => a-b);
-  const maxH       = usedHours.length ? Math.max(...usedHours.map(h => hourMap[h])) : 1;
-  const uniqueDates = [...new Set(rows.map(r => r.date))].sort();
+  const usedHours   = Object.keys(hourMap).map(Number).sort((a,b)=>a-b);
+  const maxH        = usedHours.length ? Math.max(...usedHours.map(h=>hourMap[h])) : 1;
+  const uniqueDates = [...new Set(rows.map(r=>r.date))].sort();
 
-  // ── HTML構築 ──
-  document.getElementById('member-detail-title').textContent = `${monthName} 利用詳細`;
+  // HTML構築
   let html = '';
-
   if (!rows.length) {
     html = `<div style="text-align:center;padding:36px 0;color:#888;font-size:0.88rem;">${monthName}の利用記録はありません</div>`;
   } else {
-    // 利用回数（Oswaldフォント統一）
     html += `<div class="ui-detail-section">
       <div class="ui-detail-section-title"><i class="fas fa-calendar-alt"></i>${monthName} の利用回数</div>
       <div style="text-align:center;padding:8px 0 4px;">
         <span style="font-family:'Oswald',sans-serif;font-size:3rem;font-weight:600;color:var(--primary);line-height:1;">${rows.length}</span>
         <span style="font-size:1rem;color:#888;margin-left:6px;">回</span>
-      </div>
-    </div>`;
+      </div></div>`;
 
-    // 平日・休日祝日
     html += `<div class="ui-detail-section">
       <div class="ui-detail-section-title"><i class="fas fa-sun"></i>平日・休日祝日</div>
       <div class="ui-detail-wh-grid">
         <div class="ui-detail-wh-card weekday"><div class="ui-detail-wh-val">${weekdayCnt}</div><div class="ui-detail-wh-lbl">平日</div></div>
         <div class="ui-detail-wh-card holiday"><div class="ui-detail-wh-val">${holidayCnt}</div><div class="ui-detail-wh-lbl">土・日・祝日</div></div>
-      </div>
-    </div>`;
+      </div></div>`;
 
-    // 利用時間帯
     if (usedHours.length) {
       let timeRows = '';
-      for (const h of usedHours) {
+      usedHours.forEach(h => {
         const cnt = hourMap[h], barW = Math.round(cnt/maxH*100);
         timeRows += `<div class="ui-detail-time-row">
           <span class="ui-detail-time-label">${h}時</span>
           <div class="ui-detail-time-bar-bg"><div class="ui-detail-time-bar-fill" style="width:${barW}%;"></div></div>
-          <span class="ui-detail-time-count">${cnt}</span>
-        </div>`;
-      }
+          <span class="ui-detail-time-count">${cnt}</span></div>`;
+      });
       html += `<div class="ui-detail-section">
-        <div class="ui-detail-section-title"><i class="fas fa-clock"></i>利用時間帯</div>${timeRows}
-      </div>`;
+        <div class="ui-detail-section-title"><i class="fas fa-clock"></i>利用時間帯</div>${timeRows}</div>`;
     }
 
-    // 利用日チップ
     let chips = '';
-    for (const dateStr of uniqueDates) {
+    uniqueDates.forEach(dateStr => {
       const [dy,dm,dd] = dateStr.split('-').map(Number);
-      const dow = new Date(dy, dm-1, dd).getDay();
-      const isH = _isMemberHoliday(dy, dm, dd);
-      const cls = (isH||dow===0) ? 'holiday' : dow===6 ? 'saturday' : 'weekday';
+      const dow = new Date(dy,dm-1,dd).getDay();
+      const isH = _isMemberHoliday(dy,dm,dd);
+      const cls = (isH||dow===0)?'holiday':dow===6?'saturday':'weekday';
       chips += `<span class="ui-detail-date-chip ${cls}">${dm}/${dd}(${dowLabel[dow]})</span>`;
-    }
+    });
     html += `<div class="ui-detail-section">
       <div class="ui-detail-section-title"><i class="fas fa-calendar-check"></i>利用日</div>
-      <div class="ui-detail-date-grid">${chips}</div>
-    </div>`;
+      <div class="ui-detail-date-grid">${chips}</div></div>`;
   }
 
   document.getElementById('member-detail-body').innerHTML = html;
