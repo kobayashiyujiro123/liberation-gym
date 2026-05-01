@@ -88,6 +88,7 @@
     /* SVG chart containers */
     .an-chart-wrap { width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch; }
     .an-chart-wrap svg { display:block;width:100%;height:auto; }
+    #an-time-chart { max-width:480px; }
     .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
 
     /* ─── ご利用状況 スマホ対応 ─── */
@@ -3564,11 +3565,11 @@ function _buildTimeChartSVG(hourCount) {
   if (!hours.length) return '<div style="color:var(--text-light);font-size:0.85rem;padding:28px;text-align:center;">データがありません</div>';
 
   const maxVal = Math.max(...hours.map(h => hourCount[h]), 1);
-  // バー数に応じてSVG幅を動的計算（1バー20px基準・最小180px）
-  const BAR_SLOT = 20;
-  const VH = 150;
-  const mT = 20, mR = 8, mB = 22, mL = 36;
-  const VW = Math.max(mL + mR + hours.length * BAR_SLOT, 180);
+  // コンテナ max-width:480px に合わせた固定比率（480×195）
+  const BAR_SLOT = 22;
+  const VH = 195;
+  const mT = 28, mR = 12, mB = 26, mL = 42;
+  const VW = Math.max(mL + mR + hours.length * BAR_SLOT, 480);
   const cW = VW - mL - mR, cH = VH - mT - mB;
   const barW   = cW / hours.length;
   const barPad = Math.max(2, barW * 0.14);
@@ -3580,25 +3581,25 @@ function _buildTimeChartSVG(hourCount) {
   for (let v = 0; v <= maxTick; v += tickStep) {
     const y = mT + cH * (1 - v / maxTick);
     grid    += `<line x1="${mL}" y1="${y.toFixed(1)}" x2="${VW - mR}" y2="${y.toFixed(1)}" stroke="${v===0?'#ccc':'#e8e8e8'}" stroke-width="${v===0?1.5:1}"/>`;
-    yLabels += `<text x="${mL - 5}" y="${(y + 3.5).toFixed(1)}" font-size="9" fill="#aaa" text-anchor="end">${v}</text>`;
+    yLabels += `<text x="${mL - 7}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#aaa" text-anchor="end">${v}</text>`;
   }
 
   // バー＋ラベル
   let bars = '';
   hours.forEach((h, i) => {
     const cnt  = hourCount[h];
-    const barH = Math.max((cnt / maxTick) * cH, 3);
+    const barH = Math.max((cnt / maxTick) * cH, 4);
     const x    = mL + i * barW + barPad;
     const w    = barW - barPad * 2;
     const y    = mT + cH - barH;
     const cx   = (x + w / 2).toFixed(1);
 
-    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="2" fill="url(#tGrad)" opacity="0.88"/>`;
-    bars += `<text x="${cx}" y="${(y - 3).toFixed(1)}" font-size="9" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
-    bars += `<text x="${cx}" y="${(mT + cH + 13).toFixed(1)}" font-size="8" fill="#888" text-anchor="middle">${h}</text>`;
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="url(#tGrad)" opacity="0.88"/>`;
+    bars += `<text x="${cx}" y="${(y - 4).toFixed(1)}" font-size="10" fill="#0097a7" font-weight="700" text-anchor="middle">${cnt}</text>`;
+    bars += `<text x="${cx}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#888" text-anchor="middle">${h}</text>`;
   });
 
-  return `<svg viewBox="0 0 ${VW} ${VH}" style="display:block;height:150px;width:auto;max-width:100%;" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 ${VW} ${VH}" style="display:block;width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="tGrad" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#0097a7"/>
@@ -3608,8 +3609,8 @@ function _buildTimeChartSVG(hourCount) {
     ${grid}${yLabels}
     <line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + cH}" stroke="#ddd" stroke-width="1"/>
     ${bars}
-    <text x="${VW - mR}" y="${(mT + cH + 13).toFixed(1)}" font-size="8" fill="#aaa" text-anchor="start"> 時</text>
-    <text x="${mL - 5}" y="${mT - 6}" font-size="9" fill="#bbb" text-anchor="end">人</text>
+    <text x="${VW - mR}" y="${(mT + cH + 14).toFixed(1)}" font-size="9" fill="#aaa" text-anchor="start"> 時</text>
+    <text x="${mL - 7}" y="${mT - 10}" font-size="10" fill="#bbb" text-anchor="end">人</text>
   </svg>`;
 }
 
