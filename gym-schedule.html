@@ -3613,8 +3613,14 @@ async function renderAnalytics() {
         if (r2.ok) { const ps = await r2.json(); ps.forEach(p => { if (p.name) nameMap[p.id] = p.name; }); }
       } catch(e) {}
     }
-    rankEl.innerHTML = topEntries.map(({ uid, cnt, rank }) => {
-      const name = escHtml(nameMap[uid] || uid.slice(0, 8) + '…');
+    // 名前が取得できないエントリは表示しない
+    const displayEntries = topEntries.filter(({ uid }) => !!nameMap[uid]);
+    if (!displayEntries.length) {
+      rankEl.innerHTML = '<div style="color:var(--text-light);font-size:0.85rem;padding:12px 0;text-align:center;">この月のデータがありません</div>';
+      return;
+    }
+    rankEl.innerHTML = displayEntries.map(({ uid, cnt, rank }) => {
+      const name = escHtml(nameMap[uid]);
       const barW = Math.round(cnt / max1 * 100);
       return `<div class="an-rank-row">
         <span class="an-rank-medal">${medals[rank]}</span>
