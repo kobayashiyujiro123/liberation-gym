@@ -2483,7 +2483,7 @@ function getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours
     return { type:'slots', slots: Object.entries(existing).map(([t,n])=>({time:t,name:n})).sort((a,b)=>a.time.localeCompare(b.time)) };
   }
   const isWkend = (dow === 0 || dow === 6);
-  const isJpH   = JP_HOLIDAYS.has(dateStr);
+  const isJpH   = _isMemberHoliday(date.getFullYear(), date.getMonth()+1, date.getDate());
   const pfx = isJpH ? 'bi-holiday' : isWkend ? 'bi-weekend' : 'bi-weekday';
   // 管理側 HTML 初期値と合わせたデフォルト（平日: 15〜23時、土日祝: 12〜17時）
   const dfltStart = (pfx === 'bi-weekday') ? '15時' : '12時';
@@ -2539,7 +2539,7 @@ async function renderMemberWeekly(weekOffset) {
     const dow = date.getDay();
     const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     const isToday = weekOffset === 0 && d === 0;
-    const isJpHoliday = JP_HOLIDAYS.has(dateStr);
+    const isJpHoliday = _isMemberHoliday(date.getFullYear(), date.getMonth()+1, date.getDate());
     const dowClass = dow === 0 ? 'wk-sun' : dow === 6 ? 'wk-sat' : '';
     const hdCls = ['week-col-hd', isToday ? 'is-today' : '', dowClass, isJpHoliday ? 'is-jpholiday' : ''].filter(Boolean).join(' ');
     const label = isToday ? '今日' : (weekOffset === 0 && d === 1) ? '明日' : `${date.getMonth()+1}/${date.getDate()}`;
