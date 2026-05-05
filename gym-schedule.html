@@ -453,6 +453,8 @@
     .res-day-tab.res-tab-holiday.active { background: #9e9e9e; border-color: #9e9e9e; color: #fff; }
     .res-day-tab.res-tab-event .day-sub { color: #f57c00; font-weight: 600; }
     .res-day-tab.res-tab-event.active .day-sub { color: #ffe0b2; }
+    .res-day-tab.res-tab-past { opacity: 0.6; }
+    .res-day-tab.res-tab-past.active { opacity: 1; }
     /* PAGINATION */
     .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 12px 18px; border-top: 1px solid var(--border); }
     .pg-btn { width: 28px; height: 28px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 4px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: var(--text-light); }
@@ -1767,7 +1769,7 @@ let dayNotesLoaded = false;    // day_notesのロード成功フラグ
 (function _initResDates() {
   const _pad = n => String(n).padStart(2,'0');
   const base = new Date(); base.setHours(0,0,0,0);
-  for (let d = 0; d < 7; d++) {
+  for (let d = -3; d < 7; d++) {
     const dt = new Date(base); dt.setDate(base.getDate() + d);
     const key = `${dt.getFullYear()}/${_pad(dt.getMonth()+1)}/${_pad(dt.getDate())}`;
     resDates.push(key);
@@ -1781,7 +1783,8 @@ function saveResDataToStorage() {
 }
 saveResDataToStorage();
 const _savedResDate = sessionStorage.getItem('resSelectedDate');
-let resSelectedDate = (resDates.includes(_savedResDate) ? _savedResDate : resDates[0]);
+const _todayKey = (() => { const _p=n=>String(n).padStart(2,'0'); const t=new Date(); return `${t.getFullYear()}/${_p(t.getMonth()+1)}/${_p(t.getDate())}`; })();
+let resSelectedDate = (resDates.includes(_savedResDate) ? _savedResDate : (_todayKey || resDates[3]));
 let resPage = 1;
 const RES_PER_PAGE = 5;
 let resCoachFilter = ''; // '' = 全て、トレーナー名 = フィルター中
@@ -1795,16 +1798,18 @@ function buildDayTabs() {
     const [ky, km, kd] = key.split('/').map(Number);
     const dt = new Date(ky, km - 1, kd);
     const diff = Math.round((dt.getTime() - todayMs) / 86400000);
-    const label = diff === 0 ? '今日' : diff === 1 ? '明日' : (dt.getMonth()+1) + '/' + dt.getDate();
+    const label = diff === 0 ? '今日' : diff === 1 ? '明日' : diff === -1 ? '昨日' : (dt.getMonth()+1) + '/' + dt.getDate();
     const weekday = WEEKDAYS[dt.getDay()];
     const count = resData[key].filter(r => r.status !== 'キャンセル').length;
     const isActive = key === resSelectedDate ? 'active' : '';
+    const isPast = diff < 0;
     const dbKey = key.replace(/\//g, '-');
     const isGymHoliday = holidays.has(dbKey);
     const dayNote = dayNotes[dbKey] || '';
     const subLabel = isGymHoliday ? 'お休み' : (dayNote || `${count}件`);
     const extraClass = isGymHoliday ? ' res-tab-holiday' : (dayNote ? ' res-tab-event' : '');
-    return `<div class="res-day-tab ${isActive}${extraClass}" onclick="selectResDay('${key}')">
+    const pastClass = isPast ? ' res-tab-past' : '';
+    return `<div class="res-day-tab ${isActive}${extraClass}${pastClass}" onclick="selectResDay('${key}')">
       <span class="day-label">${label}（${weekday}）</span>
       <span class="day-sub">${subLabel}</span>
     </div>`;
@@ -5010,11 +5015,13 @@ async function initMembersFromDB() {
 async function initReservationsFromDB() {
   try {
     const today = new Date(); today.setHours(0,0,0,0);
+    const startDate = new Date(today); startDate.setDate(today.getDate() - 3);
     const endDate = new Date(today); endDate.setDate(today.getDate() + 6);
     // toISOString()はUTC変換されるためJSTで1日ずれる→ローカル日付文字列を使用
     const _pad = n => String(n).padStart(2,'0');
-    const startStr = `${today.getFullYear()}-${_pad(today.getMonth()+1)}-${_pad(today.getDate())}`;
+    const startStr = `${startDate.getFullYear()}-${_pad(startDate.getMonth()+1)}-${_pad(startDate.getDate())}`;
     const endStr   = `${endDate.getFullYear()}-${_pad(endDate.getMonth()+1)}-${_pad(endDate.getDate())}`;
+    const todayStr = `${today.getFullYear()}/${_pad(today.getMonth()+1)}/${_pad(today.getDate())}`;
     const token = _getAccessToken();
     // joinなしで予約取得（外部キー未設定のため）
     const res = await fetch(
@@ -5042,11 +5049,11 @@ async function initReservationsFromDB() {
       }
     } catch(e) {}
 
-    // Rebuild resData
+    // Rebuild resData（3日前〜6日後の計10日分）
     Object.keys(resData).forEach(k => delete resData[k]);
     const base = new Date(); base.setHours(0,0,0,0);
     resDates.length = 0;
-    for (let d = 0; d < 7; d++) {
+    for (let d = -3; d < 7; d++) {
       const dt = new Date(base); dt.setDate(base.getDate() + d);
       const key = dt.toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'/');
       resDates.push(key);
@@ -5079,9 +5086,9 @@ async function initReservationsFromDB() {
         });
       }
     });
-    // sessionStorageに保存済みの選択日があれば復元、なければ今日
+    // sessionStorageに保存済みの選択日があれば復元、なければ今日（resDates[0]は3日前のため）
     const _saved = sessionStorage.getItem('resSelectedDate');
-    resSelectedDate = (resDates.includes(_saved) ? _saved : resDates[0]);
+    resSelectedDate = (resDates.includes(_saved) ? _saved : todayStr);
     buildDayTabs();
     renderReservations();
   } catch(e) { console.warn('initReservationsFromDB failed:', e); }
