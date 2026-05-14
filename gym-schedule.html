@@ -652,8 +652,7 @@
     .fight-simple-list { padding: 4px 0; }
     .fight-simple-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px 7px 8px; gap: 8px; }
     .fight-simple-row + .fight-simple-row { border-top: 1px solid var(--border); }
-    .fight-simple-grip { color: #ccc; cursor: grab; font-size: 0.9rem; padding: 4px 6px 4px 4px; flex-shrink: 0; transition: color 0.15s; touch-action: none; }
-    .fight-simple-grip:hover { color: var(--primary); }
+    .fight-simple-grip { flex: 1; cursor: grab; touch-action: none; min-height: 28px; }
     .fight-simple-grip:active { cursor: grabbing; }
     .fight-simple-row.fs-dragging { opacity: 0.35; }
     .fight-simple-row.fs-drag-over { box-shadow: inset 0 -2px 0 var(--primary); }
@@ -4438,8 +4437,8 @@ function renderFights() {
       const resultMap = { 'KO勝ち':['ko-win','KO勝ち'], '判定勝ち':['win','判定勝ち'], 'KO負け':['ko-lose','KO負け'], '判定負け':['lose','判定負け'], '引き分け':['draw','引き分け'] };
       const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '未入力'];
       return `<div class="fight-simple-row" data-fid="${f.id}">
-        <i class="fas fa-grip-vertical fight-simple-grip" title="ドラッグして並び替え"></i>
-        <span class="fight-simple-name" style="flex:1;">${escHtml(f.fighter_name || '—')}</span>
+        <span class="fight-simple-name">${escHtml(f.fighter_name || '—')}</span>
+        <span class="fight-simple-grip"></span>
         <span class="fight-result-badge ${badgeCls}" data-simple-badge="${f.id}">${badgeTxt}</span>
       </div>`;
     }).join('');
@@ -4738,7 +4737,7 @@ function closeResultEditAccordion(matchId) {
   const simpleRows = fighters.map(f => {
     const cls = resultMap[f.result] || 'pending';
     const txt = f.result || '未入力';
-    return `<div class="fight-simple-row" data-fid="${f.id}"><i class="fas fa-grip-vertical fight-simple-grip" title="ドラッグして並び替え"></i><span class="fight-simple-name" style="flex:1;">${escHtml(f.fighter_name||'—')}</span><span class="fight-result-badge ${cls}" data-simple-badge="${f.id}">${txt}</span></div>`;
+    return `<div class="fight-simple-row" data-fid="${f.id}"><span class="fight-simple-name">${escHtml(f.fighter_name||'—')}</span><span class="fight-simple-grip"></span><span class="fight-result-badge ${cls}" data-simple-badge="${f.id}">${txt}</span></div>`;
   }).join('');
   detail.innerHTML = fighters.length ? `<div class="fight-simple-list">${simpleRows}</div>` : '<div style="padding:12px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>';
   detail.classList.remove('open');
