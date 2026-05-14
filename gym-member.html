@@ -2479,9 +2479,15 @@ function getMemberDaySlots(date, scheduleData, dayNotes, holidays, businessHours
   const isHoliday = holidays.has(dateStr);
   const note = dayNotes[dateStr];
   const existing = scheduleData[dateStr];
-  // イベント日は予約スロットを表示しない（イベントのみ表示）
+  // イベント日でもスロットが登録されていれば予約可能にする
   if (note) {
-    return { type:'event', note, slots: null };
+    if (existing !== undefined) {
+      const slots = Array.isArray(existing)
+        ? existing
+        : Object.entries(existing).map(([t,n])=>({time:t,name:n})).sort((a,b)=>a.time.localeCompare(b.time));
+      return { type:'event', note, slots };
+    }
+    return { type:'event', note, slots: [] };
   }
   if (isHoliday) return { type:'holiday' };
   if (existing !== undefined) {

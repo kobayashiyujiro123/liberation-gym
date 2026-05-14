@@ -2962,6 +2962,22 @@ function buildCalCell(date, otherMonth, isToday) {
     body = '<div class="cal-holiday-label"><i class="fas fa-moon" style="margin-right:4px;"></i>お休み</div>';
   } else if (dayNote) {
     body = `<div class="cal-event-label"><i class="fas fa-star" style="font-size:0.7rem;opacity:0.7;"></i>${dayNote}</div>`;
+    // イベント日でもスロットが登録されていれば時間枠を表示する
+    const evExisting = !otherMonth ? scheduleData[dateStr] : undefined;
+    if (evExisting !== undefined) {
+      let evEntries;
+      if (Array.isArray(evExisting)) {
+        evEntries = evExisting.map(t => ({ time: t, name: '練習' }));
+      } else {
+        evEntries = Object.entries(evExisting).map(([t, n]) => ({ time: t, name: n }))
+                          .sort((a, b) => a.time.localeCompare(b.time));
+      }
+      evEntries.forEach(({ time, name }) => {
+        const safeName = name.replace(/'/g, "\\'");
+        const pillClick = isPast ? '' : `onclick="openPillEdit(event,'${dateStr}','${time}','${safeName}')" style="cursor:pointer;" title="クリックでクラス名を編集"`;
+        body += `<span class="cal-pill cls-default" ${pillClick}>${time} ${name}</span>`;
+      });
+    }
   } else if (!otherMonth) {
     let entries; // [{ time, name }]
     const existing = scheduleData[dateStr];
