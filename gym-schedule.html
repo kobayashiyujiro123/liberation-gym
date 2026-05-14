@@ -659,6 +659,14 @@
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     @media (max-width: 700px) { #view-fights { padding-bottom: 80px; } }
     .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; transition: opacity 0.15s, box-shadow 0.15s; }
+    /* 選手検索ピッカー */
+    .fight-member-picker { position: relative; }
+    .fight-member-dropdown { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: #fff; border: 1px solid var(--primary); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
+    .fight-member-item { padding: 9px 12px; cursor: pointer; font-size: 0.88rem; color: var(--text); transition: background 0.1s; }
+    .fight-member-item:hover, .fight-member-item.focused { background: #e0f7fa; }
+    .fight-member-item.fmi-hidden { display: none; }
+    .fight-member-item.fmi-selected { font-weight: 700; color: var(--primary-dark); }
+    .fight-sel-search::placeholder { color: #bbb; }
     .fight-fighter-row.dragging { opacity: 0.4; }
     .fight-fighter-row.drag-over { box-shadow: 0 -3px 0 var(--primary); }
     .fight-fighter-row-inner { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
@@ -4163,6 +4171,64 @@ function _fightMemberOptions(selectedId) {
     active.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('');
 }
 
+// 検索付きメンバーピッカー HTML 生成
+function _fightMemberPickerHtml(selectedId, hiddenClass, searchClass) {
+  const active = allMembers.filter(m => m.status !== '退会');
+  const selected = active.find(m => m.id === selectedId);
+  const items = active.map(m =>
+    `<div class="fight-member-item${m.id === selectedId ? ' fmi-selected' : ''}" data-id="${m.id}" data-name="${escHtml(m.name)}">${escHtml(m.name)}</div>`
+  ).join('');
+  return `<div class="fight-member-picker">
+    <input class="form-ctrl ${searchClass}" type="text" placeholder="名前で検索…" autocomplete="off" value="${selected ? escHtml(selected.name) : ''}">
+    <input class="${hiddenClass}" type="hidden" value="${selectedId || ''}">
+    <div class="fight-member-dropdown">${items}</div>
+  </div>`;
+}
+
+// 検索ピッカーのイベント設定（行生成後に呼ぶ）
+function _initFightMemberPicker(container, searchCls, hiddenCls) {
+  const pickers = container.querySelectorAll('.fight-member-picker');
+  pickers.forEach(picker => {
+    const searchInput = picker.querySelector(`.${searchCls}`);
+    const hiddenInput = picker.querySelector(`.${hiddenCls}`);
+    const dropdown    = picker.querySelector('.fight-member-dropdown');
+    const items       = dropdown.querySelectorAll('.fight-member-item');
+
+    function filter(val) {
+      const q = val.toLowerCase();
+      let visCount = 0;
+      items.forEach(item => {
+        const match = item.dataset.name.toLowerCase().includes(q);
+        item.classList.toggle('fmi-hidden', !match);
+        if (match) visCount++;
+      });
+    }
+    function open() {
+      filter(searchInput.value);
+      dropdown.style.display = 'block';
+    }
+    function close() {
+      dropdown.style.display = 'none';
+      // 入力値がどのメンバーにも一致しなければクリア
+      if (!hiddenInput.value) searchInput.value = '';
+    }
+    function selectItem(item) {
+      hiddenInput.value  = item.dataset.id;
+      searchInput.value  = item.dataset.name;
+      items.forEach(i => i.classList.remove('fmi-selected'));
+      item.classList.add('fmi-selected');
+      close();
+    }
+
+    searchInput.addEventListener('focus', open);
+    searchInput.addEventListener('input', () => { hiddenInput.value = ''; filter(searchInput.value); dropdown.style.display = 'block'; });
+    searchInput.addEventListener('blur',  () => setTimeout(close, 160));
+    items.forEach(item => item.addEventListener('mousedown', e => { e.preventDefault(); selectItem(item); }));
+    // タッチ対応
+    items.forEach(item => item.addEventListener('touchend', e => { e.preventDefault(); selectItem(item); }));
+  });
+}
+
 // ===== タッチ対応ドラッグ&ドロップ共通ヘルパー =====
 function _attachTouchDrag({ handle, row, container, draggingClass, dragOverClass, rowSelector, afterDrop }) {
   let startY, clone, origTop;
@@ -4224,9 +4290,9 @@ function addFighterRow(fighterId, opponent) {
         <span class="fight-row-num-val fight-num-display"></span>
       </div>
       <div class="fight-drag-handle" title="ドラッグして並び替え"><i class="fas fa-grip-vertical"></i></div>
-      <div class="form-group" style="flex:1;min-width:120px;">
+      <div class="form-group" style="flex:1;min-width:140px;">
         <label class="form-label" style="font-size:0.75rem;">出場選手</label>
-        <select class="form-ctrl fight-sel-member">${_fightMemberOptions(fighterId || '')}</select>
+        ${_fightMemberPickerHtml(fighterId || '', 'fight-sel-member', 'fight-sel-search')}
       </div>
       <div style="display:flex;align-items:center;padding-top:20px;color:var(--text-light);font-weight:700;font-size:0.9rem;">VS</div>
       <div class="form-group" style="flex:1;min-width:120px;">
@@ -4268,6 +4334,8 @@ function addFighterRow(fighterId, opponent) {
   }
   wrap.appendChild(row);
   _updateFighterNumbers();
+  // 検索ピッカーのイベントを初期化
+  _initFightMemberPicker(row, 'fight-sel-search', 'fight-sel-member');
 }
 
 function _updateFighterNumbers() {
@@ -4698,6 +4766,7 @@ function _fightEditMemberOptions(selectedId) {
   return '<option value="">-- 選択 --</option>' +
     active.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('');
 }
+// 編集モーダル用エイリアス（新規登録と同一のピッカーを使用）
 
 function addFightEditFighterRow(fighterId, opponent, existingFid) {
   _editFighterCount++;
@@ -4706,9 +4775,9 @@ function addFightEditFighterRow(fighterId, opponent, existingFid) {
   row.className = 'fight-edit-fighter-row';
   if (existingFid) row.dataset.fid = existingFid;
   row.innerHTML = `
-    <div class="form-group" style="flex:1;min-width:120px;">
+    <div class="form-group" style="flex:1;min-width:140px;">
       <label class="form-label" style="font-size:0.73rem;">出場選手</label>
-      <select class="form-ctrl fight-edit-sel">${_fightEditMemberOptions(fighterId || '')}</select>
+      ${_fightMemberPickerHtml(fighterId || '', 'fight-edit-sel', 'fight-edit-search')}
     </div>
     <div class="form-group" style="flex:1;min-width:100px;">
       <label class="form-label" style="font-size:0.73rem;">対戦相手 <span style="font-weight:400;color:var(--text-light);">(任意)</span></label>
@@ -4716,6 +4785,8 @@ function addFightEditFighterRow(fighterId, opponent, existingFid) {
     </div>
     <button type="button" onclick="this.closest('.fight-edit-fighter-row').remove()" style="margin-bottom:2px;background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:6px;flex-shrink:0;" title="削除"><i class="fas fa-times-circle"></i></button>`;
   wrap.appendChild(row);
+  // 検索ピッカーのイベントを初期化
+  _initFightMemberPicker(row, 'fight-edit-search', 'fight-edit-sel');
 }
 
 async function openFightEditModal(matchId) {
