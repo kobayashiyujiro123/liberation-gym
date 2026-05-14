@@ -658,6 +658,14 @@
     .fight-result-modal-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
     .fight-section-title { font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
     @media (max-width: 700px) { #view-fights { padding-bottom: 80px; } }
+    /* 試合カード並び替えハンドル */
+    .fight-card-drag-handle { cursor: grab; color: #ccc; padding: 6px 8px 6px 0; flex-shrink: 0; font-size: 1rem; transition: color 0.15s; touch-action: none; user-select: none; }
+    .fight-card-drag-handle:hover { color: var(--primary); }
+    .fight-card-drag-handle:active { cursor: grabbing; }
+    .fight-card.fl-dragging { opacity: 0.4; box-shadow: 0 4px 20px rgba(0,0,0,0.14); }
+    .fight-card.fl-drag-over { box-shadow: inset 0 -3px 0 var(--primary); }
+    .fight-row-inner { display: flex; align-items: flex-start; gap: 4px; }
+    .fight-row-content { flex: 1; min-width: 0; }
     .fight-fighter-row { background: #f9f9f9; border: 1px solid var(--border); border-radius: 8px; padding: 12px; transition: opacity 0.15s, box-shadow 0.15s; }
     /* 選手検索ピッカー */
     .fight-member-picker { position: relative; }
@@ -4390,6 +4398,17 @@ function renderFights() {
     el.innerHTML = '<div class="fight-empty"><i class="fas fa-trophy" style="font-size:1.6rem;opacity:0.25;display:block;margin-bottom:10px;"></i>試合がまだ登録されていません</div>';
     return;
   }
+  // localStorage に保存済みの順序があれば適用
+  const savedOrder = JSON.parse(localStorage.getItem('fight_list_order') || '[]');
+  if (savedOrder.length) {
+    allFights.sort((a, b) => {
+      const ai = savedOrder.indexOf(String(a.id)), bi = savedOrder.indexOf(String(b.id));
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
   el.innerHTML = allFights.map(match => {
     const d = match.match_date ? new Date(match.match_date + 'T00:00:00') : null;
     const dateStr = d ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}` : '—';
@@ -4406,17 +4425,22 @@ function renderFights() {
       </div>`;
     }).join('');
 
-    return `<div class="fight-card" id="fight-card-${match.id}">
+    return `<div class="fight-card" id="fight-card-${match.id}" data-mid="${match.id}">
       <div class="fight-row" onclick="toggleFightDetail('${match.id}')">
-        <div class="fight-row-line1">${escHtml(match.title || '')}<i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}" style="margin-left:6px;"></i></div>
-        <div class="fight-row-line2">
-          <span class="fight-date">${dateStr}</span>
-          ${summaryBadge}
-        </div>
-        <div class="fight-row-actions">
-          <button class="fight-edit-btn fight-result-edit-btn" onclick="event.stopPropagation();openResultEditAccordion('${match.id}')">結果を編集</button>
-          <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">対戦カードを編集</button>
-          <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
+        <div class="fight-row-inner">
+          <i class="fas fa-grip-vertical fight-card-drag-handle" title="ドラッグして並び替え" onclick="event.stopPropagation()"></i>
+          <div class="fight-row-content">
+            <div class="fight-row-line1">${escHtml(match.title || '')}<i class="fas fa-chevron-down fight-chevron" id="fight-chev-${match.id}" style="margin-left:6px;"></i></div>
+            <div class="fight-row-line2">
+              <span class="fight-date">${dateStr}</span>
+              ${summaryBadge}
+            </div>
+            <div class="fight-row-actions">
+              <button class="fight-edit-btn fight-result-edit-btn" onclick="event.stopPropagation();openResultEditAccordion('${match.id}')">結果を編集</button>
+              <button class="fight-edit-btn" onclick="event.stopPropagation();openFightEditModal('${match.id}')">対戦カードを編集</button>
+              <button class="fight-del-btn" onclick="event.stopPropagation();deleteFight('${match.id}')" title="削除"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
@@ -4424,9 +4448,103 @@ function renderFights() {
       </div>
     </div>`;
   }).join('');
+  // 試合カード並び替えD&D初期化
+  _initFightListDrag();
 }
 
 const openFightIds = new Set();
+
+// ── 試合カード一覧の並び替え D&D ──────────────────────────
+let _flDragSrc = null;
+let _flDragFromHandle = false;
+
+function _initFightListDrag() {
+  const list = document.getElementById('fight-list');
+  if (!list) return;
+  const cards = [...list.querySelectorAll('.fight-card')];
+  cards.forEach(card => {
+    const handle = card.querySelector('.fight-card-drag-handle');
+    if (!handle || card.dataset.dragListInit) return;
+    card.dataset.dragListInit = '1';
+
+    // ハンドルを掴んだときだけドラッグ可能にする
+    handle.addEventListener('mousedown',  () => { _flDragFromHandle = true;  card.draggable = true; });
+    handle.addEventListener('touchstart', () => { _flDragFromHandle = true;  card.draggable = true; }, { passive: true });
+    document.addEventListener('mouseup',  () => { _flDragFromHandle = false; }, { once: false });
+
+    card.addEventListener('dragstart', e => {
+      if (!_flDragFromHandle) { e.preventDefault(); return; }
+      _flDragSrc = card;
+      setTimeout(() => card.classList.add('fl-dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+      e.stopPropagation();
+    });
+    card.addEventListener('dragend', () => {
+      _flDragSrc = null;
+      _flDragFromHandle = false;
+      card.draggable = false;
+      card.classList.remove('fl-dragging');
+      list.querySelectorAll('.fight-card').forEach(c => c.classList.remove('fl-drag-over'));
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (card !== _flDragSrc) {
+        list.querySelectorAll('.fight-card').forEach(c => c.classList.remove('fl-drag-over'));
+        card.classList.add('fl-drag-over');
+      }
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('fl-drag-over'));
+    card.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      card.classList.remove('fl-drag-over');
+      if (!_flDragSrc || _flDragSrc === card) return;
+      const allCards = [...list.querySelectorAll('.fight-card')];
+      const srcIdx = allCards.indexOf(_flDragSrc);
+      const tgtIdx = allCards.indexOf(card);
+      if (srcIdx < tgtIdx) list.insertBefore(_flDragSrc, card.nextSibling);
+      else list.insertBefore(_flDragSrc, card);
+      _saveFightListOrder();
+    });
+    // タッチ対応
+    _attachTouchDrag({
+      handle, row: card, container: list,
+      draggingClass: 'fl-dragging', dragOverClass: 'fl-drag-over',
+      rowSelector: '.fight-card',
+      afterDrop: (src, tgt, cont) => {
+        const allCards = [...cont.querySelectorAll('.fight-card')];
+        const sIdx = allCards.indexOf(src), tIdx = allCards.indexOf(tgt);
+        if (sIdx < tIdx) cont.insertBefore(src, tgt.nextSibling);
+        else cont.insertBefore(src, tgt);
+        _saveFightListOrder();
+      }
+    });
+  });
+}
+
+async function _saveFightListOrder() {
+  const list = document.getElementById('fight-list');
+  if (!list) return;
+  const orderedIds = [...list.querySelectorAll('.fight-card')].map(c => c.dataset.mid).filter(Boolean);
+  // allFights 配列を DOM の順序に合わせる
+  allFights.sort((a, b) => {
+    const ai = orderedIds.indexOf(String(a.id)), bi = orderedIds.indexOf(String(b.id));
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  // localStorage に保存（ページリロード後も維持）
+  localStorage.setItem('fight_list_order', JSON.stringify(orderedIds));
+  // Supabase の matches.sort_order に保存（カラムが存在する場合）
+  const token = _getAccessToken();
+  if (!token) return;
+  for (let i = 0; i < orderedIds.length; i++) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${orderedIds[i]}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ sort_order: i })
+      });
+    } catch(e) { /* sort_order カラムがない場合は localStorage のみで管理 */ }
+  }
+}
 
 let _detailDragSrc = null;
 
