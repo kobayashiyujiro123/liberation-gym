@@ -4232,8 +4232,21 @@ function _initFightMemberPicker(container, searchCls, hiddenCls) {
     searchInput.addEventListener('input', () => { hiddenInput.value = ''; filter(searchInput.value); dropdown.style.display = 'block'; });
     searchInput.addEventListener('blur',  () => setTimeout(close, 160));
     items.forEach(item => item.addEventListener('mousedown', e => { e.preventDefault(); selectItem(item); }));
-    // タッチ対応
-    items.forEach(item => item.addEventListener('touchend', e => { e.preventDefault(); selectItem(item); }));
+    // タッチ対応: touchstart/touchend の移動距離でスクロールとタップを判別
+    items.forEach(item => {
+      let _touchStartY = 0, _touchStartX = 0;
+      item.addEventListener('touchstart', e => {
+        _touchStartY = e.touches[0].clientY;
+        _touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      item.addEventListener('touchend', e => {
+        const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
+        const dx = Math.abs(e.changedTouches[0].clientX - _touchStartX);
+        if (dy > 8 || dx > 8) return; // スクロール中は選択しない
+        e.preventDefault();
+        selectItem(item);
+      });
+    });
   });
 }
 
