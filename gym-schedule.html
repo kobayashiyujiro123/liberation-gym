@@ -4570,14 +4570,22 @@ function _initFightDrag(matchId) {
     if (numEl) numEl.textContent = i + 1;
     if (row.dataset.dragInit) return;
     row.dataset.dragInit = '1';
+    // grip を掴んだときだけドラッグ有効（クリックで誤ドラッグ防止）
+    const grip = row.querySelector('.fight-detail-grip');
+    if (grip) {
+      grip.addEventListener('mousedown', () => { row.draggable = true; });
+      grip.addEventListener('touchstart', () => { row.draggable = true; }, { passive: true });
+    }
     row.addEventListener('dragstart', e => {
+      if (!row.draggable) { e.preventDefault(); return; }
       _detailDragSrc = row;
-      row.classList.add('detail-dragging');
+      setTimeout(() => row.classList.add('detail-dragging'), 0);
       e.dataTransfer.effectAllowed = 'move';
       e.stopPropagation();
     });
     row.addEventListener('dragend', () => {
       _detailDragSrc = null;
+      row.draggable = false;
       row.classList.remove('detail-dragging');
       container.querySelectorAll('.fight-fighter-detail-row').forEach(r => r.classList.remove('detail-drag-over'));
     });
@@ -4604,8 +4612,7 @@ function _initFightDrag(matchId) {
       });
       _saveFighterOrder(matchId);
     });
-    // タッチ対応
-    const grip = row.querySelector('.fight-detail-grip');
+    // タッチ対応（grip は上で取得済み）
     if (grip) {
       _attachTouchDrag({
         handle: grip, row, container,
@@ -4656,8 +4663,8 @@ function _buildEditFighterRows(match) {
     const rowCls = _rowClsMap[f.result] || '';
     return `<div class="fight-fighter-detail-row ${rowCls}" data-fid="${f.id}">
       <div class="fight-detail-left-bar">
-        <span class="fight-detail-num">${i+1}</span>
-        <i class="fas fa-grip-vertical fight-detail-grip"></i>
+        <span class="fight-detail-num" data-detail-num>${i+1}</span>
+        <i class="fas fa-grip-vertical fight-detail-grip" title="ドラッグして並び替え"></i>
       </div>
       <div class="fight-detail-content">
         <div class="fight-fighter-vs-block">
@@ -4706,6 +4713,8 @@ function openResultEditAccordion(matchId) {
   card.classList.add('is-open');
   if (chev) chev.style.transform = 'rotate(180deg)';
   openFightIds.add(matchId);
+  // 選手行のD&Dを初期化（innerHTML更新後に必ず呼ぶ）
+  _initFightDrag(matchId);
   setTimeout(() => { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
 }
 
