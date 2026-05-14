@@ -4507,6 +4507,8 @@ function _initFightListDrag() {
     });
     card.addEventListener('dragover', e => {
       e.preventDefault(); e.stopPropagation();
+      // simple-row をドラッグ中は card レベルの D&D 表示をしない
+      if (_simpleDragSrc) return;
       if (card !== _flDragSrc) {
         list.querySelectorAll('.fight-card').forEach(c => c.classList.remove('fl-drag-over'));
         card.classList.add('fl-drag-over');
@@ -4747,63 +4749,84 @@ function closeResultEditAccordion(matchId) {
 }
 
 // ── シンプルリスト（展開ビュー）D&D ─────────────────────
+// モジュールスコープの drag source（card レベルと干渉しないよう分離）
+let _simpleGripActive = false;
+let _simpleDragSrc    = null;
+
 function _initSimpleListDrag(matchId) {
   const detail = document.getElementById('fight-detail-' + matchId);
   if (!detail) return;
   const container = detail.querySelector('.fight-simple-list');
   if (!container) return;
-  const rows = [...container.querySelectorAll('.fight-simple-row')];
-  let _sDragSrc = null;
-  rows.forEach(row => {
+
+  container.querySelectorAll('.fight-simple-row').forEach(row => {
     if (row.dataset.simpleDragInit) return;
     row.dataset.simpleDragInit = '1';
+
     const grip = row.querySelector('.fight-simple-grip');
-    if (grip) {
-      grip.addEventListener('mousedown', () => { row.draggable = true; });
-      grip.addEventListener('touchstart', () => { row.draggable = true; }, { passive: true });
-    }
-    row.addEventListener('dragstart', e => {
-      _sDragSrc = row;
-      setTimeout(() => row.classList.add('fs-dragging'), 0);
-      e.dataTransfer.effectAllowed = 'move';
+    if (!grip) return;
+
+    // グリップを掴んでいる間だけドラッグ許可（card レベルへの誤伝播を防ぐ）
+    grip.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      _simpleGripActive = true;
+      row.draggable = true;
     });
-    row.addEventListener('dragend', () => {
-      _sDragSrc = null;
+    document.addEventListener('mouseup', () => {
+      _simpleGripActive = false;
+    });
+
+    // ── マウス D&D ──────────────────────────────────────
+    row.addEventListener('dragstart', e => {
+      e.stopPropagation();               // fight-card の dragstart へ伝播させない
+      if (!_simpleGripActive) { e.preventDefault(); return; }
+      _simpleDragSrc = row;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => row.classList.add('fs-dragging'), 0);
+    });
+    row.addEventListener('dragend', e => {
+      e.stopPropagation();
       row.draggable = false;
+      _simpleGripActive = false;
+      _simpleDragSrc = null;
       row.classList.remove('fs-dragging');
       container.querySelectorAll('.fight-simple-row').forEach(r => r.classList.remove('fs-drag-over'));
     });
     row.addEventListener('dragover', e => {
       e.preventDefault();
-      if (row !== _sDragSrc) {
+      e.stopPropagation();               // fight-card の dragover へ伝播させない
+      if (_simpleDragSrc && row !== _simpleDragSrc) {
         container.querySelectorAll('.fight-simple-row').forEach(r => r.classList.remove('fs-drag-over'));
         row.classList.add('fs-drag-over');
       }
     });
-    row.addEventListener('dragleave', () => row.classList.remove('fs-drag-over'));
+    row.addEventListener('dragleave', e => {
+      e.stopPropagation();
+      row.classList.remove('fs-drag-over');
+    });
     row.addEventListener('drop', e => {
       e.preventDefault();
+      e.stopPropagation();
       row.classList.remove('fs-drag-over');
-      if (!_sDragSrc || _sDragSrc === row) return;
+      if (!_simpleDragSrc || _simpleDragSrc === row) return;
       const all = [...container.querySelectorAll('.fight-simple-row')];
-      if (all.indexOf(_sDragSrc) < all.indexOf(row)) container.insertBefore(_sDragSrc, row.nextSibling);
-      else container.insertBefore(_sDragSrc, row);
+      if (all.indexOf(_simpleDragSrc) < all.indexOf(row)) container.insertBefore(_simpleDragSrc, row.nextSibling);
+      else container.insertBefore(_simpleDragSrc, row);
       _saveSimpleOrder(matchId, container);
     });
-    // タッチ対応
-    if (grip) {
-      _attachTouchDrag({
-        handle: grip, row, container,
-        draggingClass: 'fs-dragging', dragOverClass: 'fs-drag-over',
-        rowSelector: '.fight-simple-row',
-        afterDrop: (src, tgt, cont) => {
-          const all = [...cont.querySelectorAll('.fight-simple-row')];
-          if (all.indexOf(src) < all.indexOf(tgt)) cont.insertBefore(src, tgt.nextSibling);
-          else cont.insertBefore(src, tgt);
-          _saveSimpleOrder(matchId, cont);
-        }
-      });
-    }
+
+    // ── タッチ D&D ──────────────────────────────────────
+    _attachTouchDrag({
+      handle: grip, row, container,
+      draggingClass: 'fs-dragging', dragOverClass: 'fs-drag-over',
+      rowSelector: '.fight-simple-row',
+      afterDrop: (src, tgt, cont) => {
+        const all = [...cont.querySelectorAll('.fight-simple-row')];
+        if (all.indexOf(src) < all.indexOf(tgt)) cont.insertBefore(src, tgt.nextSibling);
+        else cont.insertBefore(src, tgt);
+        _saveSimpleOrder(matchId, cont);
+      }
+    });
   });
 }
 
