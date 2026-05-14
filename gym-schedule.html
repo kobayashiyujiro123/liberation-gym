@@ -650,8 +650,13 @@
     .fight-edit-fighter-row + .fight-edit-fighter-row { margin-top:8px; }
     .fight-empty { text-align: center; color: var(--text-light); padding: 40px 20px; font-size: 0.88rem; }
     .fight-simple-list { padding: 4px 0; }
-    .fight-simple-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 16px; gap: 8px; }
+    .fight-simple-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px 7px 8px; gap: 8px; }
     .fight-simple-row + .fight-simple-row { border-top: 1px solid var(--border); }
+    .fight-simple-grip { color: #ccc; cursor: grab; font-size: 0.9rem; padding: 4px 6px 4px 4px; flex-shrink: 0; transition: color 0.15s; touch-action: none; }
+    .fight-simple-grip:hover { color: var(--primary); }
+    .fight-simple-grip:active { cursor: grabbing; }
+    .fight-simple-row.fs-dragging { opacity: 0.35; }
+    .fight-simple-row.fs-drag-over { box-shadow: inset 0 -2px 0 var(--primary); }
     .fight-simple-name { font-weight: 600; font-size: 0.88rem; }
     .fight-result-modal-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
     .fight-result-modal-row:last-child { border-bottom: none; }
@@ -4432,8 +4437,9 @@ function renderFights() {
     const simpleRows = fighters.map(f => {
       const resultMap = { 'KO勝ち':['ko-win','KO勝ち'], '判定勝ち':['win','判定勝ち'], 'KO負け':['ko-lose','KO負け'], '判定負け':['lose','判定負け'], '引き分け':['draw','引き分け'] };
       const [badgeCls, badgeTxt] = resultMap[f.result] || ['pending', '未入力'];
-      return `<div class="fight-simple-row">
-        <span class="fight-simple-name">${escHtml(f.fighter_name || '—')}</span>
+      return `<div class="fight-simple-row" data-fid="${f.id}">
+        <i class="fas fa-grip-vertical fight-simple-grip" title="ドラッグして並び替え"></i>
+        <span class="fight-simple-name" style="flex:1;">${escHtml(f.fighter_name || '—')}</span>
         <span class="fight-result-badge ${badgeCls}" data-simple-badge="${f.id}">${badgeTxt}</span>
       </div>`;
     }).join('');
@@ -4730,7 +4736,7 @@ function closeResultEditAccordion(matchId) {
   const simpleRows = fighters.map(f => {
     const cls = resultMap[f.result] || 'pending';
     const txt = f.result || '未入力';
-    return `<div class="fight-simple-row"><span class="fight-simple-name">${escHtml(f.fighter_name||'—')}</span><span class="fight-result-badge ${cls}" data-simple-badge="${f.id}">${txt}</span></div>`;
+    return `<div class="fight-simple-row" data-fid="${f.id}"><i class="fas fa-grip-vertical fight-simple-grip" title="ドラッグして並び替え"></i><span class="fight-simple-name" style="flex:1;">${escHtml(f.fighter_name||'—')}</span><span class="fight-result-badge ${cls}" data-simple-badge="${f.id}">${txt}</span></div>`;
   }).join('');
   detail.innerHTML = fighters.length ? `<div class="fight-simple-list">${simpleRows}</div>` : '<div style="padding:12px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>';
   detail.classList.remove('open');
@@ -4740,6 +4746,91 @@ function closeResultEditAccordion(matchId) {
   _resultEditMatchId = null;
 }
 
+// ── シンプルリスト（展開ビュー）D&D ─────────────────────
+function _initSimpleListDrag(matchId) {
+  const detail = document.getElementById('fight-detail-' + matchId);
+  if (!detail) return;
+  const container = detail.querySelector('.fight-simple-list');
+  if (!container) return;
+  const rows = [...container.querySelectorAll('.fight-simple-row')];
+  let _sDragSrc = null;
+  rows.forEach(row => {
+    if (row.dataset.simpleDragInit) return;
+    row.dataset.simpleDragInit = '1';
+    const grip = row.querySelector('.fight-simple-grip');
+    if (grip) {
+      grip.addEventListener('mousedown', () => { row.draggable = true; });
+      grip.addEventListener('touchstart', () => { row.draggable = true; }, { passive: true });
+    }
+    row.addEventListener('dragstart', e => {
+      _sDragSrc = row;
+      setTimeout(() => row.classList.add('fs-dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      _sDragSrc = null;
+      row.draggable = false;
+      row.classList.remove('fs-dragging');
+      container.querySelectorAll('.fight-simple-row').forEach(r => r.classList.remove('fs-drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (row !== _sDragSrc) {
+        container.querySelectorAll('.fight-simple-row').forEach(r => r.classList.remove('fs-drag-over'));
+        row.classList.add('fs-drag-over');
+      }
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('fs-drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('fs-drag-over');
+      if (!_sDragSrc || _sDragSrc === row) return;
+      const all = [...container.querySelectorAll('.fight-simple-row')];
+      if (all.indexOf(_sDragSrc) < all.indexOf(row)) container.insertBefore(_sDragSrc, row.nextSibling);
+      else container.insertBefore(_sDragSrc, row);
+      _saveSimpleOrder(matchId, container);
+    });
+    // タッチ対応
+    if (grip) {
+      _attachTouchDrag({
+        handle: grip, row, container,
+        draggingClass: 'fs-dragging', dragOverClass: 'fs-drag-over',
+        rowSelector: '.fight-simple-row',
+        afterDrop: (src, tgt, cont) => {
+          const all = [...cont.querySelectorAll('.fight-simple-row')];
+          if (all.indexOf(src) < all.indexOf(tgt)) cont.insertBefore(src, tgt.nextSibling);
+          else cont.insertBefore(src, tgt);
+          _saveSimpleOrder(matchId, cont);
+        }
+      });
+    }
+  });
+}
+
+async function _saveSimpleOrder(matchId, container) {
+  const rows = [...container.querySelectorAll('.fight-simple-row')];
+  const token = _getAccessToken();
+  const match = allFights.find(m => m.id === matchId);
+  // allFights の match_fighters を DOM 順序に合わせて並び替え
+  if (match) {
+    const ordered = rows.map(r => (match.match_fighters || []).find(f => f.id === r.dataset.fid)).filter(Boolean);
+    ordered.forEach((f, i) => { f.sort_order = i; });
+    match.match_fighters = ordered;
+  }
+  if (!token) return;
+  for (let i = 0; i < rows.length; i++) {
+    const fid = rows[i].dataset.fid;
+    if (!fid) continue;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/match_fighters?id=eq.${fid}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ sort_order: i })
+      });
+    } catch(e) {}
+  }
+}
+
 function toggleFightDetail(matchId) {
   const card   = document.getElementById('fight-card-' + matchId);
   const detail = document.getElementById('fight-detail-' + matchId);
@@ -4747,7 +4838,7 @@ function toggleFightDetail(matchId) {
   const open = detail.classList.toggle('open');
   card.classList.toggle('is-open', open);
   chev.style.transform = open ? 'rotate(180deg)' : '';
-  if (open) { openFightIds.add(matchId); _initFightDrag(matchId); }
+  if (open) { openFightIds.add(matchId); _initSimpleListDrag(matchId); }
   else openFightIds.delete(matchId);
 }
 
@@ -4756,7 +4847,7 @@ function _restoreFightOpenStates() {
     const card   = document.getElementById('fight-card-' + id);
     const detail = document.getElementById('fight-detail-' + id);
     const chev   = document.getElementById('fight-chev-' + id);
-    if (detail) { detail.classList.add('open'); _initFightDrag(id); }
+    if (detail) { detail.classList.add('open'); _initSimpleListDrag(id); }
     if (card)   card.classList.add('is-open');
     if (chev)   chev.style.transform = 'rotate(180deg)';
   });
