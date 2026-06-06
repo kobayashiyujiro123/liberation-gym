@@ -794,7 +794,7 @@
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">トレーナー管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
-        <div class="dash-card" onclick="show('fights')" data-admin-only data-coach-fights-ok><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
+        <div id="dash-fights" class="dash-card" onclick="show('fights')" data-admin-only data-coach-fights-ok><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
         <div class="dash-card" onclick="show('analytics')" data-admin-only><div class="dash-icon"><i class="fas fa-chart-bar"></i></div><div class="dash-label">ご利用状況</div></div>
         <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">ユーザ情報</div></div>
         <div id="dash-password" class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
@@ -1541,7 +1541,7 @@ function applyRoleVisibility(role) {
     (function() {
       var _navDash = document.getElementById('nav-dashboard');
       if (!_navDash) return;
-      var _coachNavOrder = ['nav-reservation', 'nav-members', 'nav-member-schedule', 'nav-userinfo', 'nav-password'];
+      var _coachNavOrder = ['nav-reservation', 'nav-members', 'nav-member-schedule', 'nav-fights', 'nav-userinfo', 'nav-password'];
       var _afterNode = _navDash;
       _coachNavOrder.forEach(function(id) {
         var el = document.getElementById(id);
@@ -1555,12 +1555,12 @@ function applyRoleVisibility(role) {
     (function() {
       var _grid = document.querySelector('.dash-grid');
       if (!_grid) return;
-      var _coachDashOrder = ['dash-reservation', 'dash-members', 'dash-member-schedule', 'dash-userinfo', 'dash-password'];
+      var _coachDashOrder = ['dash-reservation', 'dash-members', 'dash-member-schedule', 'dash-fights', 'dash-userinfo', 'dash-password'];
       _coachDashOrder.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) _grid.appendChild(el);
       });
-      // コーチは5枚なので3列グリッドに変更（3+2で均等）
+      // コーチは6枚なので3列グリッドに変更（3+3で均等）
       _grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     })();
   } else if (role === 'viewer') {
