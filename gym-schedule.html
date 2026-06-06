@@ -1113,10 +1113,20 @@
         </div>
       </div>
       <div class="form-card" style="max-width:none;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 12px rgba(0,150,136,0.25);">
-            <i class="fas fa-user-circle" style="color:#fff;font-size:1.8rem;"></i>
+        <div class="coach-photo-upload-area">
+          <input type="file" id="ui-photo-input" accept="image/*" style="display:none;" onchange="handleUiPhotoChange(this)">
+          <div class="coach-photo-circle" id="ui-photo-circle" style="width:80px;height:80px;background:var(--primary);" onclick="document.getElementById('ui-photo-input').click()">
+            <i class="fas fa-user" id="ui-photo-icon" style="color:#fff;font-size:1.8rem;"></i>
+            <img id="ui-photo-preview" src="" alt="" style="display:none;">
+            <div class="coach-photo-overlay">
+              <i class="fas fa-camera"></i>
+              <span>変更</span>
+            </div>
           </div>
+          <div class="coach-photo-hint">タップして写真を登録（JPG / PNG）</div>
+          <button class="coach-photo-remove-btn" id="ui-photo-remove-btn" style="display:none;" onclick="removeUiPhoto()">写真を削除</button>
+        </div>
+        <div style="text-align:center;margin-bottom:16px;">
           <div style="font-size:1.1rem;font-weight:700;color:var(--text);">ユーザ情報</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:14px;">
@@ -1140,6 +1150,9 @@
             <div class="coach-detail-label"><i class="fas fa-birthday-cake"></i> 生年月日</div>
             <div class="coach-detail-val" id="ui-birth"></div>
           </div>
+        </div>
+        <div style="margin-top:20px;text-align:center;">
+          <button class="btn-p" id="ui-photo-save-btn" style="display:none;" onclick="saveUiPhoto()"><i class="fas fa-save"></i> 写真を保存</button>
         </div>
       </div>
       </div>
@@ -1686,6 +1699,22 @@ if (DEMO_MODE) {
               if (_yvEl) _yvEl.textContent = year;
               if (_mvEl) _mvEl.textContent = month;
             } catch(e) { console.warn('coach visit count error:', e); }
+            // コーチ自身の写真を coaches テーブルから取得して表示
+            try {
+              const _coachName = p.name || '';
+              if (_coachName) {
+                const _photoRes = await fetch(
+                  `${SUPABASE_URL}/rest/v1/coaches?name=eq.${encodeURIComponent(_coachName)}&select=photo_url&limit=1`,
+                  { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
+                );
+                if (_photoRes.ok) {
+                  const _photoRows = await _photoRes.json();
+                  if (_photoRows[0] && _photoRows[0].photo_url) {
+                    _setUiPhoto(_photoRows[0].photo_url);
+                  }
+                }
+              }
+            } catch(e) { console.warn('coach photo load error:', e); }
           }
         } else if (!p) {
           // プロフィールが存在しない（削除済みユーザー）→ ログアウトしてログイン画面へ
@@ -3960,6 +3989,78 @@ function removeCoachPhoto() {
   rmBtn.style.display = 'none';
   circle.style.background = c ? c.color : 'var(--primary)';
   document.getElementById('ce-photo-input').value = '';
+}
+
+// ===== ユーザ情報 写真アップロード =====
+function handleUiPhotoChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以内にしてください。'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const tmpImg = new Image();
+    tmpImg.onload = () => {
+      const MAX = 400;
+      let w = tmpImg.width, h = tmpImg.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(tmpImg, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      _setUiPhoto(dataUrl);
+      document.getElementById('ui-photo-save-btn').style.display = '';
+    };
+    tmpImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeUiPhoto() {
+  _setUiPhoto(null);
+  document.getElementById('ui-photo-input').value = '';
+  document.getElementById('ui-photo-save-btn').style.display = '';
+}
+
+function _setUiPhoto(dataUrl) {
+  const prev   = document.getElementById('ui-photo-preview');
+  const icon   = document.getElementById('ui-photo-icon');
+  const rmBtn  = document.getElementById('ui-photo-remove-btn');
+  const circle = document.getElementById('ui-photo-circle');
+  if (dataUrl) {
+    prev.src = dataUrl; prev.style.display = '';
+    icon.style.display = 'none';
+    rmBtn.style.display = '';
+    circle.style.background = 'transparent';
+  } else {
+    prev.src = ''; prev.style.display = 'none';
+    icon.style.display = '';
+    rmBtn.style.display = 'none';
+    circle.style.background = 'var(--primary)';
+  }
+}
+
+async function saveUiPhoto() {
+  if (!currentCoachName) { alert('コーチ情報が読み込まれていません。'); return; }
+  const prev = document.getElementById('ui-photo-preview');
+  const photoUrl = (prev && prev.style.display !== 'none' && prev.src && !prev.src.endsWith(window.location.pathname)) ? prev.src : null;
+  const token = _getAccessToken();
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/coaches?name=eq.${encodeURIComponent(currentCoachName)}`,
+    {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ photo_url: photoUrl })
+    }
+  );
+  if (res.ok || res.status === 204) {
+    document.getElementById('ui-photo-save-btn').style.display = 'none';
+    alert('写真を保存しました。');
+  } else {
+    alert('保存に失敗しました。もう一度お試しください。');
+  }
 }
 
 // ===== NOTICE LOGIC =====
