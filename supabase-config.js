@@ -7,8 +7,8 @@
 const SUPABASE_URL  = 'https://getlmyggtxlfswinctss.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_7UyLKKxbUzyltp4bt014EQ_-2aCT-yr';
 
-// Supabase未設定時はデモモードで動作
-const DEMO_MODE = false;
+// URLパラメータ ?demo_role=xxx が付いている場合はデモモードで動作（認証バイパス）
+const DEMO_MODE = new URLSearchParams(location.search).has('demo_role');
 
 // DEMO_MODEではSupabaseを使わないモックを使用（CDN読み込み不要）
 let sb;
