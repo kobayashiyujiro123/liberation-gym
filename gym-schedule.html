@@ -1563,6 +1563,9 @@ function applyRoleVisibility(role) {
       // コーチは6枚なので3列グリッドに変更（3+3で均等）
       _grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     })();
+  } else if (role === 'admin') {
+    // 管理者: admin-only 要素をすべて再表示（_initAdminSession 先頭で一時非表示にしたため）
+    document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = ''; });
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
@@ -1613,6 +1616,8 @@ if (DEMO_MODE) {
   });
 } else {
   (async function _initAdminSession() {
+    // 認証完了前に admin-only 要素を即時非表示（コーチへの一瞬表示を防止）
+    document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = 'none'; });
     // gym_auth_v1 セッションを読み取る（期限切れならリフレッシュを試みる）
     let sess = null;
     try {
