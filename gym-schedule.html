@@ -5439,8 +5439,8 @@ async function initMembersFromDB() {
     fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&name=not.is.null&order=created_at.asc`, {
       headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
     }),
-    fetch(`${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed`, {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+    fetch(`${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed&order=date.asc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Range': '0-9999' }
     }),
   ]);
   const data = profilesRes.ok ? await profilesRes.json() : null;
