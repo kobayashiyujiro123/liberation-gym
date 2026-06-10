@@ -1526,6 +1526,9 @@ let currentCoachName = '';
 
 function applyRoleVisibility(role) {
   currentUserRole = role;
+  // 認証完了 → ナビを表示（_initAdminSession 先頭で visibility:hidden にしていた）
+  const _authNav = document.querySelector('.sidebar-nav');
+  if (_authNav) _authNav.style.visibility = '';
   if (role === 'coach') {
     document.querySelectorAll('[data-admin-only]').forEach(el => {
       if (el.hasAttribute('data-coach-members-ok')) return; // コーチにも見せる
@@ -1577,7 +1580,7 @@ function applyRoleVisibility(role) {
       _grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     })();
   } else if (role === 'admin') {
-    // 管理者: admin-only 要素をすべて再表示（_initAdminSession 先頭で一時非表示にしたため）
+    // 管理者: admin-only 要素をすべて表示（viewer から遷移した場合などに備えてリセット）
     document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = ''; });
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
@@ -1629,8 +1632,10 @@ if (DEMO_MODE) {
   });
 } else {
   (async function _initAdminSession() {
-    // 認証完了前に admin-only 要素を即時非表示（コーチへの一瞬表示を防止）
-    document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = 'none'; });
+    // 認証完了前にサイドバーナビ全体を非表示（管理者・コーチ問わずチラ見え防止）
+    // ※ visibility:hidden でレイアウトを保持しつつ不可視にする
+    const _authNav = document.querySelector('.sidebar-nav');
+    if (_authNav) _authNav.style.visibility = 'hidden';
     // gym_auth_v1 セッションを読み取る（期限切れならリフレッシュを試みる）
     let sess = null;
     try {
