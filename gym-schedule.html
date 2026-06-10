@@ -5435,33 +5435,36 @@ function _calcAdminVisits(rows, startDate) {
 async function initMembersFromDB() {
   try {
   const token = _getAdminToken();
-  const [profilesRes, reservationsRes] = await Promise.all([
+  const [profilesRes, vcRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&role=not.in.(admin,coach)&name=not.is.null&order=created_at.asc`, {
       headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
     }),
-    fetch(`${SUPABASE_URL}/rest/v1/reservations?select=user_id,date,time&status=eq.confirmed&order=date.asc`, {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Range': '0-9999' }
+    // RPC で DB 側集計 → 件数上限なし・ご利用状況と完全一致
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/get_member_visit_counts`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: '{}'
     }),
   ]);
   const data = profilesRes.ok ? await profilesRes.json() : null;
   if (!data || !data.length) { renderMembers(); return; }
-  // 会員ごとの確定済み予約をグループ化
-  const resData = reservationsRes.ok ? await reservationsRes.json() : [];
-  const resByUser = {};
-  resData.forEach(r => { (resByUser[r.user_id] = resByUser[r.user_id] || []).push(r); });
+  // RPC 結果を user_id で索引
+  const vcRows = vcRes.ok ? await vcRes.json() : [];
+  const vcByUser = {};
+  vcRows.forEach(r => { vcByUser[r.user_id] = r; });
   allMembers.length = 0;
   const statusMap = { active: '有効', suspended: '休会', withdrawn: '退会' };
   const badgeMap  = { active: 'badge-s', suspended: 'badge-w', withdrawn: 'badge-d' };
   data.forEach(p => {
     const wins = p.wins || 0, losses = p.losses || 0, draws = p.draws || 0;
     const startDate = p.start_date || (p.created_at || '').slice(0,10);
-    const vc = _calcAdminVisits(resByUser[p.id] || [], startDate);
+    const vc = vcByUser[p.id] || { total: 0, year_count: 0, month_count: 0 };
     allMembers.push({
       id: p.id, memberNo: p.member_number ? 'M' + String(p.member_number).padStart(4,'0') : p.id.slice(0,8),
       name: p.name || '未設定', email: p.email || '', tel: p.tel || '',
       date: startDate,
       status: statusMap[p.status] || '有効', badge: badgeMap[p.status] || 'badge-s',
-      visits: vc.total, visitsYear: vc.year, visitsMonth: vc.month,
+      visits: Number(vc.total), visitsYear: Number(vc.year_count), visitsMonth: Number(vc.month_count),
       gender: p.gender || '', birthday: p.birth_date || '', style: p.style || '',
       goal: p.goal || '',
       record: wins + '勝' + losses + '敗' + draws + '分',
