@@ -5730,9 +5730,15 @@ async function msRenderWeekly(weekOffset) {
   const resCounts = {};
   try {
     const token = _getAccessToken();
-    const resRes = await fetch(SUPABASE_URL + '/rest/v1/reservations?status=eq.confirmed&select=date,time', {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token }
-    });
+    const _pad = n => String(n).padStart(2,'0');
+    const _now = new Date();
+    const _start = new Date(_now); _start.setDate(_now.getDate() + (weekOffset || 0));
+    const _end   = new Date(_start); _end.setDate(_start.getDate() + 6);
+    const _fmt = d => `${d.getFullYear()}-${_pad(d.getMonth()+1)}-${_pad(d.getDate())}`;
+    const resRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/reservations?status=eq.confirmed&select=date,time&date=gte.${_fmt(_start)}&date=lte.${_fmt(_end)}`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + token } }
+    );
     const allRes = resRes.ok ? await resRes.json() : [];
     (allRes || []).forEach(r => {
       const key = r.date + '_' + r.time;
