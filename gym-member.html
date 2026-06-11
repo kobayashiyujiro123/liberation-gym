@@ -2534,7 +2534,13 @@ async function renderMemberWeekly(weekOffset) {
     });
   } else {
     try {
-      const { data: allRes } = await _restAPI('GET', 'reservations', 'status=eq.confirmed&select=date,time');
+      const _pad = n => String(n).padStart(2,'0');
+      const _now = new Date();
+      const _start = new Date(_now); _start.setDate(_now.getDate() + (weekOffset || 0));
+      const _end   = new Date(_start); _end.setDate(_start.getDate() + 6);
+      const _fmt = d => `${d.getFullYear()}-${_pad(d.getMonth()+1)}-${_pad(d.getDate())}`;
+      const { data: allRes } = await _restAPI('GET', 'reservations',
+        `status=eq.confirmed&select=date,time&date=gte.${_fmt(_start)}&date=lte.${_fmt(_end)}`);
       (allRes || []).forEach(r => {
         const key = r.date + '_' + r.time;
         resCounts[key] = (resCounts[key] || 0) + 1;
