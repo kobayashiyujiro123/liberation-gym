@@ -2511,10 +2511,8 @@ function renderMemberFights(matches, myName, el) {
       '<div class="mfight-card-header" onclick="toggleFightCard(\'' + cardId + '\')">' +
         '<div class="mfight-card-info">' +
           '<div class="mfight-card-title">' + escHtml(m.title || '大会') + '</div>' +
-          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px;">' +
-            (dateStr ? '<span class="mfight-card-date"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' : '') +
-            '<span style="font-size:0.78rem;font-weight:700;color:var(--primary);">チーム戦績：' + total + '戦 ' + recordStr + '</span>' +
-          '</div>' +
+          (dateStr ? '<div class="mfight-card-date" style="margin-top:4px;"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</div>' : '') +
+          '<div style="font-size:0.78rem;font-weight:700;color:var(--primary);margin-top:3px;">チーム戦績：' + total + '戦 ' + recordStr + '</div>' +
         '</div>' +
         '<i class="fas fa-chevron-down mfight-card-chevron"></i>' +
       '</div>' +
