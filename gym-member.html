@@ -2461,16 +2461,9 @@ function renderMemberFights(matches, myName, el) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-light);"><i class="fas fa-trophy" style="font-size:2.5rem;opacity:0.3;display:block;margin-bottom:16px;"></i>あなたはまだ試合に出場したことがありません</div>';
     return;
   }
-  const RC = r => {
-    if (!r) return 'pending';
-    const v = r.toLowerCase();
-    if (v.includes('ko') && (v.includes('勝') || v === 'ko win')) return 'ko-win';
-    if (v.includes('ko') && (v.includes('負') || v === 'ko lose' || v === 'ko loss')) return 'ko-lose';
-    if (v === '勝ち' || v === '勝' || v === 'win' || v === '○') return 'win';
-    if (v === '負け' || v === '負' || v === 'lose' || v === 'loss' || v === '×') return 'lose';
-    if (v === '引き分け' || v === 'draw' || v === '△') return 'draw';
-    return 'pending';
-  };
+  const resultMap = { 'KO勝ち':'ko-win', '判定勝ち':'win', 'KO負け':'ko-lose', '判定負け':'lose', '引き分け':'draw' };
+  const reverseMap = { 'KO勝ち':'KO負け', '判定勝ち':'判定負け', 'KO負け':'KO勝ち', '判定負け':'判定勝ち', '引き分け':'引き分け' };
+  const RC = r => resultMap[r] || 'pending';
   const isWin  = rc => rc === 'win' || rc === 'ko-win';
   const isLose = rc => rc === 'lose' || rc === 'ko-lose';
   const isDraw = rc => rc === 'draw';
@@ -2501,11 +2494,10 @@ function renderMemberFights(matches, myName, el) {
       let rc = RC(f.result);
       let displayResult = f.result ? escHtml(f.result) : '未定';
       // 自分が opponent 側の場合は勝敗を反転して表示
-      if (oppIsMe && !nameIsMe) {
-        if (rc === 'win')     { rc = 'lose';    displayResult = '負け'; }
-        else if (rc === 'ko-win')  { rc = 'ko-lose'; displayResult = 'KO負け'; }
-        else if (rc === 'lose')    { rc = 'win';     displayResult = '勝ち'; }
-        else if (rc === 'ko-lose') { rc = 'ko-win';  displayResult = 'KO勝ち'; }
+      if (oppIsMe && !nameIsMe && f.result) {
+        const rev = reverseMap[f.result] || f.result;
+        displayResult = escHtml(rev);
+        rc = resultMap[rev] || 'pending';
       }
       const oppLabel = f.opponent ? ' vs ' + escHtml(f.opponent) : '';
       return '<div class="mfight-row' + (isMeRow ? ' is-me' : '') + '">' +
