@@ -133,7 +133,12 @@
 
     /* 試合結果 (member view) */
     .mfight-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.07); margin-bottom:16px; overflow:hidden; }
-    .mfight-card-header { padding:14px 16px 10px; border-bottom:1px solid var(--border); }
+    .mfight-card-header { padding:14px 16px 10px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; display:flex; align-items:flex-start; gap:8px; }
+    .mfight-card-header:hover { background:#f9f9f9; }
+    .mfight-card-info { flex:1; }
+    .mfight-card-chevron { font-size:0.85rem; color:var(--text-light); margin-top:3px; transition:transform 0.2s; }
+    .mfight-card.collapsed .mfight-card-chevron { transform:rotate(-90deg); }
+    .mfight-card.collapsed .mfight-body { display:none; }
     .mfight-card-title { font-weight:700; font-size:0.97rem; }
     .mfight-card-date { font-size:0.78rem; color:var(--text-light); margin-top:2px; }
     .mfight-row { display:flex; align-items:center; padding:10px 16px; gap:10px; border-bottom:1px solid var(--border); }
@@ -2499,17 +2504,26 @@ function renderMemberFights(matches, myName, el) {
     }).join('');
 
     const dateStr = m.match_date ? m.match_date.replace(/-/g, '/') : '';
-    return '<div class="mfight-card">' +
-      '<div class="mfight-card-header">' +
-        '<div class="mfight-card-title">' + escHtml(m.title || '大会') + '</div>' +
-        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px;">' +
-          (dateStr ? '<span class="mfight-card-date"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' : '') +
-          '<span style="font-size:0.78rem;font-weight:700;color:var(--primary);">チーム戦績：' + total + '戦 ' + recordStr + '</span>' +
+    const cardId = 'mfc-' + (m.id || Math.random().toString(36).slice(2));
+    return '<div class="mfight-card" id="' + cardId + '">' +
+      '<div class="mfight-card-header" onclick="toggleFightCard(\'' + cardId + '\')">' +
+        '<div class="mfight-card-info">' +
+          '<div class="mfight-card-title">' + escHtml(m.title || '大会') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px;">' +
+            (dateStr ? '<span class="mfight-card-date"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' : '') +
+            '<span style="font-size:0.78rem;font-weight:700;color:var(--primary);">チーム戦績：' + total + '戦 ' + recordStr + '</span>' +
+          '</div>' +
         '</div>' +
+        '<i class="fas fa-chevron-down mfight-card-chevron"></i>' +
       '</div>' +
-      rows +
+      '<div class="mfight-body">' + rows + '</div>' +
     '</div>';
   }).join('');
+}
+
+function toggleFightCard(id) {
+  const card = document.getElementById(id);
+  if (card) card.classList.toggle('collapsed');
 }
 
 // ===== PASSWORD =====
