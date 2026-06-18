@@ -2444,7 +2444,7 @@ function renderMemberFights(matches, myName, el) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-light);"><i class="fas fa-trophy" style="font-size:2.5rem;opacity:0.3;display:block;margin-bottom:16px;"></i>あなたはまだ試合に出場したことがありません</div>';
     return;
   }
-  const resultClass = r => {
+  const RC = r => {
     if (!r) return 'pending';
     const v = r.toLowerCase();
     if (v.includes('ko') && (v.includes('勝') || v === 'ko win')) return 'ko-win';
@@ -2454,29 +2454,61 @@ function renderMemberFights(matches, myName, el) {
     if (v === '引き分け' || v === 'draw' || v === '△') return 'draw';
     return 'pending';
   };
+  const isWin  = rc => rc === 'win' || rc === 'ko-win';
+  const isLose = rc => rc === 'lose' || rc === 'ko-lose';
+  const isDraw = rc => rc === 'draw';
+
   el.innerHTML = matches.map(m => {
     const fighters = (m.match_fighters || []).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-    const myFighters = fighters.filter(f =>
-      (f.fighter_name||'').trim() === myName || (f.opponent||'').trim() === myName
-    );
-    const rows = myFighters.map(f => {
-      const isMe = (f.fighter_name||'').trim() === myName;
-      const oppLabel = isMe ? (f.opponent ? `vs ${escHtml(f.opponent)}` : '') : `vs ${escHtml(f.fighter_name||'')}`;
-      const rc = resultClass(f.result);
-      const resultLabel = f.result ? escHtml(f.result) : '未定';
-      return `<div class="mfight-row is-me">
-        <div class="mfight-name">${escHtml(myName)}<span class="mfight-opp">${oppLabel}</span></div>
-        <span class="mfight-badge ${rc}">${resultLabel}</span>
-      </div>`;
+
+    // 戦績集計（全選手）
+    let wins = 0, losses = 0, draws = 0;
+    fighters.forEach(f => {
+      const rc = RC(f.result);
+      if (isWin(rc)) wins++;
+      else if (isLose(rc)) losses++;
+      else if (isDraw(rc)) draws++;
+    });
+    const total = fighters.length;
+    const recordParts = [];
+    if (wins)   recordParts.push(wins + '勝');
+    if (losses) recordParts.push(losses + '負');
+    if (draws)  recordParts.push(draws + '引き分け');
+    const recordStr = recordParts.length ? recordParts.join('') : '結果未定';
+
+    // 全選手の行を生成
+    const rows = fighters.map(f => {
+      const nameIsMe = (f.fighter_name||'').trim() === myName;
+      const oppIsMe  = (f.opponent||'').trim() === myName;
+      const isMeRow  = nameIsMe || oppIsMe;
+      let rc = RC(f.result);
+      let displayResult = f.result ? escHtml(f.result) : '未定';
+      // 自分が opponent 側の場合は勝敗を反転して表示
+      if (oppIsMe && !nameIsMe) {
+        if (rc === 'win')     { rc = 'lose';    displayResult = '負け'; }
+        else if (rc === 'ko-win')  { rc = 'ko-lose'; displayResult = 'KO負け'; }
+        else if (rc === 'lose')    { rc = 'win';     displayResult = '勝ち'; }
+        else if (rc === 'ko-lose') { rc = 'ko-win';  displayResult = 'KO勝ち'; }
+      }
+      const oppLabel = f.opponent ? ' vs ' + escHtml(f.opponent) : '';
+      return '<div class="mfight-row' + (isMeRow ? ' is-me' : '') + '">' +
+        '<div class="mfight-name">' + escHtml(f.fighter_name || '') +
+        '<span class="mfight-opp">' + oppLabel + '</span></div>' +
+        '<span class="mfight-badge ' + rc + '">' + displayResult + '</span>' +
+        '</div>';
     }).join('');
+
     const dateStr = m.match_date ? m.match_date.replace(/-/g, '/') : '';
-    return `<div class="mfight-card">
-      <div class="mfight-card-header">
-        <div class="mfight-card-title">${escHtml(m.title || '大会')}</div>
-        ${dateStr ? `<div class="mfight-card-date"><i class="fas fa-calendar-alt"></i> ${dateStr}</div>` : ''}
-      </div>
-      ${rows}
-    </div>`;
+    return '<div class="mfight-card">' +
+      '<div class="mfight-card-header">' +
+        '<div class="mfight-card-title">' + escHtml(m.title || '大会') + '</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px;">' +
+          (dateStr ? '<span class="mfight-card-date"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' : '') +
+          '<span style="font-size:0.78rem;font-weight:700;color:var(--primary);">チーム戦績：' + total + '戦 ' + recordStr + '</span>' +
+        '</div>' +
+      '</div>' +
+      rows +
+    '</div>';
   }).join('');
 }
 
