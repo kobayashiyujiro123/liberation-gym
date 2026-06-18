@@ -291,6 +291,7 @@
       .main-wrap { margin-left: 0; }
       .hamburger { display: flex; }
       .top-cards { grid-template-columns: repeat(2,1fr); gap: 14px; }
+      .top-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 12px; }
       .info-key { width: 110px; padding: 12px; font-size: 0.78rem; }
       .info-val { padding: 12px; font-size: 0.83rem; }
       .content { padding: 16px; }
@@ -1095,6 +1096,16 @@ function showApp(key) {
   location.hash = key;
 }
 
+// ----- top card height equalizer -----
+function equalizeTopCards() {
+  const cards = Array.from(document.querySelectorAll('.top-card')).filter(c => c.offsetParent !== null && c.style.display !== 'none');
+  cards.forEach(c => c.style.height = '');
+  if (window.innerWidth > 768 || !cards.length) return;
+  const max = Math.max(...cards.map(c => c.scrollHeight));
+  cards.forEach(c => c.style.height = max + 'px');
+}
+window.addEventListener('resize', equalizeTopCards);
+
 // ----- avatar helpers -----
 function updateAvatarUI(photoUrl) {
   // sidebar
@@ -1177,6 +1188,7 @@ function enterApp() {
   const canView = user.canView || false;
   document.getElementById('nav-res-view').style.display    = canView ? '' : 'none';
   document.getElementById('top-card-res-view').style.display = canView ? '' : 'none';
+  equalizeTopCards();
   // コーチが ?schedule=1 で来た場合はスケジュール予約画面へ直接遷移
   if (_isCoach && new URLSearchParams(location.search).get('schedule') === '1') {
     showApp('schedule');
