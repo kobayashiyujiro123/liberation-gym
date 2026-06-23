@@ -1,0 +1,2119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>setanin食堂 — 管理画面</title>
+<style>
+  :root{
+    --nav-bg:#ffffff;
+    --nav-ink:#1f2328;
+    --header-bg:#1f2937;
+    --bg:#f3f4f6;
+    --line:#e6e7e8;
+    --line-2:#d8dade;
+    --ink:#1f2328;
+    --ink-2:#525860;
+    --ink-3:#8a8f98;
+    --call:#ff506b;
+    --call-bg:#ffe6ec;
+    --call-deep:#e53d57;
+    --refill:#ff9a3d;
+    --refill-bg:#ffe9d2;
+    --table-head:#d4d6dc;
+    --table-body:#eef0f3;
+    --in-use:#3b9eff;
+    --in-use-bg:#fde2e8;
+    --primary:#2196f3;
+    --primary-deep:#1976d2;
+    --warning:#f0a020;
+    --success:#22c55e;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
+  body{
+    font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
+    color:var(--ink);background:var(--bg);
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;color:inherit}
+
+  /* ==================== トップナビ ==================== */
+  .nav{
+    background:#fff;height:46px;display:flex;align-items:stretch;
+    border-bottom:1px solid var(--line);position:relative;z-index:5;
+  }
+  .nav-tabs{display:flex;align-items:stretch}
+  .nav-tab{
+    padding:0 18px;display:flex;align-items:center;font-size:14px;color:var(--ink);
+    cursor:pointer;position:relative;font-weight:500;
+  }
+  .nav-tab:hover{color:var(--primary)}
+  .nav-tab.active{color:var(--primary);font-weight:600}
+  .nav-tab.active::after{
+    content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--primary);
+  }
+  .nav-right{margin-left:auto;display:flex;align-items:stretch}
+  .nav-store{
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-end;
+    padding:0 14px;font-size:13px;line-height:1.3;
+  }
+  .nav-store .name{font-weight:700}
+  .nav-store .id{color:var(--ink-3);font-size:11px}
+  .nav-logout{padding:0 14px;display:flex;align-items:center;cursor:pointer;color:var(--ink-2)}
+  .nav-logout:hover{color:var(--call)}
+  .nav-time{
+    background:var(--header-bg);color:#fff;padding:0 16px;
+    display:flex;align-items:center;gap:8px;min-width:140px;font-variant-numeric:tabular-nums;
+  }
+  .nav-time .hhmm{font-size:22px;font-weight:700;letter-spacing:1px}
+  .nav-time .date{font-size:11px;color:#cbd5e1}
+  .nav-refresh{
+    background:var(--primary);color:#fff;padding:0 14px;display:flex;align-items:center;cursor:pointer;
+  }
+  .nav-refresh:hover{background:var(--primary-deep)}
+
+  /* ==================== ページ共通 ==================== */
+  .page{flex:1;overflow:hidden;display:none;flex-direction:column}
+  .page.active{display:flex}
+
+  /* ============ Home ============ */
+  .home-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;
+    padding:80px;max-width:1200px;margin:0 auto;
+  }
+  .home-card{
+    background:#fff;border:1px solid var(--line);border-radius:6px;padding:32px 14px;
+    text-align:center;cursor:pointer;transition:transform .15s, box-shadow .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .home-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .home-card .icon{
+    width:60px;height:60px;margin:0 auto 14px;color:var(--primary);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .home-card h3{margin:0 0 8px;font-size:17px;font-weight:700}
+  .home-card p{margin:0;font-size:13px;color:var(--ink-2);line-height:1.5}
+
+  /* ============ フィルタバー共通 ============ */
+  .filter-bar{
+    background:#fff;border-bottom:1px solid var(--line);height:44px;flex:0 0 44px;
+    display:flex;align-items:center;padding:0 16px;gap:6px;font-size:13px;
+  }
+  .filter{
+    display:flex;align-items:center;gap:8px;padding:0 14px;cursor:pointer;
+    border-right:1px solid var(--line);height:30px;
+  }
+  .filter:last-of-type{border-right:none}
+  .filter .label{color:var(--ink-2);font-weight:600}
+  .filter .value{color:var(--primary);font-weight:600}
+  .filter .caret{color:var(--ink-3);font-size:10px}
+  .filter-spacer{flex:1}
+  .toggle-row{display:flex;align-items:center;gap:10px;padding:0 8px;font-size:13px;color:var(--ink-2)}
+  .toggle{width:38px;height:20px;background:var(--primary);border-radius:10px;position:relative;cursor:pointer}
+  .toggle.off{background:#ccc}
+  .toggle::after{
+    content:"";position:absolute;top:2px;left:20px;width:16px;height:16px;background:#fff;
+    border-radius:50%;transition:left .15s;
+  }
+  .toggle.off::after{left:2px}
+  .btn{
+    border:1px solid var(--line);background:#fff;border-radius:4px;
+    padding:6px 14px;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;
+  }
+  .btn:hover{background:#fafafa}
+  .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn-primary:hover{background:var(--primary-deep)}
+  .btn-warning{background:var(--warning);color:#fff;border:none}
+  .btn-warning:hover{background:#d68a0e}
+  .btn-call{background:var(--call);color:#fff;border:none}
+  .btn-call:hover{background:var(--call-deep)}
+
+  /* ============ テーブル管理 ============ */
+  .tables-main{flex:1;display:grid;grid-template-columns:1fr 290px;min-height:0;overflow:hidden}
+  .tables{
+    padding:16px;overflow-y:auto;
+    display:grid;grid-template-columns:repeat(6, 1fr);gap:14px 14px;align-content:start;
+  }
+  .table-card{
+    background:#fff;border:1px solid transparent;border-radius:4px;overflow:hidden;
+    display:flex;flex-direction:column;cursor:pointer;
+    transition:border-color .15s, box-shadow .15s;user-select:none;
+  }
+  .table-card:hover{box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .table-card.selected{border-color:var(--call);background:var(--call-bg)}
+  .table-card .head{
+    background:var(--table-head);color:var(--ink);text-align:center;
+    padding:10px 0;font-size:18px;font-weight:700;letter-spacing:1px;position:relative;
+  }
+  .table-card.calling .head,
+  .table-card.refilling .head{background:var(--call);color:#fff}
+  .table-card.in-use .head{background:var(--in-use);color:#fff}
+  .table-card .head .badge-right{
+    position:absolute;right:10px;top:11px;font-size:12px;color:#fff;font-weight:500;
+  }
+  .table-card .body{
+    background:var(--table-body);height:60px;margin:8px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:11px;
+    text-align:center;
+  }
+  .table-card.in-use .body{
+    background:var(--in-use-bg);color:var(--ink);font-size:18px;font-weight:600;
+  }
+  .table-card .footer{display:flex;align-items:center;gap:4px;padding:6px 8px;font-size:11px}
+  .table-card .next-rsv{
+    flex:1;background:#f3f4f6;border-radius:3px;padding:4px 8px;color:var(--ink-3);font-size:10px;
+    display:flex;justify-content:space-between;
+  }
+  .table-card .icon-btn{
+    width:24px;height:24px;border-radius:3px;display:flex;align-items:center;justify-content:center;
+    background:#fff;border:1px solid transparent;color:var(--ink-3);
+  }
+  .table-card .icon-btn svg{width:14px;height:14px}
+  .table-card.calling .icon-btn.call,
+  .table-card.refilling .icon-btn.call{border:2px solid var(--call);color:var(--call)}
+
+  .extra-seat{
+    border:2px dashed var(--ink-3);border-radius:4px;background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-3);font-size:14px;flex-direction:column;gap:6px;cursor:pointer;
+  }
+  .extra-seat:hover{border-color:var(--primary);color:var(--primary)}
+  .extra-seat .plus{font-size:30px;line-height:1;font-weight:300}
+
+  /* ============ サイドバー (席情報) ============ */
+  .sidebar{
+    background:#fff;border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .side-tabs{display:flex;border-bottom:1px solid var(--line)}
+  .side-tab{
+    flex:1;padding:14px 0;text-align:center;font-size:13px;color:var(--ink-2);cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .side-tab.active{color:var(--primary);font-weight:700;border-bottom-color:var(--primary)}
+  .side-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:18px}
+  .side-section .title{font-size:12px;color:var(--ink-2);margin-bottom:8px}
+
+  .seat-row{display:flex;align-items:center;gap:10px}
+  .seat-row .state{color:var(--ink-2);font-size:13px;font-weight:500}
+  .seat-row .state.in-use{color:var(--in-use)}
+  .seat-row .waiting-badge{
+    background:#fff;border:1px solid var(--call);color:var(--call);
+    border-radius:3px;padding:1px 8px;font-size:11px;font-weight:700;
+  }
+  .resolve-btn{
+    background:var(--call);color:#fff;border:none;border-radius:3px;
+    padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;
+  }
+  .resolve-btn:hover{background:var(--call-deep)}
+
+  .field-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .field-row .icon{
+    width:20px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);
+  }
+  .field-row select, .field-row input, .field-row .text-input{
+    flex:1;border:1px solid var(--line-2);border-radius:3px;padding:5px 8px;font-size:13px;
+    background:#fff;color:var(--ink);
+  }
+  .field-row .suffix{color:var(--ink-2);font-size:13px}
+
+  .order-status .row{display:flex;align-items:center;gap:8px;padding:4px 0}
+  .order-status .icon{width:20px;color:var(--ink-3);display:flex;align-items:center;justify-content:center}
+  .order-status .v{font-weight:700;font-size:14px}
+
+  .pill-btn{
+    background:#f3f4f6;border:1px solid var(--line);color:var(--ink-2);
+    border-radius:4px;padding:8px 0;text-align:center;font-size:13px;cursor:pointer;
+  }
+  .pill-btn:hover{background:#eaecef}
+  .pill-btn.active{background:#fff;border:1px solid var(--primary);color:var(--primary);font-weight:600}
+  .pill-btn.disabled{opacity:.6;cursor:not-allowed}
+
+  .start-btn{
+    margin:auto 14px 14px;padding:14px;background:var(--primary);color:#fff;
+    border:none;border-radius:4px;font-weight:700;font-size:15px;cursor:pointer;
+  }
+  .start-btn:hover{background:var(--primary-deep)}
+  .start-btn.disabled{background:#bbb;cursor:not-allowed}
+
+  .btm-actions{
+    display:flex;gap:0;border-top:1px solid var(--line);
+  }
+  .btm-actions .cancel-btn{
+    flex:1;padding:14px;background:#fff;color:var(--call);border:1px solid var(--call);
+    border-radius:0;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .btm-actions .pay-btn{
+    flex:1;padding:14px;background:var(--warning);color:#fff;border:none;
+    font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .btm-actions .pay-btn:hover{background:#d68a0e}
+
+  /* ============ オーダー管理 ============ */
+  .order-empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--ink-3);gap:14px;font-size:14px;
+  }
+  .order-empty svg{width:60px;color:#bcbec5}
+  .order-list{
+    flex:1;overflow-y:auto;padding:16px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-content:start;
+  }
+  .order-card{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--warning);
+    border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+    animation:slideIn .3s ease;
+  }
+  @keyframes slideIn{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+  .oc-head{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+  .oc-table{font-weight:700;font-size:15px}
+  .oc-time{color:var(--ink-3);font-size:12px}
+  .oc-body{
+    background:#fff8e1;border-radius:4px;padding:10px 12px;display:flex;
+    justify-content:space-between;align-items:center;font-size:14px;
+  }
+  .oc-name{font-weight:600}
+  .oc-qty{color:var(--ink-2);font-size:13px}
+  .oc-actions{display:flex;gap:8px}
+  .oc-actions .btn{flex:1;padding:8px 0;font-weight:600}
+  .oc-actions .btn[data-act="serve"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .oc-actions .btn[data-act="serve"]:hover{background:var(--primary-deep)}
+
+  /* ナビバッジ */
+  .nav-badge{
+    background:var(--call);color:#fff;border-radius:10px;padding:1px 7px;
+    font-size:11px;font-weight:700;margin-left:6px;min-width:18px;
+    text-align:center;display:inline-block;line-height:1.4;
+  }
+
+  /* ============ 予約管理 ============ */
+  .rsv-bar{
+    background:#fff;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:6px 16px;gap:10px;height:54px;
+  }
+  .seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .seg button{padding:6px 18px;font-size:13px;color:var(--ink-2);background:#fff}
+  .seg button.active{background:var(--primary);color:#fff;font-weight:700}
+  .date-pick{
+    padding:6px 14px;background:#fff;border:1px solid var(--line);border-radius:4px;
+    font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;
+  }
+  .navarrow{
+    padding:6px 12px;background:#fff;border:1px solid var(--line);border-radius:4px;
+    font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--ink-2);
+  }
+  .navarrow:hover{background:#fafafa}
+  .rsv-search{
+    padding:5px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;
+    flex:0 1 180px;
+  }
+  .display-mode{
+    padding:6px 12px;background:#fff;border:1px solid var(--line);border-radius:4px;
+    font-size:13px;color:var(--primary);font-weight:600;cursor:pointer;
+  }
+  .rsv-count{margin-left:auto;font-size:13px;color:var(--ink-2)}
+  .rsv-table{flex:1;background:#fff;display:flex;flex-direction:column;margin:0;overflow:hidden}
+  .rsv-table .head{
+    background:#eef0f3;padding:10px 16px;font-size:13px;font-weight:600;
+    display:grid;grid-template-columns:100px 160px 1fr 1fr 80px 140px 1fr;gap:10px;
+  }
+  .rsv-table .body{flex:1;overflow-y:auto}
+  .rsv-add{
+    align-self:center;padding:8px 24px;background:var(--primary);color:#fff;border-radius:20px;
+    font-weight:700;cursor:pointer;margin:14px auto;display:inline-flex;align-items:center;gap:6px;
+  }
+  .rsv-add:hover{background:var(--primary-deep)}
+
+  /* ============ 品切れ管理 ============ */
+  .stock-bar{
+    background:#fff;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:0 16px;gap:6px;height:44px;
+  }
+  .stock-body{flex:1;overflow-y:auto;padding:20px 30px}
+  .stock-category{margin-bottom:24px}
+  .stock-category .cat-head{
+    display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;
+    padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px;
+  }
+  .stock-category .cat-bar{width:5px;height:18px;border-radius:2px}
+  .stock-items{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;
+  }
+  .stock-item{
+    background:#fff;border:1px solid var(--line);border-radius:4px;
+    padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .stock-item.off{background:#fbeaea}
+  .stock-item .name{font-size:14px}
+  .stock-toggle{
+    width:40px;height:22px;background:var(--primary);border-radius:11px;position:relative;cursor:pointer;
+  }
+  .stock-toggle.off{background:#d1d4d9}
+  .stock-toggle::after{
+    content:"";position:absolute;top:2px;left:20px;width:18px;height:18px;background:#fff;
+    border-radius:50%;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .stock-toggle.off::after{left:2px}
+
+  /* ============ 売上管理 / マスタ設定 共通レイアウト ============ */
+  .with-sidenav{flex:1;display:grid;grid-template-columns:180px 1fr;min-height:0}
+  .sidenav{
+    background:#fff;border-right:1px solid var(--line);padding:14px 0;
+    overflow-y:auto;
+  }
+  .sidenav .group-title{
+    padding:8px 18px;font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .sidenav .menu-item{
+    padding:8px 22px;font-size:13px;color:var(--ink-2);cursor:pointer;
+  }
+  .sidenav .menu-item.active{
+    background:#e3f2fd;color:var(--primary);font-weight:700;
+    border-left:3px solid var(--primary);padding-left:19px;
+  }
+  .sidenav .menu-item:hover{background:#f5f9ff}
+
+  /* ============ 売上管理 ============ */
+  .sales-content{padding:20px;overflow-y:auto}
+  .sales-content h2{margin:0 0 12px;font-size:18px}
+  .sales-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .sub-tabs{
+    display:flex;gap:0;background:#f3f4f6;border-radius:4px;padding:4px;margin:14px 0;
+  }
+  .sub-tabs button{
+    flex:1;padding:8px 14px;font-size:13px;border-radius:3px;color:var(--ink-2);
+  }
+  .sub-tabs button.active{background:#fff;color:var(--primary);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .chart-wrap{
+    background:#fff;border:1px solid var(--line);border-radius:4px;
+    height:480px;display:flex;flex-direction:column;
+  }
+  .chart-wrap .legend{padding:12px 20px;text-align:right;font-size:12px}
+  .chart-wrap .legend .swatch{
+    display:inline-block;width:14px;height:8px;background:var(--primary);margin-right:6px;vertical-align:middle;
+  }
+  .chart-grid{
+    flex:1;display:grid;grid-template-columns:repeat(7,1fr);align-items:end;
+    border-top:1px solid var(--line);
+  }
+  .chart-col{
+    border-right:1px dashed var(--line);height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px 0;
+  }
+  .chart-col:last-child{border-right:none}
+  .chart-col .bar{
+    width:60%;background:var(--primary);min-height:4px;border-radius:2px 2px 0 0;
+  }
+  .chart-col .label{font-size:13px;padding:8px 0;color:var(--ink-2)}
+
+  /* ============ マスタ設定 ============ */
+  .master-content{padding:0;display:flex;flex-direction:column;overflow:hidden;height:100%}
+  .master-bar{
+    background:#fff;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:8px 16px;gap:10px;height:54px;
+  }
+  .master-body{flex:1;overflow-y:auto;background:#fff}
+  .master-table-head{
+    display:grid;grid-template-columns:140px 1.5fr 100px 130px 1fr 70px 60px;
+    background:#f8f9fa;padding:10px 18px;font-size:13px;color:var(--ink-2);
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2;
+  }
+  .master-row{
+    display:grid;grid-template-columns:140px 1.5fr 100px 130px 1fr 70px 60px;
+    padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px;align-items:center;
+    background:#fff;
+  }
+  .master-row .cat{display:flex;align-items:center;gap:8px;font-weight:600}
+  .master-row .cat-bar{width:4px;height:16px;border-radius:2px}
+  .master-row .price-input{
+    width:80px;padding:6px 8px;border:1px solid var(--line);border-radius:3px;font-size:13px;text-align:right;
+  }
+  .add-row{padding:14px;text-align:center}
+
+  /* ============ モーダル共通 ============ */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.32);
+    display:none;align-items:center;justify-content:center;z-index:50;
+  }
+  .overlay.active{display:flex}
+  .modal{
+    background:#fff;border-radius:6px;box-shadow:0 6px 30px rgba(0,0,0,.22);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  .modal-head{
+    display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);gap:14px;
+  }
+  .modal-head h3{margin:0;font-size:15px;font-weight:700}
+  .modal-head .close{margin-left:auto;cursor:pointer;color:var(--ink-2);padding:6px}
+  .modal-head .close:hover{color:var(--call)}
+
+  /* 本日の会計一覧 modal */
+  #modal-today-pay .modal{width:800px;max-width:95vw;height:600px;max-height:90vh}
+  #modal-today-pay .modal-body{flex:1;overflow-y:auto;padding:0 0 14px}
+  #modal-today-pay table{width:100%;border-collapse:collapse}
+  #modal-today-pay th{text-align:left;padding:10px 20px;color:var(--ink-2);font-weight:500;border-bottom:1px solid var(--line);font-size:13px}
+  #modal-today-pay td{padding:12px 20px;border-bottom:1px solid var(--line);font-size:13px}
+
+  /* 会計モーダル */
+  #modal-pay .modal{width:1200px;max-width:96vw;height:600px;max-height:90vh}
+  #modal-pay .modal-body{flex:1;overflow-y:auto;padding:14px 20px}
+  #modal-pay .pay-foot{
+    border-top:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:16px;
+  }
+  #modal-pay .pay-foot .label{font-size:13px}
+  #modal-pay .pay-foot .total{font-size:20px;font-weight:700;margin:0 6px}
+  #modal-pay .per{margin-left:auto;font-size:12px;color:var(--ink-2)}
+  #modal-pay .complete-btn{
+    padding:10px 30px;background:var(--primary);color:#fff;border-radius:4px;font-weight:700;cursor:pointer;
+  }
+  #modal-pay table{width:100%;border-collapse:collapse}
+  #modal-pay th{text-align:left;padding:10px;color:var(--ink-2);font-weight:500;border-bottom:1px solid var(--line);font-size:13px}
+  #modal-pay td{padding:10px;border-bottom:1px solid var(--line);font-size:13px}
+
+  /* 受信フラッシュ */
+  .flash{
+    position:fixed;inset:0;background:var(--call);opacity:0;pointer-events:none;
+    transition:opacity .15s;z-index:80;
+  }
+  .flash.on{opacity:.18}
+
+  /* 初回ゲート */
+  .gate{
+    position:fixed;inset:0;background:rgba(15,23,42,.85);color:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    z-index:100;cursor:pointer;text-align:center;padding:0 24px;
+  }
+  .gate h1{margin:0;font-size:24px}
+  .gate p{margin:0;font-size:14px;color:#cbd5e1;max-width:420px;line-height:1.6}
+  .gate .start{
+    background:var(--call);color:#fff;padding:14px 36px;border-radius:6px;border:none;
+    font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .gate .start:hover{background:var(--call-deep)}
+  .gate.hidden{display:none}
+
+  .live-dot{
+    width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;
+    box-shadow:0 0 0 0 rgba(34,197,94,.45);animation:pulse 2s infinite;margin-right:6px;
+    vertical-align:middle;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(34,197,94,.45)}
+    70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}
+    100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+  }
+
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#cfd2d6;border-radius:4px}
+
+  /* サブページ切替 */
+  .sub-page{display:none;flex:1;flex-direction:column;overflow:auto;min-height:0}
+  .sub-page.active{display:flex}
+  .sales-content{padding:0;display:flex;flex-direction:column;overflow:hidden;height:100%}
+  .sales-content > .sub-page{padding:20px}
+  .sales-content > .sub-page.active{display:block;overflow-y:auto}
+  .master-content > .sub-page{padding:0}
+  .master-content > .sub-page.active{display:flex;flex-direction:column}
+
+  /* ドロップダウンメニュー */
+  .dd-menu{
+    position:absolute;background:#fff;border:1px solid var(--line);
+    border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.12);
+    min-width:160px;padding:4px 0;z-index:60;display:none;
+  }
+  .dd-menu.open{display:block}
+  .dd-menu .dd-item{
+    padding:8px 16px;font-size:13px;color:var(--ink);cursor:pointer;
+  }
+  .dd-menu .dd-item:hover{background:#f3f4f6}
+  .dd-menu .dd-item.active{color:var(--primary);font-weight:600}
+  .dd-trigger{cursor:pointer;user-select:none}
+
+  /* 個別会計モード active */
+  .indiv-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  /* 値引きモーダル */
+  #modal-discount .modal{width:340px;padding:20px}
+  #modal-discount input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:14px;margin:10px 0}
+
+  /* 新規予約モーダル */
+  #modal-rsv .modal{width:440px;padding:0}
+  #modal-rsv .modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+  #modal-rsv input,#modal-rsv select{padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;width:100%}
+  #modal-rsv label{font-size:12px;color:var(--ink-2)}
+  #modal-rsv .modal-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<!-- ============= トップナビ ============= -->
+<nav class="nav">
+  <div class="nav-tabs">
+    <div class="nav-tab" data-page="home">ホーム</div>
+    <div class="nav-tab" data-page="order">オーダー管理</div>
+    <div class="nav-tab active" data-page="tables">テーブル管理</div>
+    <div class="nav-tab" data-page="rsv">予約管理</div>
+    <div class="nav-tab" data-page="stock">品切れ管理</div>
+    <div class="nav-tab" data-page="sales">売上管理</div>
+    <div class="nav-tab" data-page="master">マスタ設定</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-store">
+      <div class="name">setanin食堂</div>
+      <div class="id">店舗ID: TEST_HANTEN</div>
+    </div>
+    <div class="nav-logout" title="ログアウト">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M15 4h4v16h-4M4 12h12M11 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="nav-time">
+      <div>
+        <div class="hhmm" id="hhmm">--:--</div>
+        <div class="date" id="date">--月--日</div>
+      </div>
+    </div>
+    <div class="nav-refresh" title="更新" onclick="location.reload()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M4 12a8 8 0 0114-5.3L20 4M20 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 01-14 5.3L4 20M4 20v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</nav>
+
+<!-- ============= ホーム ============= -->
+<div class="page" id="page-home">
+  <div class="home-grid">
+    <div class="home-card" data-go="order">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><rect x="14" y="10" width="36" height="44" rx="3" stroke="currentColor" stroke-width="3"/><path d="M22 22h20M22 30h20M22 38h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="44" cy="46" r="9" fill="#fff" stroke="currentColor" stroke-width="2.5"/><path d="M44 41v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <h3>オーダー管理</h3>
+      <p>オーダーの<br>確認・提供 など</p>
+    </div>
+    <div class="home-card" data-go="tables">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><path d="M8 22h48v8H8z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M16 30v22M48 30v22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <h3>テーブル管理</h3>
+      <p>テーブル状況の<br>確認・会計処理 など</p>
+    </div>
+    <div class="home-card" data-go="rsv">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><rect x="10" y="14" width="44" height="40" rx="3" stroke="currentColor" stroke-width="3"/><path d="M10 26h44M22 10v8M42 10v8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M24 42l6 6 12-14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>予約管理</h3>
+      <p>予約確認・登録 など</p>
+    </div>
+    <div class="home-card" data-go="stock">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><path d="M32 8L8 18v26l24 12 24-12V18z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M8 18l24 10 24-10M32 28v28" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="48" cy="48" r="10" fill="#fff" stroke="currentColor" stroke-width="2.5"/><path d="M44 44l8 8M52 44l-8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <h3>品切れ管理</h3>
+      <p>メニューの品切れの<br>登録・解除</p>
+    </div>
+    <div class="home-card" data-go="sales">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><path d="M10 50h44M14 50V32M26 50V18M38 50V26M50 50V12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <h3>売上管理</h3>
+      <p>店舗売上の確認</p>
+    </div>
+    <div class="home-card" data-go="master">
+      <div class="icon"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="6" stroke="currentColor" stroke-width="3"/><path d="M32 8v6M32 50v6M8 32h6M50 32h6M14 14l5 5M45 45l5 5M50 14l-5 5M14 50l5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <h3>マスタ設定</h3>
+      <p>システム設定・<br>メニュー登録 など</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============= テーブル管理 ============= -->
+<div class="page active" id="page-tables">
+  <div class="filter-bar">
+    <div class="filter"><span class="label">エリア</span><span class="value">すべて</span><span class="caret">▾</span></div>
+    <div class="filter"><span class="label">テーブル区分</span><span class="value">すべて</span><span class="caret">▾</span></div>
+    <div class="filter"><span class="label">ステータス</span><span class="value">すべて</span><span class="caret">▾</span></div>
+    <div class="filter"><span class="label">呼び出し状況</span><span class="value">すべて</span><span class="caret">▾</span></div>
+    <div class="filter-spacer"></div>
+    <div class="toggle-row">
+      <span><span class="live-dot" id="liveDot" style="display:none"></span><span id="recvLabel">時間表示</span></span>
+      <div class="toggle" id="timeToggle"></div>
+    </div>
+    <button class="btn" id="openTodayPay">本日の会計一覧</button>
+  </div>
+  <div class="tables-main">
+    <div class="tables" id="tables"></div>
+    <aside class="sidebar">
+      <div class="side-tabs">
+        <div class="side-tab active">席情報</div>
+        <div class="side-tab">今日の予約(0)</div>
+      </div>
+      <div class="side-body">
+        <div class="side-section">
+          <div class="title">座席情報</div>
+          <div class="seat-row">
+            <span class="state" id="seatState">空席</span>
+            <span class="waiting-badge" id="waitingBadge" style="display:none">店員待ち</span>
+            <button class="resolve-btn" id="resolveBtn" style="display:none">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" style="vertical-align:-1px;margin-right:3px"><path d="M5 13l4 4 10-10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              対応済みにする
+            </button>
+          </div>
+          <div class="field-row">
+            <div class="icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M4 11h16v6H4z M8 11V8h8v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </div>
+            <select id="seatSelect"><option>選択してください</option></select>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <div class="title">お客様情報</div>
+          <div class="field-row">
+            <div class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2"/></svg></div>
+            <input class="text-input" id="custName" placeholder=""><span class="suffix">様</span>
+          </div>
+          <div class="field-row">
+            <div class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="10" r="2" stroke="currentColor" stroke-width="2"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="2"/></svg></div>
+            <select id="custPeople"><option></option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <div class="title">スタッフメモ</div>
+          <div class="field-row">
+            <div class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M4 20h16M4 16l10-10 4 4-10 10H4v-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            <input class="text-input" id="staffMemo" placeholder="">
+          </div>
+        </div>
+
+        <div class="side-section order-status">
+          <div class="title">注文状況</div>
+          <div class="row">
+            <span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <span class="v" id="orderTime">00時間00分</span>
+          </div>
+          <div class="row">
+            <span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg></span>
+            <span class="v"><span id="orderAmount">0</span> 円</span>
+          </div>
+          <div class="pill-btn disabled" id="checkOrderBtn" style="margin-top:6px">注文情報を確認</div>
+        </div>
+
+        <div class="side-section">
+          <div class="title">飲み放題情報</div>
+          <div class="pill-btn disabled" id="drinkPlanBtn">飲み放題利用</div>
+        </div>
+      </div>
+
+      <div id="sideBottomEmpty">
+        <button class="start-btn disabled" id="startBtn">利用開始</button>
+      </div>
+      <div id="sideBottomInUse" style="display:none">
+        <div class="btm-actions">
+          <button class="cancel-btn" id="cancelUseBtn">利用取消</button>
+          <button class="pay-btn" id="payBtn">会計</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============= オーダー管理 ============= -->
+<div class="page" id="page-order">
+  <div class="filter-bar">
+    <div class="filter"><span class="label">調理場</span><span class="value">すべての調理場</span><span class="caret">▾</span></div>
+    <div class="filter-spacer"></div>
+    <button class="btn">本日の注文一覧</button>
+  </div>
+  <div class="order-empty" id="orderEmpty">
+    <svg viewBox="0 0 80 60" fill="none">
+      <path d="M40 16c-12 0-22 8-22 20h44c0-12-10-20-22-20z" fill="#e3e6ea"/>
+      <path d="M40 8c-2 0-3 1-3 3M40 8c2 0 3 1 3 3" stroke="#bcbec5" stroke-width="2" stroke-linecap="round"/>
+      <path d="M30 4c-1 1-1 3 0 4M50 4c1 1 1 3 0 4M40 2c-1 1-1 3 0 4" stroke="#bcbec5" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div>未提供の注文はありません。</div>
+  </div>
+  <div class="order-list" id="orderListBody" style="display:none"></div>
+</div>
+
+<!-- ============= 予約管理 ============= -->
+<div class="page" id="page-rsv">
+  <div class="rsv-bar">
+    <div class="seg">
+      <button class="active">日</button>
+      <button>月</button>
+    </div>
+    <div class="date-pick">
+      <span id="rsvDate">2026年6月15日</span>
+      <span style="color:var(--ink-3)">▾</span>
+    </div>
+    <div class="navarrow"><span>‹</span><span>前の日</span></div>
+    <div class="navarrow"><span>次の日</span><span>›</span></div>
+    <input class="rsv-search" placeholder="テーブル名">
+    <div class="display-mode">表示形式 <span style="color:var(--primary);font-weight:700">一覧表示</span> ▾</div>
+    <div class="rsv-count">予約数：<span id="rsvCount">0</span>件</div>
+  </div>
+  <div class="rsv-table">
+    <div class="head">
+      <div>ステータス</div><div>予約日時</div><div>テーブル名</div>
+      <div>名前</div><div>人数</div><div>電話番号</div><div>備考</div>
+    </div>
+    <div class="body" id="rsvBody"></div>
+  </div>
+  <button class="rsv-add" id="rsvAddBtn">
+    <span style="font-size:18px;line-height:1">+</span> 新規予約登録
+  </button>
+</div>
+
+<!-- ============= 品切れ管理 ============= -->
+<div class="page" id="page-stock">
+  <div class="stock-bar">
+    <div class="filter"><span class="label">ステータス</span><span class="value">すべて</span><span class="caret">▾</span></div>
+    <div class="filter"><span class="label">カテゴリー</span><span class="value">すべて</span><span class="caret">▾</span></div>
+  </div>
+  <div class="stock-body" id="stockBody"></div>
+</div>
+
+<!-- ============= 売上管理 ============= -->
+<div class="page" id="page-sales">
+  <div class="with-sidenav">
+    <aside class="sidenav">
+      <div class="group-title">売上管理</div>
+      <div class="menu-item active" data-sub="sales-info">売上情報</div>
+      <div class="menu-item" data-sub="sales-analysis">売上分析</div>
+      <div class="group-title">会計管理</div>
+      <div class="menu-item" data-sub="sales-paylist">会計一覧</div>
+    </aside>
+    <div class="sales-content">
+      <!-- 売上情報 -->
+      <div class="sub-page active" data-subpage="sales-info">
+        <h2>売上情報</h2>
+        <div class="sales-filter">
+          <div class="seg" data-segname="period">
+            <button class="active" data-v="今月">今月</button>
+            <button data-v="先月">先月</button>
+            <button data-v="先々月">先々月</button>
+          </div>
+          <div class="filter dd-trigger" data-dd="sales-cat"><span class="label">カテゴリー</span><span class="value">すべて</span><span class="caret">▾</span></div>
+          <div class="filter"><span class="label">来店時間</span><span class="value">0:00</span><span style="color:var(--ink-3)">~</span><span class="value">24:00</span></div>
+        </div>
+        <div class="sub-tabs" data-segname="metric">
+          <button class="active" data-v="売上合計">売上合計</button>
+          <button data-v="平均会計金額">平均会計金額</button>
+          <button data-v="平均客単価">平均客単価</button>
+          <button data-v="平均提供時間">平均提供時間</button>
+        </div>
+        <div class="chart-wrap">
+          <div class="legend"><span class="swatch"></span><span id="chartLegend">売上合計</span></div>
+          <div class="chart-grid" id="chart">
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">月</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">火</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">水</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">木</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">金</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">土</div></div>
+            <div class="chart-col"><div class="bar" style="height:0"></div><div class="label">日</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- 売上分析 -->
+      <div class="sub-page" data-subpage="sales-analysis">
+        <h2>売上分析</h2>
+        <div class="sales-filter">
+          <div class="seg">
+            <button class="active">今月</button>
+            <button>先月</button>
+            <button>先々月</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px">
+          <div style="background:#fff;border:1px solid var(--line);border-radius:6px;padding:18px">
+            <div style="color:var(--ink-2);font-size:13px">売上合計</div>
+            <div style="font-size:28px;font-weight:700;color:var(--primary);margin-top:6px">¥ 0</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:6px;padding:18px">
+            <div style="color:var(--ink-2);font-size:13px">来店客数</div>
+            <div style="font-size:28px;font-weight:700;color:var(--primary);margin-top:6px">0 名</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:6px;padding:18px">
+            <div style="color:var(--ink-2);font-size:13px">平均客単価</div>
+            <div style="font-size:28px;font-weight:700;color:var(--primary);margin-top:6px">¥ 0</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:6px;padding:18px;margin-top:16px">
+          <div style="font-weight:700;margin-bottom:14px">カテゴリ別売上</div>
+          <div id="catSales"></div>
+        </div>
+      </div>
+      <!-- 会計一覧 -->
+      <div class="sub-page" data-subpage="sales-paylist">
+        <h2>会計一覧</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px;margin-top:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding:12px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>テーブル</div><div>合計金額</div><div>人数</div><div>会計時間</div><div>領収書</div>
+          </div>
+          <div id="paylistBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= マスタ設定 ============= -->
+<div class="page" id="page-master">
+  <div class="with-sidenav">
+    <aside class="sidenav">
+      <div class="group-title">商品管理</div>
+      <div class="menu-item active" data-sub="m-menu">メニュー</div>
+      <div class="menu-item" data-sub="m-category">カテゴリー</div>
+      <div class="menu-item" data-sub="m-option">オプション</div>
+      <div class="menu-item" data-sub="m-drink">飲み放題プラン</div>
+      <div class="menu-item" data-sub="m-recommend">おすすめメニュー</div>
+      <div class="group-title">キッチン管理</div>
+      <div class="menu-item" data-sub="m-kitchen">調理場</div>
+      <div class="menu-item" data-sub="m-notify">通知設定</div>
+      <div class="group-title">座席管理</div>
+      <div class="menu-item" data-sub="m-table">テーブル</div>
+      <div class="menu-item" data-sub="m-area">エリア</div>
+      <div class="group-title">店舗設定</div>
+      <div class="menu-item" data-sub="m-shop">店舗基本情報</div>
+      <div class="menu-item" data-sub="m-selforder">セルフオーダー</div>
+      <div class="menu-item" data-sub="m-user">ユーザー</div>
+    </aside>
+    <div class="master-content">
+      <!-- メニュー -->
+      <div class="sub-page active" data-subpage="m-menu">
+        <div class="master-bar">
+          <div class="filter dd-trigger" data-dd="master-cat"><span class="label">カテゴリー</span><span class="value">すべて</span><span class="caret">▾</span></div>
+          <input class="rsv-search" id="masterSearch" placeholder="メニュー名" style="flex:0 1 220px">
+          <div style="flex:1"></div>
+          <button class="btn" id="sortBtn">並び替え</button>
+        </div>
+        <div class="master-body">
+          <div class="master-table-head">
+            <div>カテゴリー</div><div>メニュー名</div><div>価格(税込)</div>
+            <div>テイクアウト<br>価格(税込)</div><div>オプション</div><div>表示</div><div>削除</div>
+          </div>
+          <div id="masterTbody"></div>
+          <div class="add-row">
+            <button class="btn btn-primary" id="addMenuBtn" style="padding:10px 30px;border-radius:20px">+ メニューを追加</button>
+          </div>
+        </div>
+      </div>
+      <!-- カテゴリー -->
+      <div class="sub-page" data-subpage="m-category">
+        <div style="padding:20px">
+          <h2 style="margin:0 0 14px">カテゴリー</h2>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+            <div style="display:grid;grid-template-columns:60px 1fr 100px 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+              <div>順序</div><div>カテゴリー名</div><div>色</div><div>表示</div><div>削除</div>
+            </div>
+            <div id="catListBody"></div>
+          </div>
+          <div style="text-align:center;padding:14px"><button class="btn btn-primary" style="padding:10px 30px;border-radius:20px" onclick="addCategory()">+ カテゴリーを追加</button></div>
+        </div>
+      </div>
+      <!-- オプション -->
+      <div class="sub-page" data-subpage="m-option">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">オプション</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 18px;color:var(--ink-2);font-size:13px">登録済みオプションはありません。</div>
+        <div style="text-align:center;padding:14px"><button class="btn btn-primary" style="padding:10px 30px;border-radius:20px">+ オプションを追加</button></div>
+        </div>
+      </div>
+      <!-- 飲み放題プラン -->
+      <div class="sub-page" data-subpage="m-drink">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">飲み放題プラン</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+          <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>プラン名</div><div>料金</div><div>制限時間</div><div>表示</div><div>削除</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>90分飲み放題</div><div>1,500円</div><div>90分</div>
+            <div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        </div>
+      </div>
+      <!-- おすすめメニュー -->
+      <div class="sub-page" data-subpage="m-recommend">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">おすすめメニュー</h2>
+        <p style="color:var(--ink-2);font-size:13px">「本日のおすすめ」カテゴリに表示する商品を選択できます。</p>
+        <div id="recBody" style="background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 18px"></div>
+        </div>
+      </div>
+      <!-- 調理場 -->
+      <div class="sub-page" data-subpage="m-kitchen">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">調理場</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>順序</div><div>調理場名</div><div>表示</div><div>削除</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>1</div><div>メインキッチン</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>2</div><div>ドリンクバー</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        </div>
+      </div>
+      <!-- 通知設定 -->
+      <div class="sub-page" data-subpage="m-notify">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">通知設定</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px;padding:18px;max-width:600px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)">
+            <span>呼び出し通知音</span>
+            <select style="padding:6px 10px;border:1px solid var(--line);border-radius:4px"><option>ピンポーン (G5→E5)</option><option>ベル</option><option>チャイム</option></select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)">
+            <span>おかわり通知音</span>
+            <select style="padding:6px 10px;border:1px solid var(--line);border-radius:4px"><option>ピンポンパン (E→G→C)</option><option>ベル</option></select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
+            <span>音量</span>
+            <input type="range" min="0" max="100" value="95" style="width:200px">
+          </div>
+        </div>
+        </div>
+      </div>
+      <!-- テーブル -->
+      <div class="sub-page" data-subpage="m-table">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">テーブル</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+          <div style="display:grid;grid-template-columns:80px 1fr 100px 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>順序</div><div>テーブル名</div><div>定員</div><div>表示</div><div>削除</div>
+          </div>
+          <div id="tableListBody"></div>
+        </div>
+        </div>
+      </div>
+      <!-- エリア -->
+      <div class="sub-page" data-subpage="m-area">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">エリア</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>順序</div><div>エリア名</div><div>表示</div><div>削除</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>1</div><div>1階フロア</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>2</div><div>テラス席</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        </div>
+      </div>
+      <!-- 店舗基本情報 -->
+      <div class="sub-page" data-subpage="m-shop">
+        <div style="padding:20px;max-width:600px"><h2 style="margin:0 0 14px">店舗基本情報</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div><label style="font-size:12px;color:var(--ink-2)">店舗名</label><input style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-top:4px" value="setanin食堂"></div>
+          <div><label style="font-size:12px;color:var(--ink-2)">店舗ID</label><input style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-top:4px" value="TEST_HANTEN" disabled></div>
+          <div><label style="font-size:12px;color:var(--ink-2)">電話番号</label><input style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-top:4px" placeholder="03-0000-0000"></div>
+          <div><label style="font-size:12px;color:var(--ink-2)">住所</label><input style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-top:4px" placeholder=""></div>
+          <div><label style="font-size:12px;color:var(--ink-2)">営業時間</label><input style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-top:4px" value="11:00 - 22:00"></div>
+          <button class="btn btn-primary" style="align-self:flex-start;padding:8px 26px">保存</button>
+        </div>
+        </div>
+      </div>
+      <!-- セルフオーダー -->
+      <div class="sub-page" data-subpage="m-selforder">
+        <div style="padding:20px;max-width:600px"><h2 style="margin:0 0 14px">セルフオーダー設定</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span>パスコード</span><input type="password" style="padding:8px 10px;border:1px solid var(--line);border-radius:4px;width:200px" value="123456"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span>セルフオーダー有効</span><div class="stock-toggle"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span>自動ログアウト時間</span><select style="padding:6px 10px;border:1px solid var(--line);border-radius:4px"><option>5分</option><option>10分</option><option>30分</option></select></div>
+          <button class="btn btn-primary" style="align-self:flex-start;padding:8px 26px">保存</button>
+        </div>
+        </div>
+      </div>
+      <!-- ユーザー -->
+      <div class="sub-page" data-subpage="m-user">
+        <div style="padding:20px"><h2 style="margin:0 0 14px">ユーザー</h2>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 120px 80px 60px;padding:10px 18px;background:#f8f9fa;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)">
+            <div>ユーザーID</div><div>名前</div><div>権限</div><div>表示</div><div>削除</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 120px 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>ADMIN</div><div>管理者</div><div>管理者</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 120px 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+            <div>STAFF01</div><div>佐藤太郎</div><div>スタッフ</div><div><div class="stock-toggle" style="margin:0"></div></div>
+            <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:14px"><button class="btn btn-primary" style="padding:10px 30px;border-radius:20px">+ ユーザーを追加</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 本日の会計一覧モーダル ============= -->
+<div class="overlay" id="modal-today-pay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>本日の会計一覧</h3>
+      <span style="color:var(--primary);font-weight:600;font-size:13px">すべてのテーブル ▾</span>
+      <span class="close" id="todayPayClose">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="modal-body">
+      <table>
+        <thead><tr><th>テーブル名</th><th>合計金額</th><th>利用人数</th><th>会計時間</th></tr></thead>
+        <tbody id="todayPayBody"><tr><td colspan="4" style="text-align:center;padding:60px;color:var(--ink-3)">会計済みはまだありません</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 会計モーダル ============= -->
+<div class="overlay" id="modal-pay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>会計 <span id="payTable" style="color:var(--ink-2);font-weight:500"></span></h3>
+      <button class="btn" style="color:var(--primary);border-color:var(--primary);font-weight:600">↻ 個別会計モード</button>
+      <span class="close" id="payClose">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <button class="btn" style="color:var(--primary);border-color:var(--primary);font-weight:600">値引き</button>
+        <span><b id="discountAmount">0</b> 円</span>
+      </div>
+      <table>
+        <thead><tr><th style="width:130px">状態</th><th>商品名</th><th style="width:100px;text-align:right">個数</th><th style="width:140px;text-align:right">金額</th></tr></thead>
+        <tbody id="payBody"></tbody>
+      </table>
+    </div>
+    <div class="pay-foot">
+      <span class="label">合計</span><span class="total" id="payTotal">0</span><span class="label">円(税込)</span>
+      <span class="per">一人あたり <span id="payPer">0</span>円</span>
+      <button class="complete-btn" id="completePayBtn">会計完了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 注文情報モーダル ============= -->
+<div class="overlay" id="modal-orderinfo">
+  <div class="modal" style="width:600px;max-width:92vw">
+    <div class="modal-head">
+      <h3>注文情報 <span id="orderInfoTable" style="color:var(--ink-2);font-weight:500"></span></h3>
+      <span class="close" id="orderInfoClose">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="modal-body" style="padding:20px;max-height:50vh;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#f8f9fa"><th style="padding:10px;text-align:left">ステータス</th><th style="padding:10px;text-align:left">商品</th><th style="padding:10px;text-align:right">個数</th><th style="padding:10px;text-align:right">金額</th></tr></thead>
+        <tbody id="orderInfoBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 値引きモーダル ============= -->
+<div class="overlay" id="modal-discount">
+  <div class="modal">
+    <h3 style="margin:0 0 10px">値引き</h3>
+    <p style="margin:0 0 6px;font-size:13px;color:var(--ink-2)">値引き金額 (円)</p>
+    <input type="number" id="discountInput" min="0" value="0">
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" id="discountCancel">キャンセル</button>
+      <button class="btn btn-primary" id="discountApply">適用</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 新規予約モーダル ============= -->
+<div class="overlay" id="modal-rsv">
+  <div class="modal">
+    <div class="modal-head"><h3>新規予約登録</h3><span class="close" id="rsvAddClose"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></div>
+    <div class="modal-body">
+      <div><label>予約日時</label><input type="datetime-local" id="rsvDt"></div>
+      <div><label>テーブル名</label><select id="rsvTable"></select></div>
+      <div><label>名前</label><input id="rsvName" placeholder="お客様名"></div>
+      <div><label>人数</label><select id="rsvPeople"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div><label>電話番号</label><input id="rsvPhone" placeholder="090-0000-0000"></div>
+      <div><label>備考</label><input id="rsvNote" placeholder=""></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="rsvAddCancel">キャンセル</button>
+      <button class="btn btn-primary" id="rsvAddSave">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 初回ゲート ===== -->
+<div class="gate" id="gate">
+  <h1>管理画面を開始</h1>
+  <p>呼び出し音を鳴らすためにブラウザの音声を有効化します。<br>下のボタンをクリックして開始してください。</p>
+  <button class="start" id="startListenBtn">▶ 受信を開始する</button>
+  <p style="font-size:12px;opacity:.7">※ ブラウザ・OSの音量がオンになっていることを確認してください</p>
+</div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const fmt = n => Number(n).toLocaleString("ja-JP");
+
+/* ===== マスタデータ (品切れ管理 + マスタ設定 + 会計用) ===== */
+const CAT_COLORS = {
+  "キッズ":"#e84355","デザート":"#f5c000","副菜":"#c93b66","一品":"#22c55e",
+  "ランチ":"#3b82f6","ソフトドリンク":"#06b6d4","コーヒー・ティー":"#7c5c3a",
+  "アルコール":"#9333ea","主菜":"#ef6c00","裏メニュー":"#0f172a","通知音テストA":"#888","通知音テストB":"#888","通知音テストC":"#888","通知音テストE":"#888","本日のおすすめ":"#16a34a"
+};
+const MENU = {
+  "キッズ":[
+    {name:"お子様ランチ",price:780},
+    {name:"パンケーキセット",price:780},
+    {name:"キッズカレー",price:780},
+  ],
+  "デザート":[
+    {name:"フルーツタルト",price:500},
+    {name:"バスクチーズケーキ",price:500},
+    {name:"シフォンケーキ",price:450},
+    {name:"ショコラケーキ",price:500},
+  ],
+  "副菜":[
+    {name:"にんじんマリネ",price:380},
+    {name:"かぼちゃのマッシュサラダ",price:380},
+    {name:"蒸しナスの青しそマリネ",price:380},
+    {name:"ほうれん草のキッシュ",price:480},
+    {name:"トマトとアボカドのブルスケッタ",price:380},
+  ],
+  "一品":[
+    {name:"フライドポテト",price:300},
+    {name:"からあげ",price:380},
+    {name:"山芋ふわふわ焼き",price:580},
+    {name:"枝豆",price:300},
+    {name:"エイヒレ",price:580},
+    {name:"トマトスライス",price:280},
+  ],
+  "ランチ":[
+    {name:"日替わりランチ",price:980},
+    {name:"パスタランチ",price:1100},
+  ],
+  "ソフトドリンク":[
+    {name:"コーラ",price:380},
+    {name:"オレンジジュース",price:380},
+  ],
+  "コーヒー・ティー":[
+    {name:"ブレンドコーヒー",price:450},
+    {name:"紅茶",price:450},
+  ],
+  "アルコール":[
+    {name:"生ビール",price:580},
+    {name:"ハイボール",price:480},
+  ],
+  "主菜":[
+    {name:"本日の主菜",price:1500},
+  ],
+};
+
+const TABLES = [
+  "らいおん","きりん","うさぎ","ぞう","とら",
+  "くじら","ぺんぎん","いんこ","文鳥","ふくろう","かもめ",
+  "ひまわり","あじさい","ちゅーりっぷ","こすもす","すいせん","彼岸花"
+];
+
+/* ===== 状態 ===== */
+const state = {
+  page:"tables",
+  calls:{},                // {tableName: {kind, time}}
+  inUse:{},                // {tableName: {startedAt, people, customer, memo, orders:[{name,qty,price,status,time}]}}
+  paid:[],                 // [{table, total, people, time}]
+  selectedTable:null,
+  stockStatus:{},          // {menuName: true/false}
+  ready:false,
+};
+
+/* 初期 stockStatus 全部在庫あり */
+Object.values(MENU).flat().forEach(m => state.stockStatus[m.name] = true);
+
+/* ===== ページ切替 ===== */
+function showPage(name){
+  state.page = name;
+  $$(".page").forEach(p => p.classList.remove("active"));
+  $(`#page-${name}`).classList.add("active");
+  $$(".nav-tab").forEach(t => t.classList.toggle("active", t.dataset.page === name));
+}
+$$(".nav-tab").forEach(t => t.addEventListener("click", () => showPage(t.dataset.page)));
+$$(".home-card").forEach(c => c.addEventListener("click", () => showPage(c.dataset.go)));
+
+/* ===== テーブル管理: テーブルカード描画 ===== */
+function renderTables(){
+  const wrap = $("#tables");
+  wrap.innerHTML = "";
+
+  const extra = document.createElement("div");
+  extra.className = "extra-seat";
+  extra.innerHTML = `<div class="plus">+</div><div>臨時席</div>`;
+  wrap.appendChild(extra);
+
+  TABLES.forEach(name => {
+    const call = state.calls[name];
+    const use = state.inUse[name];
+    const card = document.createElement("div");
+    card.className = "table-card";
+    if (call?.kind === "call") card.classList.add("calling");
+    if (call?.kind === "refill") card.classList.add("refilling");
+    if (use) card.classList.add("in-use");
+    if (state.selectedTable === name) card.classList.add("selected");
+
+    let bodyContent = "";
+    let headBadge = "";
+    if (use){
+      const mm = Math.floor((Date.now() - use.startedAt) / 60000);
+      const hh = Math.floor(mm / 60);
+      const rest = mm % 60;
+      bodyContent = `${hh}-${hh+1}時間 ${rest}-${rest+1}分`;
+      headBadge = `<span class="badge-right">${use.people || 1}/4名</span>`;
+    }
+
+    card.innerHTML = `
+      <div class="head">${name}${headBadge}</div>
+      <div class="body">${bodyContent}</div>
+      <div class="footer">
+        <div class="next-rsv"><span>次の予約</span><span>なし</span></div>
+        <div class="icon-btn call">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+      </div>
+    `;
+    card.addEventListener("click", () => {
+      state.selectedTable = (state.selectedTable === name ? null : name);
+      renderTables();
+      renderSidebar();
+    });
+    wrap.appendChild(card);
+  });
+}
+
+/* ===== サイドバー描画 ===== */
+function renderSidebar(){
+  const tbl = state.selectedTable;
+  const call = tbl ? state.calls[tbl] : null;
+  const use  = tbl ? state.inUse[tbl] : null;
+
+  // 待ち表示
+  if (call){
+    $("#waitingBadge").style.display = "inline-block";
+    $("#resolveBtn").style.display = "inline-flex";
+    $("#waitingBadge").textContent = call.kind === "refill" ? "おかわり" : "店員待ち";
+  } else {
+    $("#waitingBadge").style.display = "none";
+    $("#resolveBtn").style.display = "none";
+  }
+
+  // 状態テキスト
+  $("#seatState").textContent = use ? "利用中" : "空席";
+  $("#seatState").classList.toggle("in-use", !!use);
+
+  // テーブル選択
+  $("#seatSelect").innerHTML = tbl
+    ? `<option>${tbl}</option>`
+    : `<option>選択してください</option>`;
+
+  // 客情報
+  $("#custName").value = use?.customer || "";
+  $("#custPeople").value = use?.people || "";
+  $("#staffMemo").value = use?.memo || "";
+
+  // 時間・金額
+  if (use){
+    const mm = Math.floor((Date.now() - use.startedAt) / 60000);
+    const hh = Math.floor(mm / 60);
+    const rest = mm % 60;
+    $("#orderTime").textContent = `${hh}-${hh+1}時間${rest}-${rest+1}分`;
+    const sum = use.orders.reduce((s,o) => s + o.price * o.qty, 0);
+    $("#orderAmount").textContent = fmt(sum);
+    $("#checkOrderBtn").classList.remove("disabled");
+    $("#drinkPlanBtn").classList.remove("disabled");
+    $("#drinkPlanBtn").classList.add("active");
+  } else {
+    $("#orderTime").textContent = "00時間00分";
+    $("#orderAmount").textContent = "0";
+    $("#checkOrderBtn").classList.add("disabled");
+    $("#drinkPlanBtn").classList.add("disabled");
+    $("#drinkPlanBtn").classList.remove("active");
+  }
+
+  // 下部ボタン: 利用中なら利用取消/会計、それ以外は利用開始
+  if (use){
+    $("#sideBottomEmpty").style.display = "none";
+    $("#sideBottomInUse").style.display = "block";
+  } else {
+    $("#sideBottomEmpty").style.display = "block";
+    $("#sideBottomInUse").style.display = "none";
+    $("#startBtn").classList.toggle("disabled", !tbl);
+  }
+}
+
+/* ===== 対応済み ===== */
+$("#resolveBtn").addEventListener("click", () => {
+  if (!state.selectedTable) return;
+  delete state.calls[state.selectedTable];
+  renderTables();
+  renderSidebar();
+});
+
+/* ===== 利用開始 / 利用取消 / 会計 ===== */
+$("#startBtn").addEventListener("click", () => {
+  const t = state.selectedTable;
+  if (!t || state.inUse[t]) return;
+  state.inUse[t] = {
+    startedAt: Date.now(),
+    people: 1,
+    customer: "",
+    memo: "",
+    orders: [
+      // デモ用ダミー注文
+      { name:"フライドポテト", qty:1, price:300, status:"提供済", time:nowStr() },
+      { name:"生ビール", qty:2, price:580, status:"提供済", time:nowStr() },
+    ],
+  };
+  renderTables();
+  renderSidebar();
+});
+
+$("#cancelUseBtn").addEventListener("click", () => {
+  const t = state.selectedTable;
+  if (!t) return;
+  delete state.inUse[t];
+  renderTables();
+  renderSidebar();
+});
+
+$("#payBtn").addEventListener("click", () => {
+  const t = state.selectedTable;
+  if (!t || !state.inUse[t]) return;
+  openPayModal(t);
+});
+
+/* お客様情報入力同期 */
+$("#custName").addEventListener("input", e => { const t=state.selectedTable; if (state.inUse[t]) state.inUse[t].customer = e.target.value; });
+$("#custPeople").addEventListener("change", e => {
+  const t=state.selectedTable;
+  if (state.inUse[t]) { state.inUse[t].people = e.target.value; renderTables(); }
+});
+$("#staffMemo").addEventListener("input", e => { const t=state.selectedTable; if (state.inUse[t]) state.inUse[t].memo = e.target.value; });
+
+/* ===== 注文情報モーダル ===== */
+$("#checkOrderBtn").addEventListener("click", () => {
+  const t = state.selectedTable;
+  if (!t || !state.inUse[t]) return;
+  $("#orderInfoTable").textContent = t;
+  const tb = $("#orderInfoBody");
+  const orders = state.inUse[t].orders;
+  tb.innerHTML = orders.length === 0
+    ? `<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--ink-3)">注文はまだありません</td></tr>`
+    : orders.map(o => `<tr>
+        <td style="padding:10px"><span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:3px;font-size:11px">${o.status}</span></td>
+        <td style="padding:10px">${o.name}</td>
+        <td style="padding:10px;text-align:right">${o.qty}</td>
+        <td style="padding:10px;text-align:right">${fmt(o.price * o.qty)}円</td>
+      </tr>`).join("");
+  openModal("modal-orderinfo");
+});
+$("#orderInfoClose").addEventListener("click", () => closeModal("modal-orderinfo"));
+
+/* ===== 会計モーダル ===== */
+function openPayModal(table){
+  const use = state.inUse[table];
+  if (!use) return;
+  $("#payTable").textContent = table;
+  const tb = $("#payBody");
+  tb.innerHTML = use.orders.length === 0
+    ? `<tr><td colspan="4" style="padding:50px;text-align:center;color:var(--ink-3)">注文はまだありません</td></tr>`
+    : use.orders.map(o => `<tr>
+        <td><span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:3px;font-size:11px">${o.status}</span></td>
+        <td>${o.name}</td>
+        <td style="text-align:right">${o.qty}</td>
+        <td style="text-align:right">${fmt(o.price * o.qty)}円</td>
+      </tr>`).join("");
+  const total = use.orders.reduce((s,o) => s + o.price * o.qty, 0);
+  $("#payTotal").textContent = fmt(total);
+  $("#payPer").textContent = fmt(Math.ceil(total / (use.people || 1)));
+  openModal("modal-pay");
+}
+$("#payClose").addEventListener("click", () => closeModal("modal-pay"));
+$("#completePayBtn").addEventListener("click", () => {
+  const t = state.selectedTable;
+  const use = state.inUse[t];
+  if (!t || !use) return;
+  const total = use.orders.reduce((s,o) => s + o.price * o.qty, 0);
+  state.paid.unshift({ table:t, total, people:use.people, time:nowStr() });
+  delete state.inUse[t];
+  closeModal("modal-pay");
+  renderTables();
+  renderSidebar();
+});
+
+/* ===== 本日の会計一覧モーダル ===== */
+$("#openTodayPay").addEventListener("click", () => {
+  const tb = $("#todayPayBody");
+  tb.innerHTML = state.paid.length === 0
+    ? `<tr><td colspan="4" style="text-align:center;padding:60px;color:var(--ink-3)">会計済みはまだありません</td></tr>`
+    : state.paid.map(p => `<tr>
+        <td>${p.table}</td>
+        <td>${fmt(p.total)} 円</td>
+        <td>${p.people} 名</td>
+        <td>${p.time}</td>
+      </tr>`).join("");
+  openModal("modal-today-pay");
+});
+$("#todayPayClose").addEventListener("click", () => closeModal("modal-today-pay"));
+
+/* ===== モーダルヘルパー ===== */
+function openModal(id){ $(`#${id}`).classList.add("active"); }
+function closeModal(id){ $(`#${id}`).classList.remove("active"); }
+
+/* ===== 品切れ管理 ===== */
+function renderStock(){
+  const wrap = $("#stockBody");
+  wrap.innerHTML = "";
+  Object.keys(MENU).forEach(cat => {
+    const items = MENU[cat];
+    if (!items?.length) return;
+    const div = document.createElement("div");
+    div.className = "stock-category";
+    div.innerHTML = `
+      <div class="cat-head">
+        <span class="cat-bar" style="background:${CAT_COLORS[cat] || '#888'}"></span>${cat}
+      </div>
+      <div class="stock-items">
+        ${items.map(m => `
+          <div class="stock-item ${state.stockStatus[m.name] ? '' : 'off'}" data-name="${m.name}">
+            <span class="name">${m.name}</span>
+            <div class="stock-toggle ${state.stockStatus[m.name] ? '' : 'off'}"></div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+  $$(".stock-item").forEach(item => {
+    item.addEventListener("click", () => {
+      const n = item.dataset.name;
+      state.stockStatus[n] = !state.stockStatus[n];
+      renderStock();
+    });
+  });
+}
+
+/* ===== マスタ設定: メニュー一覧 ===== */
+function renderMaster(){
+  const wrap = $("#masterTbody");
+  const rows = [];
+  Object.keys(MENU).forEach(cat => {
+    (MENU[cat] || []).forEach(m => {
+      rows.push({ cat, name:m.name, price:m.price });
+    });
+  });
+  wrap.innerHTML = rows.map(r => `
+    <div class="master-row">
+      <div class="cat"><span class="cat-bar" style="background:${CAT_COLORS[r.cat] || '#888'}"></span>${r.cat}</div>
+      <div>${r.name}</div>
+      <div><input class="price-input" value="${r.price}"></div>
+      <div></div>
+      <div></div>
+      <div><div class="stock-toggle" style="margin:0"></div></div>
+      <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  `).join("");
+}
+
+/* ===== 時計 ===== */
+function nowStr(){
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+function renderClock(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  $("#hhmm").textContent = `${hh} ${mm}`;
+  const week = ["日","月","火","水","木","金","土"][d.getDay()];
+  $("#date").textContent = `${d.getMonth()+1}月${d.getDate()}日(${week})`;
+  // 利用中テーブルの時間も更新
+  if (state.page === "tables"){
+    renderTables();
+    if (state.selectedTable && state.inUse[state.selectedTable]) renderSidebar();
+  }
+}
+setInterval(renderClock, 30000);
+renderClock();
+
+/* ===== トグル ===== */
+$("#timeToggle").addEventListener("click", () => { $("#timeToggle").classList.toggle("off"); });
+
+/* ===== AudioContext + チャイム ===== */
+let audioCtx = null;
+function getAudioCtx(){
+  if (!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function playTone(ctx, freq, startAt, duration, peak){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, startAt);
+  const osc2 = ctx.createOscillator();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freq * 2.01, startAt);
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(peak * 0.18, startAt);
+  g2.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc2.connect(g2).connect(ctx.destination);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(startAt); osc.stop(startAt + duration + 0.05);
+  osc2.start(startAt); osc2.stop(startAt + duration + 0.05);
+}
+function playCallSound(kind){
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  if (kind === "refill"){
+    playTone(ctx, 659.25, now,        0.6, 0.95);
+    playTone(ctx, 783.99, now + 0.18, 0.6, 0.95);
+    playTone(ctx, 1046.50, now + 0.36, 0.9, 0.95);
+  } else if (kind === "order"){
+    // オーダー通知音: ピロリン♪ (C6→E6 上昇2音)
+    playTone(ctx, 1046.50, now,        0.4, 0.85);
+    playTone(ctx, 1318.51, now + 0.14, 0.7, 0.85);
+  } else {
+    playTone(ctx, 783.99, now,        0.9, 0.95);
+    playTone(ctx, 659.25, now + 0.32, 1.1, 0.95);
+  }
+}
+
+/* ===== BroadcastChannel ===== */
+let channel = null;
+function startListening(){
+  if (channel) return;
+  channel = new BroadcastChannel("setanin-staff-call");
+  channel.onmessage = (ev) => {
+    const msg = ev.data;
+    if (!msg || typeof msg !== "object") return;
+    if (msg.type === "ping"){ channel.postMessage({ type:"ack" }); return; }
+    if (msg.type === "call" || msg.type === "refill"){
+      const table = msg.table || "らいおん";
+      state.calls[table] = { kind: msg.type, time: msg.time || Date.now() };
+      renderTables();
+      if (state.selectedTable === table) renderSidebar();
+      playCallSound(msg.type);
+      flash();
+      channel.postMessage({ type:"ack" });
+    }
+    if (msg.type === "order"){
+      receiveOrder(msg);
+      channel.postMessage({ type:"ack" });
+    }
+  };
+  state.ready = true;
+  $("#liveDot").style.display = "inline-block";
+  $("#recvLabel").textContent = "受信中";
+}
+
+/* ===== オーダー受信処理 ===== */
+function receiveOrder(msg){
+  const table = msg.table || "らいおん";
+  const items = msg.items || [];
+  const tm = nowStr();
+  // テーブルが未利用なら自動的に利用開始
+  if (!state.inUse[table]){
+    state.inUse[table] = {
+      startedAt: msg.time || Date.now(),
+      people: 1,
+      customer: "",
+      memo: "",
+      orders: [],
+    };
+  }
+  // 注文を「未提供」ステータスで追加
+  items.forEach(it => {
+    state.inUse[table].orders.push({
+      name: it.name, qty: it.qty, price: it.price,
+      status: "未提供", time: tm,
+      orderedAt: msg.time || Date.now(),
+      table,
+    });
+  });
+  playCallSound("order");
+  flash();
+  renderTables();
+  if (state.selectedTable === table) renderSidebar();
+  renderPendingOrders();
+  updateOrderBadge();
+}
+
+/* ===== オーダー管理: 未提供注文の描画 ===== */
+function pendingOrders(){
+  const out = [];
+  Object.entries(state.inUse).forEach(([table, use]) => {
+    use.orders.forEach((o, idx) => {
+      if (o.status === "未提供"){
+        out.push({ ...o, table, orderIdx: idx });
+      }
+    });
+  });
+  // 古い順
+  out.sort((a,b) => (a.orderedAt||0) - (b.orderedAt||0));
+  return out;
+}
+
+function renderPendingOrders(){
+  const wrap = $("#orderListBody");
+  if (!wrap) return;
+  const orders = pendingOrders();
+  if (orders.length === 0){
+    $("#orderEmpty").style.display = "flex";
+    wrap.style.display = "none";
+    wrap.innerHTML = "";
+    return;
+  }
+  $("#orderEmpty").style.display = "none";
+  wrap.style.display = "grid";
+  wrap.innerHTML = orders.map((o, i) => {
+    const mins = Math.floor((Date.now() - (o.orderedAt || Date.now())) / 60000);
+    return `
+    <div class="order-card" data-table="${o.table}" data-idx="${o.orderIdx}">
+      <div class="oc-head">
+        <span class="oc-table">${o.table}</span>
+        <span class="oc-time">${o.time}<span style="margin-left:8px;color:${mins>=10?'var(--call)':'var(--ink-3)'}">(${mins}分経過)</span></span>
+      </div>
+      <div class="oc-body">
+        <span class="oc-name">${o.name}</span>
+        <span class="oc-qty">× ${o.qty}</span>
+      </div>
+      <div class="oc-actions">
+        <button class="btn" data-act="serve">提供済</button>
+        <button class="btn" data-act="cancel" style="color:var(--call);border-color:var(--call)">取消</button>
+      </div>
+    </div>`;
+  }).join("");
+  wrap.querySelectorAll(".order-card").forEach(card => {
+    const t = card.dataset.table;
+    const idx = +card.dataset.idx;
+    card.querySelector('[data-act="serve"]').addEventListener("click", () => {
+      const use = state.inUse[t];
+      if (use && use.orders[idx]) use.orders[idx].status = "提供済";
+      renderPendingOrders();
+      updateOrderBadge();
+      if (state.selectedTable === t) renderSidebar();
+    });
+    card.querySelector('[data-act="cancel"]').addEventListener("click", () => {
+      const use = state.inUse[t];
+      if (use && use.orders[idx]){
+        if (!confirm("この注文を取り消しますか？")) return;
+        use.orders.splice(idx, 1);
+      }
+      renderPendingOrders();
+      updateOrderBadge();
+      if (state.selectedTable === t) renderSidebar();
+    });
+  });
+}
+
+function updateOrderBadge(){
+  const cnt = pendingOrders().length;
+  const tab = document.querySelector('.nav-tab[data-page="order"]');
+  if (!tab) return;
+  let badge = tab.querySelector(".nav-badge");
+  if (cnt === 0){ if (badge) badge.remove(); return; }
+  if (!badge){
+    badge = document.createElement("span");
+    badge.className = "nav-badge";
+    tab.appendChild(badge);
+  }
+  badge.textContent = cnt;
+}
+function flash(){ const el = $("#flash"); el.classList.add("on"); setTimeout(() => el.classList.remove("on"), 250); }
+
+$("#startListenBtn").addEventListener("click", () => {
+  getAudioCtx();
+  startListening();
+  $("#gate").classList.add("hidden");
+});
+
+/* ===== 売上チャートにデモ値 (受信中表示用) ===== */
+function renderChartDemo(){
+  const cols = $$("#chart .chart-col");
+  const demo = [60,80,45,70,90,120,100];
+  const max = Math.max(...demo);
+  cols.forEach((c,i) => {
+    const bar = c.querySelector(".bar");
+    bar.style.height = `${(demo[i] / max) * 80}%`;
+  });
+}
+
+/* ===== サイドナビ切替 (売上管理 + マスタ設定) ===== */
+$$(".sidenav .menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    const sub = item.dataset.sub;
+    if (!sub) return;
+    const parent = item.closest(".with-sidenav");
+    parent.querySelectorAll(".sidenav .menu-item").forEach(m => m.classList.remove("active"));
+    item.classList.add("active");
+    parent.querySelectorAll(".sub-page").forEach(p => p.classList.remove("active"));
+    const target = parent.querySelector(`.sub-page[data-subpage="${sub}"]`);
+    if (target) target.classList.add("active");
+  });
+});
+
+/* ===== セグメントタブ切替 (汎用) ===== */
+$$(".seg, .sub-tabs").forEach(seg => {
+  seg.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      seg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      if (b.dataset.v === "売上合計" || b.dataset.v === "平均会計金額" || b.dataset.v === "平均客単価" || b.dataset.v === "平均提供時間"){
+        $("#chartLegend").textContent = b.dataset.v;
+        renderChartDemo();
+      }
+    });
+  });
+});
+
+/* ===== ドロップダウンフィルタ ===== */
+const DD_OPTIONS = {
+  "area":["すべて","1階フロア","テラス席"],
+  "table-cat":["すべて","通常席","個室","カウンター"],
+  "status":["すべて","空席","利用中","予約中"],
+  "call-status":["すべて","呼び出し中","おかわり要","対応済み"],
+  "order-cook":["すべての調理場","メインキッチン","ドリンクバー"],
+  "stock-status":["すべて","販売中","品切れ"],
+  "stock-cat":["すべて",...Object.keys(MENU)],
+  "sales-cat":["すべて",...Object.keys(MENU)],
+  "master-cat":["すべて",...Object.keys(MENU)],
+};
+let openDD = null;
+function closeDD(){ if (openDD){ openDD.remove(); openDD = null; } }
+document.addEventListener("click", e => {
+  if (openDD && !openDD.contains(e.target) && !e.target.closest(".dd-trigger")) closeDD();
+});
+
+function attachDD(trigger, key){
+  trigger.classList.add("dd-trigger");
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    closeDD();
+    const opts = DD_OPTIONS[key] || ["すべて"];
+    const dd = document.createElement("div");
+    dd.className = "dd-menu open";
+    const rect = trigger.getBoundingClientRect();
+    dd.style.left = rect.left + "px";
+    dd.style.top = (rect.bottom + 4) + "px";
+    const current = trigger.querySelector(".value")?.textContent || opts[0];
+    dd.innerHTML = opts.map(o => `<div class="dd-item ${o===current?'active':''}">${o}</div>`).join("");
+    document.body.appendChild(dd);
+    openDD = dd;
+    dd.querySelectorAll(".dd-item").forEach(it => {
+      it.addEventListener("click", ev => {
+        ev.stopPropagation();
+        const v = it.textContent;
+        const vEl = trigger.querySelector(".value");
+        if (vEl) vEl.textContent = v;
+        closeDD();
+      });
+    });
+  });
+}
+
+/* テーブル管理のフィルタを設定 */
+const filterBarFilters = document.querySelectorAll("#page-tables .filter-bar .filter");
+attachDD(filterBarFilters[0], "area");
+attachDD(filterBarFilters[1], "table-cat");
+attachDD(filterBarFilters[2], "status");
+attachDD(filterBarFilters[3], "call-status");
+
+/* オーダー管理 */
+attachDD(document.querySelector("#page-order .filter"), "order-cook");
+
+/* 品切れ管理 */
+const stockFilters = document.querySelectorAll("#page-stock .filter");
+attachDD(stockFilters[0], "stock-status");
+attachDD(stockFilters[1], "stock-cat");
+
+/* 売上管理・マスタ設定 (data-dd属性で設定済み) */
+$$("[data-dd]").forEach(el => attachDD(el, el.dataset.dd));
+
+/* ===== 個別会計モード toggle ===== */
+const indivBtn = document.querySelector("#modal-pay .modal-head .btn");
+if (indivBtn){
+  indivBtn.classList.add("indiv-btn");
+  indivBtn.addEventListener("click", () => {
+    indivBtn.classList.toggle("active");
+  });
+}
+
+/* ===== 値引きモーダル ===== */
+let currentDiscount = 0;
+const discountTrigger = document.querySelector("#modal-pay .modal-body .btn");
+if (discountTrigger){
+  discountTrigger.addEventListener("click", () => {
+    $("#discountInput").value = currentDiscount;
+    openModal("modal-discount");
+  });
+}
+$("#discountCancel").addEventListener("click", () => closeModal("modal-discount"));
+$("#discountApply").addEventListener("click", () => {
+  currentDiscount = Math.max(0, +$("#discountInput").value || 0);
+  $("#discountAmount").textContent = fmt(currentDiscount);
+  // 合計再計算
+  const t = state.selectedTable;
+  const use = state.inUse[t];
+  if (use){
+    const total = use.orders.reduce((s,o) => s + o.price * o.qty, 0) - currentDiscount;
+    $("#payTotal").textContent = fmt(Math.max(0,total));
+    $("#payPer").textContent = fmt(Math.ceil(Math.max(0,total) / (use.people || 1)));
+  }
+  closeModal("modal-discount");
+});
+
+/* ===== 予約管理 ===== */
+const RSVS = [];
+
+function openRsvDialog(){
+  // テーブル選択肢を入れる
+  $("#rsvTable").innerHTML = TABLES.map(t => `<option>${t}</option>`).join("");
+  $("#rsvName").value = "";
+  $("#rsvPhone").value = "";
+  $("#rsvNote").value = "";
+  // 現在時刻 + 1h
+  const d = new Date(Date.now() + 60*60*1000);
+  const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  $("#rsvDt").value = iso;
+  openModal("modal-rsv");
+}
+$("#rsvAddBtn").addEventListener("click", openRsvDialog);
+$("#rsvAddClose").addEventListener("click", () => closeModal("modal-rsv"));
+$("#rsvAddCancel").addEventListener("click", () => closeModal("modal-rsv"));
+$("#rsvAddSave").addEventListener("click", () => {
+  const dt = $("#rsvDt").value;
+  if (!dt){ alert("予約日時を入力してください"); return; }
+  RSVS.push({
+    status:"確定",
+    dt: dt.replace("T"," "),
+    table: $("#rsvTable").value,
+    name: $("#rsvName").value || "(未入力)",
+    people: $("#rsvPeople").value,
+    phone: $("#rsvPhone").value,
+    note: $("#rsvNote").value,
+  });
+  renderRsv();
+  closeModal("modal-rsv");
+});
+function renderRsv(){
+  const body = $("#rsvBody");
+  $("#rsvCount").textContent = RSVS.length;
+  if (RSVS.length === 0){
+    body.innerHTML = `<div style="padding:60px;text-align:center;color:var(--ink-3);font-size:13px">予約はまだありません</div>`;
+    return;
+  }
+  body.innerHTML = RSVS.map(r => `
+    <div style="display:grid;grid-template-columns:100px 160px 1fr 1fr 80px 140px 1fr;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;align-items:center">
+      <div><span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:3px;font-size:11px">${r.status}</span></div>
+      <div>${r.dt}</div>
+      <div>${r.table}</div>
+      <div>${r.name} 様</div>
+      <div>${r.people} 名</div>
+      <div>${r.phone || '-'}</div>
+      <div>${r.note || '-'}</div>
+    </div>
+  `).join("");
+}
+renderRsv();
+
+/* ===== マスタ設定: メニュー検索 + 並び替え + 追加 ===== */
+let masterSortAsc = true;
+$("#masterSearch").addEventListener("input", () => renderMaster());
+$("#sortBtn").addEventListener("click", () => { masterSortAsc = !masterSortAsc; renderMaster(); });
+$("#addMenuBtn").addEventListener("click", () => {
+  const name = prompt("新しいメニュー名を入力");
+  if (!name) return;
+  const cat = prompt("カテゴリーを入力 (例: キッズ, デザート, 副菜, 一品, ランチ, ソフトドリンク, コーヒー・ティー, アルコール, 主菜)", "キッズ");
+  if (!cat) return;
+  const priceStr = prompt("価格を入力 (税込)", "500");
+  const price = parseInt(priceStr, 10);
+  if (isNaN(price)) return;
+  if (!MENU[cat]) MENU[cat] = [];
+  MENU[cat].push({ name, price });
+  state.stockStatus[name] = true;
+  renderMaster();
+  renderStock();
+});
+
+/* renderMasterを検索・ソート対応に上書き */
+function renderMaster(){
+  const wrap = $("#masterTbody");
+  const q = ($("#masterSearch")?.value || "").trim().toLowerCase();
+  let rows = [];
+  Object.keys(MENU).forEach(cat => {
+    (MENU[cat] || []).forEach(m => rows.push({ cat, name:m.name, price:m.price }));
+  });
+  if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
+  rows.sort((a,b) => masterSortAsc ? a.price - b.price : b.price - a.price);
+  wrap.innerHTML = rows.map(r => `
+    <div class="master-row">
+      <div class="cat"><span class="cat-bar" style="background:${CAT_COLORS[r.cat] || '#888'}"></span>${r.cat}</div>
+      <div>${r.name}</div>
+      <div><input class="price-input" value="${r.price}" data-name="${r.name}"></div>
+      <div></div>
+      <div></div>
+      <div><div class="stock-toggle ${state.stockStatus[r.name] ? '' : 'off'}" data-name="${r.name}"></div></div>
+      <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer" data-name="${r.name}" class="del-icon"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  `).join("");
+  // 価格編集
+  wrap.querySelectorAll(".price-input").forEach(inp => {
+    inp.addEventListener("change", e => {
+      const n = e.target.dataset.name;
+      const v = parseInt(e.target.value, 10);
+      if (isNaN(v)) return;
+      Object.values(MENU).forEach(arr => {
+        const item = arr.find(x => x.name === n);
+        if (item) item.price = v;
+      });
+    });
+  });
+  // 表示トグル
+  wrap.querySelectorAll(".stock-toggle").forEach(t => {
+    t.addEventListener("click", () => {
+      const n = t.dataset.name;
+      state.stockStatus[n] = !state.stockStatus[n];
+      t.classList.toggle("off", !state.stockStatus[n]);
+    });
+  });
+  // 削除
+  wrap.querySelectorAll(".del-icon").forEach(d => {
+    d.addEventListener("click", () => {
+      const n = d.dataset.name;
+      if (!confirm(`「${n}」を削除しますか？`)) return;
+      Object.keys(MENU).forEach(cat => { MENU[cat] = MENU[cat].filter(x => x.name !== n); });
+      delete state.stockStatus[n];
+      renderMaster();
+      renderStock();
+    });
+  });
+}
+
+/* ===== カテゴリー一覧 ===== */
+function renderCatList(){
+  const body = $("#catListBody");
+  if (!body) return;
+  body.innerHTML = Object.keys(MENU).map((cat, i) => `
+    <div style="display:grid;grid-template-columns:60px 1fr 100px 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+      <div>${i+1}</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:4px;height:16px;background:${CAT_COLORS[cat]||'#888'};border-radius:2px"></span>${cat}</div>
+      <div><span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:${CAT_COLORS[cat]||'#888'};vertical-align:middle"></span></div>
+      <div><div class="stock-toggle" style="margin:0"></div></div>
+      <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  `).join("");
+}
+function addCategory(){
+  const n = prompt("カテゴリー名");
+  if (!n || MENU[n]) return;
+  MENU[n] = [];
+  CAT_COLORS[n] = "#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0");
+  renderCatList();
+  renderStock();
+}
+
+/* テーブル一覧 (マスタ設定) */
+function renderMasterTableList(){
+  const body = $("#tableListBody");
+  if (!body) return;
+  body.innerHTML = TABLES.map((t, i) => `
+    <div style="display:grid;grid-template-columns:80px 1fr 100px 80px 60px;padding:14px 18px;font-size:13px;border-bottom:1px solid var(--line);align-items:center">
+      <div>${i+1}</div><div>${t}</div><div>4 名</div>
+      <div><div class="stock-toggle" style="margin:0"></div></div>
+      <div><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="color:var(--call);cursor:pointer"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  `).join("");
+}
+
+/* おすすめメニュー */
+function renderRecommend(){
+  const body = $("#recBody");
+  if (!body) return;
+  const rows = [];
+  Object.entries(MENU).forEach(([cat, items]) => items.forEach(m => rows.push({cat, name:m.name})));
+  body.innerHTML = rows.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div><span style="display:inline-block;width:4px;height:14px;background:${CAT_COLORS[r.cat]||'#888'};vertical-align:middle;margin-right:8px"></span>${r.name}</div>
+      <div class="stock-toggle off"></div>
+    </div>
+  `).join("");
+  body.querySelectorAll(".stock-toggle").forEach(t => t.addEventListener("click", () => t.classList.toggle("off")));
+}
+
+/* カテゴリ別売上 (売上分析) */
+function renderCatSales(){
+  const body = $("#catSales");
+  if (!body) return;
+  body.innerHTML = Object.keys(MENU).map(cat => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:120px;font-size:13px"><span style="display:inline-block;width:4px;height:12px;background:${CAT_COLORS[cat]||'#888'};vertical-align:middle;margin-right:6px"></span>${cat}</div>
+      <div style="flex:1;background:#f3f4f6;border-radius:3px;height:14px;overflow:hidden"><div style="width:${Math.floor(Math.random()*80)+10}%;height:100%;background:var(--primary)"></div></div>
+      <div style="width:80px;text-align:right;font-size:13px">¥ 0</div>
+    </div>
+  `).join("");
+}
+
+/* 会計一覧 (売上管理サブ) */
+function renderPaylist(){
+  const body = $("#paylistBody");
+  if (!body) return;
+  if (state.paid.length === 0){
+    body.innerHTML = `<div style="padding:60px;text-align:center;color:var(--ink-3);font-size:13px">会計済みはまだありません</div>`;
+    return;
+  }
+  body.innerHTML = state.paid.map(p => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding:12px 18px;font-size:13px;border-bottom:1px solid var(--line)">
+      <div>${p.table}</div><div>${fmt(p.total)}円</div><div>${p.people}名</div><div>${p.time}</div>
+      <div><button class="btn">領収書</button></div>
+    </div>
+  `).join("");
+}
+
+/* 初期描画追加 */
+renderCatList();
+renderMasterTableList();
+renderRecommend();
+renderCatSales();
+renderPaylist();
+renderPendingOrders();
+updateOrderBadge();
+// 経過時間を1分ごとに更新
+setInterval(() => {
+  if (state.page === "order") renderPendingOrders();
+}, 60000);
+
+/* 売上管理サブページ切替時に会計一覧更新 */
+$$(".sidenav .menu-item[data-sub='sales-paylist']").forEach(item => {
+  item.addEventListener("click", renderPaylist);
+});
+
+/* ===== 初期描画 ===== */
+renderTables();
+renderSidebar();
+renderStock();
+renderMaster();
+renderChartDemo();
+</script>
+</body>
+</html>

@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>setanin食堂 — セルフオーダー</title>
+<style>
+  :root{
+    --red:#b81936;
+    --red-deep:#a51530;
+    --red-soft:#fbe9ed;
+    --yellow:#dca600;
+    --yellow-hover:#c69500;
+    --pink:#dc7d8b;
+    --ink:#1f2328;
+    --ink-2:#525860;
+    --line:#e6e3e3;
+    --bg:#ffffff;
+    --gray-bg:#9b9b9b;
+    --tax:#6b7280;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
+    color:var(--ink);
+    background:#fff;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input{font-family:inherit}
+
+  .app{position:fixed;inset:0;display:flex;flex-direction:column}
+  .screen{position:absolute;inset:0;display:none}
+  .screen.active{display:flex;flex-direction:column}
+
+  /* ==================== 共通: モーダル ==================== */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.35);
+    display:none;align-items:center;justify-content:center;
+    z-index:50;
+  }
+  .overlay.active{display:flex}
+  .modal{
+    background:#fff;border-radius:10px;
+    box-shadow:0 6px 24px rgba(0,0,0,.18);
+    padding:28px 32px;min-width:320px;
+  }
+  .modal h2{margin:0 0 18px;text-align:center;font-size:18px;font-weight:700}
+  .modal .row{display:flex;gap:12px;justify-content:center;align-items:center}
+  .btn{
+    border-radius:6px;padding:10px 22px;font-weight:600;font-size:14px;
+    transition:filter .15s ease, transform .05s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-red{background:var(--red);color:#fff}
+  .btn-red:hover{background:var(--red-deep)}
+  .btn-yellow{background:var(--yellow);color:#fff}
+  .btn-yellow:hover{background:var(--yellow-hover)}
+  .btn-outline{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn-outline:hover{background:#f7f7f7}
+  .btn-pink{background:var(--pink);color:#fff}
+  .btn-pink:hover{filter:brightness(.95)}
+
+  /* ==================== 1) パスコード ==================== */
+  #screen-passcode, #screen-table{
+    background:var(--gray-bg);
+    align-items:center;justify-content:center;
+  }
+  .card{
+    background:#fff;border-radius:10px;padding:32px 40px;
+    width:340px;max-width:90vw;
+    box-shadow:0 4px 20px rgba(0,0,0,.10);
+  }
+  .card h2{margin:0 0 22px;text-align:center;font-size:18px;font-weight:700}
+  .passcode-input{
+    width:100%;padding:8px 4px;border:none;border-bottom:1px solid #d0d0d0;
+    font-size:15px;outline:none;text-align:center;color:var(--ink);
+    background:transparent;
+  }
+  .passcode-input::placeholder{color:#bdbdbd}
+  .passcode-input:focus{border-bottom-color:var(--red)}
+  .card .actions{display:flex;justify-content:center;margin-top:20px}
+  .card .actions .btn{min-width:120px;text-align:center}
+
+  /* ==================== 2) テーブル選択 ==================== */
+  .table-row{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+  .table-row label{font-weight:700;font-size:15px;min-width:48px}
+  .table-row select{
+    flex:1;padding:6px 10px;border:none;border-bottom:1px solid #d0d0d0;
+    font-size:14px;background:#fff;outline:none;color:#6b6b6b;
+  }
+  .table-row select:focus{border-bottom-color:var(--red)}
+  #screen-table .modal-actions{display:flex;gap:12px;justify-content:flex-start}
+  #screen-table .modal-actions .btn{min-width:110px;text-align:center}
+  .admin-link{
+    display:block;text-align:center;margin-top:12px;
+    color:#444;font-size:13px;text-decoration:underline;cursor:pointer;
+  }
+
+  /* ==================== 3) ウェルカム/スプラッシュ ==================== */
+  #screen-welcome{cursor:pointer;background:#fdf5e8}
+  .welcome-bg{flex:1;display:flex;align-items:stretch;overflow:hidden;position:relative}
+  .welcome-bg svg{width:100%;height:100%;display:block}
+  .welcome-tip{
+    background:var(--red);color:#fff;text-align:center;
+    font-weight:700;padding:14px 0;font-size:16px;
+  }
+
+  /* ==================== 4) メニュー ==================== */
+  #screen-menu{background:#fff}
+  .menu-top{
+    background:var(--red);position:relative;
+    height:72px;display:flex;align-items:stretch;
+  }
+  .menu-tabs{
+    flex:1;display:flex;overflow-x:auto;overflow-y:hidden;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .menu-tabs::-webkit-scrollbar{display:none}
+  .menu-tab{
+    flex:0 0 114px;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;font-weight:600;font-size:13px;
+    padding:0 8px;line-height:1.3;white-space:normal;cursor:pointer;
+    transition:background .15s;
+  }
+  .menu-tab:hover{background:rgba(255,255,255,.08)}
+  .menu-tab.active{background:#fff;color:var(--red)}
+  .cart-toggle{
+    flex:0 0 34px;display:flex;align-items:center;justify-content:center;
+    background:var(--red-deep);color:#fff;cursor:pointer;
+  }
+  .cart-toggle svg{width:14px;height:14px}
+
+  .menu-body{
+    flex:1;display:flex;min-height:0;
+  }
+  .product-grid{
+    flex:1;padding:14px 18px;overflow-y:auto;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+    gap:14px 12px;align-content:start;
+  }
+  .product-card{
+    background:#fff;border-radius:4px;cursor:pointer;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .product-card .check{
+    position:absolute;top:8px;left:8px;
+    width:24px;height:24px;border-radius:50%;
+    background:#d9d9d9;display:flex;align-items:center;justify-content:center;
+    z-index:2;transition:background .15s;
+  }
+  .product-card.selected{
+    background:var(--red-soft);
+    box-shadow:0 0 0 1px rgba(184,25,54,.4) inset;
+  }
+  .product-card.selected .check{background:var(--red)}
+  .product-card.selected .check::before{
+    content:"";width:10px;height:6px;border-left:2px solid #fff;
+    border-bottom:2px solid #fff;transform:translateY(-2px) rotate(-45deg);
+  }
+  .product-img{
+    width:100%;aspect-ratio:1/1;border-radius:4px;overflow:hidden;
+    background:#f0f0f0 center/cover no-repeat;
+  }
+  .product-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .product-name{margin:10px 0 6px;font-size:14px;font-weight:500}
+  .product-price{font-size:13px}
+  .product-price .yen{font-size:16px;font-weight:700;margin-right:2px}
+  .product-price .tax{color:var(--tax);font-size:11px;margin-left:4px}
+
+  .no-image{
+    display:flex;align-items:center;justify-content:center;
+    color:#9a9a9a;font-size:13px;letter-spacing:1px;
+    background:#e9e9e9;height:100%;
+    flex-direction:column;gap:6px;
+  }
+  .no-image svg{width:54px;height:38px;color:#bdbdbd}
+
+  /* 右サイドパネル: 注文リスト */
+  .cart-panel{
+    width:0;background:#fff;border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow:hidden;
+    transition:width .25s ease;
+  }
+  .cart-panel.open{width:220px}
+  .cart-header{
+    padding:14px 16px;text-align:center;font-weight:600;font-size:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .cart-items{flex:1;overflow-y:auto;padding:6px 12px}
+  .cart-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 0;border-bottom:1px dashed var(--line);
+  }
+  .cart-item-info .name{font-size:13px}
+  .cart-item-info .price{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .qty{display:flex;align-items:center;gap:6px;font-size:13px}
+  .qty button{
+    width:22px;height:22px;border:1px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;background:#fff;color:#888;
+  }
+  .cart-empty{padding:24px 12px;color:#9a9a9a;font-size:12px;text-align:center}
+  .cart-confirm{
+    width:100%;padding:14px 0;background:var(--red);color:#fff;
+    font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .cart-confirm:hover{background:var(--red-deep)}
+  .cart-confirm svg{width:14px;height:14px}
+
+  /* 下部固定バー */
+  .bottom-bar{
+    height:64px;background:#fff;border-top:1px solid var(--line);
+    display:flex;align-items:stretch;
+  }
+  .bottom-table{
+    display:flex;align-items:center;gap:8px;padding:0 18px;min-width:140px;
+  }
+  .bottom-table .table-logo{
+    width:40px;height:40px;border-radius:4px;
+    background:linear-gradient(180deg,#f7c47a 0%,#f7c47a 45%,#2a2347 55%,#2a2347 100%);
+    flex:0 0 40px;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    font-size:7px;color:#fff;line-height:1.1;text-align:center;
+  }
+  .bottom-table .table-name{font-weight:500;font-size:14px}
+  .bottom-actions{flex:1;display:flex;gap:0}
+  .bottom-actions .baction{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    font-weight:600;font-size:15px;
+  }
+  .baction.call{background:var(--yellow);color:#fff}
+  .baction.call:hover{background:var(--yellow-hover)}
+  .baction.refill{background:#fff;color:var(--ink);border-left:1px solid var(--line)}
+  .baction.refill:hover{background:#fafafa}
+  .baction.history{background:#fff;color:var(--red);border-left:1px solid var(--line)}
+  .baction.history:hover{background:#fafafa}
+  .baction svg{width:16px;height:16px}
+
+  /* ==================== 商品詳細モーダル ==================== */
+  #modal-product .modal{width:700px;max-width:92vw;padding:0;border-radius:10px;overflow:hidden}
+  .pm-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
+  .pm-head h3{margin:0;font-size:15px;font-weight:600}
+  .pm-close{padding:6px 14px;border:1px solid #d0d0d0;border-radius:18px;font-size:12px;background:#fff;color:var(--ink)}
+  .pm-body{display:flex;gap:24px;padding:20px 24px}
+  .pm-img{width:220px;height:220px;border-radius:6px;background:#eee center/cover no-repeat;flex:0 0 220px}
+  .pm-img img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+  .pm-info h2{margin:0 0 4px;font-size:24px;font-weight:700}
+  .pm-info .pm-price{font-size:18px}
+  .pm-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--line);gap:12px;flex-wrap:wrap}
+  .pm-qty{display:flex;align-items:center;gap:12px}
+  .pm-qty .lbl{font-size:13px}
+  .pm-qty .stepper{display:flex;align-items:center;gap:6px}
+  .pm-qty .stepper button{
+    width:28px;height:28px;border:1px solid var(--line);border-radius:4px;background:#fff;color:#666;font-size:14px;
+  }
+  .pm-qty .val{min-width:24px;text-align:center;font-weight:700}
+  .pm-price-show{font-size:18px;font-weight:700;margin-left:10px}
+  .pm-price-show .tax{font-size:11px;color:var(--tax);font-weight:400;margin-left:2px}
+  .pm-foot .pm-add{padding:10px 18px;display:flex;align-items:center;gap:6px}
+  .pm-note-row{display:flex;align-items:center;justify-content:space-between;padding:10px 24px 20px;gap:12px}
+  .pm-note{font-size:12px;color:var(--ink-2)}
+  .pm-call{padding:10px 22px;display:flex;align-items:center;gap:6px}
+
+  /* ==================== 注文履歴モーダル ==================== */
+  #modal-history .modal{width:760px;max-width:94vw;padding:0;border-radius:10px;overflow:hidden}
+  .hist-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
+  .hist-head h3{margin:0;font-size:15px;font-weight:600}
+  .hist-table{padding:14px 24px;min-height:280px}
+  .hist-table table{width:100%;border-collapse:collapse;font-size:13px}
+  .hist-table th{
+    text-align:left;font-weight:500;color:var(--ink-2);padding:6px 8px;border-bottom:1px solid var(--line);
+  }
+  .hist-table td{padding:8px;border-bottom:1px solid var(--line)}
+  .hist-table .empty{padding:60px 0;text-align:center;color:#9a9a9a;font-size:13px}
+  .hist-foot{padding:14px 24px 20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;border-top:1px solid #f0f0f0}
+  .hist-foot .total{font-size:14px}
+  .hist-foot .total b{font-size:18px;color:var(--red);margin:0 4px}
+  .hist-foot .per{font-size:13px}
+  .hist-foot .people-link{font-size:13px;color:var(--ink);text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .hist-foot .pay{margin-left:auto;padding:10px 22px;display:flex;align-items:center;gap:6px}
+
+  /* ==================== その他ダイアログ ==================== */
+  .small-dialog{padding:24px 36px;text-align:center;min-width:300px}
+  .small-dialog h3{margin:0 0 18px;font-size:16px;font-weight:700}
+  .small-dialog .row{display:flex;gap:12px;justify-content:center}
+  .small-dialog .row .btn{min-width:96px;text-align:center}
+
+  /* スクロールバー控えめ */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#d1d1d1;border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- 1) パスコード -->
+  <section class="screen active" id="screen-passcode">
+    <div class="card">
+      <h2>パスコードを入力してください</h2>
+      <input type="password" class="passcode-input" id="passcodeInput" placeholder="パスコードを入力してください" autocomplete="off">
+      <div class="actions" style="margin-top:18px">
+        <button class="btn btn-red" id="passcodeSubmit" style="padding:10px 36px">確定</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2) テーブル選択 -->
+  <section class="screen" id="screen-table">
+    <div class="card" style="width:380px">
+      <h2>テーブルを選択してください</h2>
+      <div class="table-row">
+        <label>テーブル</label>
+        <select id="tableSelect">
+          <option value="">選択してください</option>
+          <option>らいおん</option>
+          <option>きりん</option>
+          <option>うさぎ</option>
+          <option>ぞう</option>
+          <option>とら</option>
+          <option>くじら</option>
+          <option>ぺんぎん</option>
+          <option>いんこ</option>
+          <option>文鳥</option>
+          <option>ふくろう</option>
+          <option>かもめ</option>
+          <option>ひまわり</option>
+          <option>あじさい</option>
+          <option>ちゅーりっぷ</option>
+          <option>こすもす</option>
+          <option>すいせん</option>
+          <option>彼岸花</option>
+        </select>
+      </div>
+      <div class="modal-actions" style="display:flex;gap:12px;justify-content:flex-start;margin-top:10px">
+        <button class="btn btn-outline" id="tableClose">閉じる</button>
+        <button class="btn btn-pink" id="tableSelectBtn">選択する</button>
+      </div>
+      <a class="admin-link">管理者ログインへ</a>
+    </div>
+  </section>
+
+  <!-- 3) ウェルカム -->
+  <section class="screen" id="screen-welcome">
+    <div class="welcome-bg">
+      <!-- イラスト風スプラッシュ (SVG) -->
+      <svg viewBox="0 0 1600 720" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a2444"/>
+            <stop offset="100%" stop-color="#0f1730"/>
+          </linearGradient>
+          <radialGradient id="moon" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%" stop-color="#ffe9a0"/>
+            <stop offset="100%" stop-color="#f5cf6a"/>
+          </radialGradient>
+          <linearGradient id="awning" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f5a44b"/>
+            <stop offset="100%" stop-color="#e08129"/>
+          </linearGradient>
+        </defs>
+        <!-- 全体背景 -->
+        <rect width="1600" height="720" fill="#fdf5e8"/>
+        <!-- 左: 食堂 -->
+        <g>
+          <rect x="100" y="120" width="760" height="600" fill="#f8efd9"/>
+          <!-- 屋根のオーニング -->
+          <path d="M100 220 Q480 60 860 220 L860 280 L100 280 Z" fill="url(#awning)"/>
+          <g stroke="#d97520" stroke-width="2" fill="none">
+            <line x1="180" y1="220" x2="180" y2="280"/>
+            <line x1="260" y1="206" x2="260" y2="280"/>
+            <line x1="340" y1="196" x2="340" y2="280"/>
+            <line x1="420" y1="190" x2="420" y2="280"/>
+            <line x1="500" y1="186" x2="500" y2="280"/>
+            <line x1="580" y1="186" x2="580" y2="280"/>
+            <line x1="660" y1="192" x2="660" y2="280"/>
+            <line x1="740" y1="202" x2="740" y2="280"/>
+            <line x1="820" y1="218" x2="820" y2="280"/>
+          </g>
+          <!-- 看板 -->
+          <text x="480" y="370" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="78" font-weight="800" fill="#222">setanin食堂</text>
+          <!-- 窓 -->
+          <rect x="200" y="420" width="560" height="280" fill="#f9d36a" rx="6"/>
+          <rect x="200" y="420" width="560" height="280" fill="none" stroke="#c98a1a" stroke-width="6"/>
+          <!-- 親子 -->
+          <g transform="translate(280,500)">
+            <!-- お母さん -->
+            <circle cx="80" cy="60" r="56" fill="#f7c79a"/>
+            <path d="M28 38 Q40 0 80 4 Q120 0 132 38 Q138 70 120 80 L40 80 Q22 70 28 38 Z" fill="#a16438"/>
+            <circle cx="64" cy="62" r="4" fill="#222"/>
+            <circle cx="96" cy="62" r="4" fill="#222"/>
+            <path d="M68 80 Q80 88 92 80" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <ellipse cx="58" cy="74" rx="6" ry="3" fill="#f59890" opacity=".7"/>
+            <ellipse cx="102" cy="74" rx="6" ry="3" fill="#f59890" opacity=".7"/>
+            <rect x="30" y="116" width="100" height="100" rx="10" fill="#f0bd3e"/>
+          </g>
+          <g transform="translate(440,540)">
+            <!-- 子ども -->
+            <circle cx="60" cy="50" r="46" fill="#f7c79a"/>
+            <path d="M18 30 Q30 -4 60 0 Q90 -4 102 30 Q108 60 92 64 L28 64 Q12 60 18 30 Z" fill="#9b5a2e"/>
+            <circle cx="46" cy="54" r="4" fill="#222"/>
+            <circle cx="74" cy="54" r="4" fill="#222"/>
+            <path d="M48 70 Q60 78 72 70" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <rect x="14" y="96" width="92" height="80" rx="8" fill="#e9a73d"/>
+          </g>
+          <!-- テーブル -->
+          <rect x="270" y="660" width="380" height="40" fill="#caa56b"/>
+        </g>
+        <!-- 右: BAR -->
+        <g>
+          <rect x="860" y="120" width="600" height="600" fill="url(#sky)"/>
+          <path d="M860 200 Q1160 80 1460 200 L1460 280 L860 280 Z" fill="#241c3b"/>
+          <!-- 月 -->
+          <circle cx="1320" cy="180" r="38" fill="url(#moon)"/>
+          <circle cx="1310" cy="170" r="38" fill="#1a2444"/>
+          <!-- 星 -->
+          <g fill="#fff5b8">
+            <circle cx="1180" cy="160" r="2"/>
+            <circle cx="1240" cy="200" r="2.5"/>
+            <circle cx="1100" cy="220" r="2"/>
+            <circle cx="1400" cy="240" r="2"/>
+            <circle cx="1280" cy="120" r="2.5"/>
+          </g>
+          <!-- BAR看板 -->
+          <text x="1160" y="380" text-anchor="middle" font-family="Georgia,serif" font-size="120" font-weight="700" fill="#f7d97a">BAR</text>
+          <!-- アーチ入口 -->
+          <path d="M1080 460 Q1160 380 1240 460 L1240 700 L1080 700 Z" fill="#1a2444" stroke="#0d1428" stroke-width="4"/>
+          <!-- ランプ -->
+          <line x1="1160" y1="460" x2="1160" y2="510" stroke="#735a2a" stroke-width="3"/>
+          <circle cx="1160" cy="525" r="18" fill="#f5cf6a"/>
+          <!-- ボトル -->
+          <g transform="translate(1100,580)">
+            <rect x="0" y="0" width="14" height="60" fill="#c44a3e" rx="2"/>
+            <rect x="22" y="-10" width="14" height="70" fill="#3a4e72" rx="2"/>
+            <rect x="44" y="-4" width="14" height="64" fill="#8a9aa5" rx="2"/>
+          </g>
+          <rect x="1080" y="640" width="160" height="20" fill="#5a3a1c"/>
+          <!-- 観葉植物 -->
+          <g transform="translate(1480,500)">
+            <ellipse cx="-2" cy="-10" rx="14" ry="20" fill="#5fa05a"/>
+            <ellipse cx="14" cy="-30" rx="12" ry="20" fill="#7bba74"/>
+            <ellipse cx="0" cy="-40" rx="10" ry="22" fill="#6dae65"/>
+            <path d="M-12 8 L24 8 L18 60 L-6 60 Z" fill="#7a5236"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="welcome-tip">ご注文の方は画面をタップしてください</div>
+  </section>
+
+  <!-- 4) メニュー -->
+  <section class="screen" id="screen-menu">
+    <div class="menu-top">
+      <div class="menu-tabs" id="menuTabs"></div>
+      <div class="cart-toggle" id="cartToggle">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="menu-body">
+      <div class="product-grid" id="productGrid"></div>
+      <aside class="cart-panel" id="cartPanel">
+        <div class="cart-header">注文リスト</div>
+        <div class="cart-items" id="cartItems">
+          <div class="cart-empty">商品を選択してください</div>
+        </div>
+        <button class="cart-confirm" id="cartConfirmBtn">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          注文確定
+        </button>
+      </aside>
+    </div>
+    <div class="bottom-bar">
+      <div class="bottom-table">
+        <div class="table-logo" title="店舗ロゴ">
+          <svg viewBox="0 0 40 40" width="40" height="40">
+            <rect width="40" height="20" fill="#f5a44b"/>
+            <rect y="20" width="40" height="20" fill="#2a2347"/>
+            <text x="20" y="14" text-anchor="middle" fill="#fff" font-size="6" font-weight="700">setanin</text>
+            <text x="20" y="32" text-anchor="middle" fill="#f7d97a" font-size="8" font-weight="700">BAR</text>
+          </svg>
+        </div>
+        <div class="table-name" id="bottomTableName">らいおん</div>
+      </div>
+      <div class="bottom-actions">
+        <button class="baction call" id="btnCall">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a6 6 0 016 6v3l2 3H4l2-3V9a6 6 0 016-6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 18a2 2 0 104 0" stroke="currentColor" stroke-width="2"/></svg>
+          呼び出し
+        </button>
+        <button class="baction refill" id="btnRefill">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          おかわり
+        </button>
+        <button class="baction history" id="btnHistory">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 4v2h6V4" stroke="currentColor" stroke-width="2"/><path d="M9 10h6M9 14h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          注文履歴/会計
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ オーバーレイ・モーダル群 ============ -->
+
+<!-- 商品詳細 -->
+<div class="overlay" id="modal-product">
+  <div class="modal">
+    <div class="pm-head">
+      <h3>商品詳細</h3>
+      <button class="pm-close" id="pmClose">閉じる</button>
+    </div>
+    <div class="pm-body">
+      <div class="pm-img" id="pmImg"></div>
+      <div class="pm-info">
+        <h2 id="pmName">商品名</h2>
+        <div class="pm-price"><span id="pmBasePrice">0</span>円</div>
+      </div>
+    </div>
+    <div class="pm-foot">
+      <div class="pm-qty">
+        <span class="lbl">数量選択</span>
+        <div class="stepper">
+          <button id="pmDec">−</button>
+          <span class="val" id="pmQty">1</span>
+          <button id="pmInc">＋</button>
+        </div>
+        <span class="pm-price-show"><span id="pmTotalPrice">0</span>円<span class="tax">(税込)</span></span>
+      </div>
+      <button class="btn btn-red pm-add" id="pmAdd">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M4 7h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7zM4 7l2-3h12l2 3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        注文リストに追加
+      </button>
+    </div>
+    <div class="pm-note-row">
+      <div class="pm-note">その他ご要望がある場合は店員をお呼びください。</div>
+      <button class="btn btn-yellow pm-call" id="pmCall">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M12 3a6 6 0 016 6v3l2 3H4l2-3V9a6 6 0 016-6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        呼び出し
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 注文履歴/会計 -->
+<div class="overlay" id="modal-history">
+  <div class="modal">
+    <div class="hist-head">
+      <h3>注文履歴</h3>
+      <button class="pm-close" id="histClose">閉じる</button>
+    </div>
+    <div class="hist-table">
+      <table id="histTable">
+        <thead>
+          <tr>
+            <th style="width:120px">ステータス</th>
+            <th>商品</th>
+            <th style="width:80px;text-align:right">数量</th>
+            <th style="width:100px;text-align:right">金額</th>
+            <th style="width:120px;text-align:right">注文時間</th>
+          </tr>
+        </thead>
+        <tbody id="histTbody">
+          <tr><td colspan="5" class="empty">注文履歴はまだありません</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="hist-foot">
+      <div class="total">合計金額<b id="histTotal">0</b>円(税込)</div>
+      <div class="per">1人あたり <span id="histPerPerson">0</span>円 (税込)</div>
+      <span class="people-link" id="histPeople">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2"/></svg>
+        <span id="histPeopleNum">1</span>人(変更する)
+      </span>
+      <button class="btn btn-red pay" id="histPay">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
+        会計をする
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 注文確定確認 -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal small-dialog">
+    <h3>注文を確定しますか？</h3>
+    <div class="row">
+      <button class="btn btn-outline" id="confirmNo">いいえ</button>
+      <button class="btn btn-red" id="confirmYes">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- 注文完了 -->
+<div class="overlay" id="modal-done">
+  <div class="modal small-dialog">
+    <h3>ご注文が完了しました</h3>
+    <div class="row">
+      <button class="btn btn-outline" id="doneClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 呼び出し確認 -->
+<div class="overlay" id="modal-call">
+  <div class="modal small-dialog">
+    <h3>店員を呼び出しますか？</h3>
+    <div class="row">
+      <button class="btn btn-outline" id="callNo">いいえ</button>
+      <button class="btn btn-yellow" id="callYes">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- 呼び出し完了 -->
+<div class="overlay" id="modal-called">
+  <div class="modal small-dialog">
+    <h3>店員を呼び出しました</h3>
+    <div class="row"><button class="btn btn-outline" id="calledClose">閉じる</button></div>
+  </div>
+</div>
+
+<!-- おかわり確認 -->
+<div class="overlay" id="modal-refill">
+  <div class="modal small-dialog">
+    <h3>おかわりをお願いしますか？</h3>
+    <div class="row">
+      <button class="btn btn-outline" id="refillNo">いいえ</button>
+      <button class="btn btn-red" id="refillYes">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- 会計完了 -->
+<div class="overlay" id="modal-paid">
+  <div class="modal small-dialog">
+    <h3>会計を承りました</h3>
+    <p style="margin:0 0 18px;font-size:13px;color:var(--ink-2)">店員がお席にお伺いします</p>
+    <div class="row"><button class="btn btn-outline" id="paidClose">閉じる</button></div>
+  </div>
+</div>
+
+<script>
+/* ========================================================
+   データ定義
+   ======================================================== */
+const IMG_BASE = "https://6e9308ad6096cdcbdeb846e8772d20d2.cdn.bubble.io/cdn-cgi/image/w=384,h=413,f=auto,dpr=1,fit=cover,q=60";
+function img(path){ return IMG_BASE + path; }
+
+const PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+    <rect width='200' height='200' fill='#e9e9e9'/>
+    <g fill='#bdbdbd' transform='translate(70,65)'>
+      <rect x='0' y='10' width='60' height='50' rx='4'/>
+      <circle cx='18' cy='28' r='6' fill='#fff'/>
+      <path d='M0 50 L20 30 L40 50 L60 30 L60 60 L0 60 Z' fill='#fff'/>
+    </g>
+    <text x='100' y='150' text-anchor='middle' font-family='sans-serif' font-size='14' fill='#9a9a9a' letter-spacing='2'>NO IMAGE</text>
+  </svg>`
+);
+
+const CATEGORIES = {
+  "キッズ": [
+    { name: "お子様ランチ", price: 780, img: img("/f1758010660243x152479806677215940/IMG_6876.jpeg") },
+    { name: "キッズカレー", price: 780, img: img("/f1758010685393x297607706286614700/IMG_6878.jpeg") },
+    { name: "パンケーキセット", price: 780, img: img("/f1758010673233x136425194058032540/IMG_6877.jpeg") },
+  ],
+  "デザート": [
+    { name: "フルーツタルト", price: 500, img: img("/f1758010038816x158439191408667600/IMG_6872.jpeg") },
+    { name: "バスクチーズケーキ", price: 500, img: img("/f1758010057927x889227536758253200/IMG_6873.jpeg") },
+    { name: "シフォンケーキ", price: 450, img: img("/f1758010072216x282447129617032770/IMG_6874.jpeg") },
+    { name: "ショコラケーキ", price: 500, img: img("/f1758010086455x924130134248801300/IMG_6875.jpeg") },
+  ],
+  "副菜": [
+    { name: "枝豆", price: 380, img: PLACEHOLDER },
+    { name: "ポテトフライ", price: 480, img: PLACEHOLDER },
+    { name: "サラダ", price: 580, img: PLACEHOLDER },
+  ],
+  "一品": [
+    { name: "唐揚げ", price: 680, img: PLACEHOLDER },
+    { name: "出汁巻き玉子", price: 580, img: PLACEHOLDER },
+  ],
+  "ランチ": [
+    { name: "ランチA", price: 1600, img: PLACEHOLDER },
+    { name: "ランチB", price: 1800, img: PLACEHOLDER },
+  ],
+  "通知音テストA": [
+    { name: "通知音テストA", price: 100, img: PLACEHOLDER },
+  ],
+  "通知音テストB": [
+    { name: "通知音テストB", price: 200, img: PLACEHOLDER },
+  ],
+  "ソフトドリンク": [
+    { name: "コーラ", price: 380, img: PLACEHOLDER },
+    { name: "ジンジャーエール", price: 380, img: PLACEHOLDER },
+    { name: "オレンジジュース", price: 400, img: PLACEHOLDER },
+  ],
+  "コーヒー・ティー": [
+    { name: "ブレンドコーヒー", price: 450, img: PLACEHOLDER },
+    { name: "紅茶", price: 450, img: PLACEHOLDER },
+    { name: "カフェラテ", price: 500, img: PLACEHOLDER },
+  ],
+  "通知音テストC": [
+    { name: "通知音テストC", price: 300, img: PLACEHOLDER },
+  ],
+  "通知音テストE": [
+    { name: "通知音テストE", price: 500, img: PLACEHOLDER },
+  ],
+  "アルコール": [
+    { name: "生ビール", price: 580, img: PLACEHOLDER },
+    { name: "ハイボール", price: 480, img: PLACEHOLDER },
+    { name: "日本酒", price: 680, img: PLACEHOLDER },
+  ],
+  "裏メニュー": [
+    { name: "店主のおすすめ", price: 1200, img: PLACEHOLDER },
+  ],
+  "主菜": [
+    { name: "本日の主菜", price: 1500, img: PLACEHOLDER },
+  ],
+};
+
+/* ========================================================
+   状態
+   ======================================================== */
+const state = {
+  passcode: "123456",
+  table: "らいおん",
+  currentCat: "キッズ",
+  cart: {},          // {productKey: {name, price, qty}}
+  history: [],       // [{name, qty, price, status, time}]
+  pmProduct: null,
+  pmQty: 1,
+  people: 1,
+};
+
+/* ========================================================
+   ヘルパー
+   ======================================================== */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+function show(screenId){
+  $$(".screen").forEach(s => s.classList.remove("active"));
+  $(`#${screenId}`).classList.add("active");
+}
+function openModal(id){ $(`#${id}`).classList.add("active"); }
+function closeModal(id){ $(`#${id}`).classList.remove("active"); }
+function fmt(n){ return n.toLocaleString("ja-JP"); }
+function key(p){ return p.name; }
+
+/* ========================================================
+   1) パスコード画面
+   ======================================================== */
+$("#passcodeSubmit").addEventListener("click", () => {
+  const v = $("#passcodeInput").value.trim();
+  if (v === state.passcode || v === "") {
+    if (v !== state.passcode && v !== "") return;
+    show("screen-table");
+  } else {
+    alert("パスコードが正しくありません");
+  }
+});
+$("#passcodeInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") $("#passcodeSubmit").click();
+});
+
+/* ========================================================
+   2) テーブル選択画面
+   ======================================================== */
+$("#tableSelectBtn").addEventListener("click", () => {
+  const v = $("#tableSelect").value;
+  if (!v) { alert("テーブルを選択してください"); return; }
+  state.table = v;
+  $("#bottomTableName").textContent = v;
+  show("screen-welcome");
+});
+$("#tableClose").addEventListener("click", () => {
+  show("screen-passcode");
+});
+
+/* ========================================================
+   3) ウェルカム → メニュー
+   ======================================================== */
+$("#screen-welcome").addEventListener("click", () => {
+  show("screen-menu");
+});
+
+/* ========================================================
+   4) メニュー: カテゴリタブ・商品グリッド
+   ======================================================== */
+function renderTabs(){
+  const wrap = $("#menuTabs");
+  wrap.innerHTML = "";
+  Object.keys(CATEGORIES).forEach(cat => {
+    const el = document.createElement("div");
+    el.className = "menu-tab" + (cat === state.currentCat ? " active" : "");
+    el.textContent = cat;
+    el.addEventListener("click", () => {
+      state.currentCat = cat;
+      renderTabs();
+      renderProducts();
+    });
+    wrap.appendChild(el);
+  });
+}
+
+function renderProducts(){
+  const grid = $("#productGrid");
+  grid.innerHTML = "";
+  const items = CATEGORIES[state.currentCat] || [];
+  items.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product-card" + (state.cart[key(p)] ? " selected" : "");
+    const hasImg = p.img && p.img !== PLACEHOLDER;
+    card.innerHTML = `
+      <div class="check"></div>
+      <div class="product-img">
+        ${hasImg
+          ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><svg viewBox=\\'0 0 60 40\\'><rect width=\\'60\\' height=\\'40\\' rx=\\'4\\' fill=\\'#e9e9e9\\' stroke=\\'#bdbdbd\\'/><circle cx=\\'18\\' cy=\\'16\\' r=\\'4\\' fill=\\'#bdbdbd\\'/><path d=\\'M8 36 L24 22 L34 32 L46 18 L56 36 Z\\' fill=\\'#bdbdbd\\'/></svg>NO IMAGE</div>'">`
+          : `<div class="no-image">
+              <svg viewBox="0 0 60 40"><rect width="60" height="40" rx="4" fill="#e9e9e9" stroke="#bdbdbd"/><circle cx="18" cy="16" r="4" fill="#bdbdbd"/><path d="M8 36 L24 22 L34 32 L46 18 L56 36 Z" fill="#bdbdbd"/></svg>
+              NO IMAGE
+            </div>`
+        }
+      </div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price"><span class="yen">${fmt(p.price)}</span>円<span class="tax">（税込）</span></div>
+    `;
+    card.addEventListener("click", () => openProductDetail(p));
+    grid.appendChild(card);
+  });
+  if (items.length === 0){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#9a9a9a;padding:40px">このカテゴリには商品がありません</div>`;
+  }
+}
+
+/* ========================================================
+   商品詳細モーダル
+   ======================================================== */
+function openProductDetail(p){
+  state.pmProduct = p;
+  state.pmQty = 1;
+  $("#pmName").textContent = p.name;
+  $("#pmBasePrice").textContent = fmt(p.price);
+  $("#pmTotalPrice").textContent = fmt(p.price);
+  $("#pmQty").textContent = 1;
+  const pmImg = $("#pmImg");
+  pmImg.innerHTML = (p.img && p.img !== PLACEHOLDER)
+    ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\' style=\\'width:100%;height:100%\\'>NO IMAGE</div>'">`
+    : `<div class="no-image" style="width:100%;height:100%">NO IMAGE</div>`;
+  openModal("modal-product");
+}
+$("#pmClose").addEventListener("click", () => closeModal("modal-product"));
+$("#pmDec").addEventListener("click", () => {
+  state.pmQty = Math.max(1, state.pmQty - 1);
+  $("#pmQty").textContent = state.pmQty;
+  $("#pmTotalPrice").textContent = fmt(state.pmProduct.price * state.pmQty);
+});
+$("#pmInc").addEventListener("click", () => {
+  state.pmQty++;
+  $("#pmQty").textContent = state.pmQty;
+  $("#pmTotalPrice").textContent = fmt(state.pmProduct.price * state.pmQty);
+});
+$("#pmAdd").addEventListener("click", () => {
+  const p = state.pmProduct;
+  const k = key(p);
+  if (state.cart[k]) state.cart[k].qty += state.pmQty;
+  else state.cart[k] = { name: p.name, price: p.price, qty: state.pmQty };
+  renderCart();
+  renderProducts();
+  closeModal("modal-product");
+  // 注文リストパネルを開く
+  $("#cartPanel").classList.add("open");
+  rotateCartToggle(true);
+});
+$("#pmCall").addEventListener("click", () => {
+  closeModal("modal-product");
+  openModal("modal-call");
+});
+
+/* ========================================================
+   注文リストパネル
+   ======================================================== */
+function renderCart(){
+  const wrap = $("#cartItems");
+  const entries = Object.entries(state.cart);
+  if (entries.length === 0){
+    wrap.innerHTML = `<div class="cart-empty">商品を選択してください</div>`;
+    return;
+  }
+  wrap.innerHTML = entries.map(([k, item]) => `
+    <div class="cart-item" data-key="${k}">
+      <div class="cart-item-info">
+        <div class="name">${item.name}</div>
+        <div class="price">${fmt(item.price)}円</div>
+      </div>
+      <div class="qty">
+        <button data-act="dec">−</button>
+        <span>${item.qty}</span>
+        <button data-act="inc">＋</button>
+      </div>
+    </div>
+  `).join("");
+  $$("#cartItems .cart-item").forEach(row => {
+    const k = row.dataset.key;
+    row.querySelector('[data-act="dec"]').addEventListener("click", () => {
+      state.cart[k].qty--;
+      if (state.cart[k].qty <= 0) delete state.cart[k];
+      renderCart(); renderProducts();
+    });
+    row.querySelector('[data-act="inc"]').addEventListener("click", () => {
+      state.cart[k].qty++;
+      renderCart();
+    });
+  });
+}
+
+function rotateCartToggle(open){
+  const svg = $("#cartToggle svg");
+  svg.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
+  svg.style.transition = "transform .25s ease";
+}
+
+$("#cartToggle").addEventListener("click", () => {
+  const panel = $("#cartPanel");
+  panel.classList.toggle("open");
+  rotateCartToggle(panel.classList.contains("open"));
+});
+
+$("#cartConfirmBtn").addEventListener("click", () => {
+  if (Object.keys(state.cart).length === 0){
+    alert("商品を選択してください");
+    return;
+  }
+  openModal("modal-confirm");
+});
+
+/* ========================================================
+   注文確定
+   ======================================================== */
+$("#confirmNo").addEventListener("click", () => closeModal("modal-confirm"));
+$("#confirmYes").addEventListener("click", () => {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  // 注文アイテムをスナップショット (state.cartをクリアする前に保持)
+  const orderedItems = Object.values(state.cart).map(item => ({
+    name: item.name, qty: item.qty, price: item.price,
+  }));
+  orderedItems.forEach(item => {
+    state.history.push({
+      name: item.name, qty: item.qty, price: item.price,
+      status: "注文受付", time: `${hh}:${mm}`,
+    });
+  });
+  // 管理画面にBroadcast (オーダー通知)
+  if (staffChannel && orderedItems.length > 0){
+    staffChannel.postMessage({
+      type: "order",
+      table: state.table,
+      items: orderedItems,
+      time: Date.now(),
+    });
+  }
+  state.cart = {};
+  renderCart();
+  renderProducts();
+  closeModal("modal-confirm");
+  openModal("modal-done");
+});
+$("#doneClose").addEventListener("click", () => closeModal("modal-done"));
+
+/* ========================================================
+   注文履歴/会計
+   ======================================================== */
+$("#btnHistory").addEventListener("click", () => {
+  renderHistory();
+  openModal("modal-history");
+});
+$("#histClose").addEventListener("click", () => closeModal("modal-history"));
+function renderHistory(){
+  const tbody = $("#histTbody");
+  if (state.history.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">注文履歴はまだありません</td></tr>`;
+  } else {
+    tbody.innerHTML = state.history.map(h => `
+      <tr>
+        <td><span style="background:#fce8ec;color:var(--red);padding:2px 8px;border-radius:3px;font-size:12px">${h.status}</span></td>
+        <td>${h.name}</td>
+        <td style="text-align:right">${h.qty}</td>
+        <td style="text-align:right">${fmt(h.price * h.qty)}円</td>
+        <td style="text-align:right">${h.time}</td>
+      </tr>
+    `).join("");
+  }
+  const total = state.history.reduce((s, h) => s + h.price * h.qty, 0);
+  $("#histTotal").textContent = fmt(total);
+  $("#histPerPerson").textContent = fmt(Math.ceil(total / state.people));
+  $("#histPeopleNum").textContent = state.people;
+}
+$("#histPeople").addEventListener("click", () => {
+  const v = prompt("人数を入力してください", state.people);
+  if (v == null) return;
+  const n = parseInt(v, 10);
+  if (!isNaN(n) && n > 0){ state.people = n; renderHistory(); }
+});
+$("#histPay").addEventListener("click", () => {
+  if (state.history.length === 0){
+    alert("会計対象の注文がありません");
+    return;
+  }
+  closeModal("modal-history");
+  openModal("modal-paid");
+});
+$("#paidClose").addEventListener("click", () => {
+  state.history = [];
+  closeModal("modal-paid");
+});
+
+/* ========================================================
+   呼び出しチャイム音 (Web Audio API で「ピンポーン♪」を合成)
+   ======================================================== */
+let audioCtx = null;
+function getAudioCtx(){
+  if (!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  // ユーザー操作直後にresumeしないと音が出ない (ブラウザポリシー)
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+// 1音(チャイムベル) を鳴らす内部関数
+function playTone(ctx, freq, startAt, duration = 0.9, peak = 0.35){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  // ベルらしいやわらかい倍音を作るため triangle + 軽いディチューン
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, startAt);
+
+  // 軽いビブラート用に2nd oscも重ねる
+  const osc2 = ctx.createOscillator();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freq * 2.01, startAt);
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(peak * 0.18, startAt);
+  g2.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc2.connect(g2).connect(ctx.destination);
+
+  // ADSR 風: アタック早め・リリースゆったり
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration + 0.05);
+  osc2.start(startAt);
+  osc2.stop(startAt + duration + 0.05);
+}
+
+// 「ピンポーン♪」: 高音 → 低音 の2音 (G5 → E5)
+function playCallSound(){
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  playTone(ctx, 783.99, now,        0.9, 0.95); // G5
+  playTone(ctx, 659.25, now + 0.32, 1.1, 0.95); // E5
+}
+
+/* ========================================================
+   管理画面 (admin.html) との連携
+   - 同一オリジンで admin.html を開いていれば BroadcastChannel
+     経由で通知し、admin側でチャイムを鳴らす
+   - admin が開いていない (ACK が返らない) 場合は従来通り
+     客側でチャイムを鳴らす
+   ======================================================== */
+const staffChannel = (typeof BroadcastChannel !== "undefined")
+  ? new BroadcastChannel("setanin-staff-call")
+  : null;
+
+function notifyStaff(kind /* "call" | "refill" */){
+  return new Promise((resolve) => {
+    if (!staffChannel){
+      resolve(false); // BroadcastChannel未対応 → ローカルで鳴らす
+      return;
+    }
+    let acked = false;
+    const onMsg = (ev) => {
+      if (ev.data && ev.data.type === "ack") acked = true;
+    };
+    staffChannel.addEventListener("message", onMsg);
+    staffChannel.postMessage({
+      type: kind,
+      table: state.table,
+      time: Date.now(),
+    });
+    // 250ms 待って ACK 確認
+    setTimeout(() => {
+      staffChannel.removeEventListener("message", onMsg);
+      resolve(acked);
+    }, 250);
+  });
+}
+
+/* ========================================================
+   呼び出し / おかわり
+   ======================================================== */
+$("#btnCall").addEventListener("click", () => {
+  // ユーザー操作で AudioContext を起こしておく (初回タップ対策)
+  getAudioCtx();
+  openModal("modal-call");
+});
+$("#callNo").addEventListener("click", () => closeModal("modal-call"));
+$("#callYes").addEventListener("click", async () => {
+  // 管理画面に通知のみ。客側ではチャイムを鳴らさない
+  notifyStaff("call");
+  closeModal("modal-call");
+  openModal("modal-called");
+});
+$("#calledClose").addEventListener("click", () => closeModal("modal-called"));
+
+$("#btnRefill").addEventListener("click", () => {
+  openModal("modal-refill");
+});
+$("#refillNo").addEventListener("click", () => closeModal("modal-refill"));
+$("#refillYes").addEventListener("click", async () => {
+  // 管理画面に通知のみ。客側ではチャイムを鳴らさない
+  notifyStaff("refill");
+  closeModal("modal-refill");
+  openModal("modal-called");
+});
+
+// 商品詳細モーダル内の「呼び出し」も同様にチャイム
+$("#pmCall").addEventListener("click", () => { getAudioCtx(); });
+
+/* ========================================================
+   初期化
+   ======================================================== */
+renderTabs();
+renderProducts();
+renderCart();
+
+/* デモ: パスコード自動補完表示用 (ヒント) */
+$("#passcodeInput").setAttribute("placeholder","パスコード (123456)");
+</script>
+</body>
+</html>
