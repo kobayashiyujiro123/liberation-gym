@@ -1932,11 +1932,30 @@ function renderReservations() {
   // 同一会員で確定予約がある場合はキャンセルを非表示
   const confirmedUserIds = new Set(all.filter(r => r.status === '確定' && r.userId).map(r => r.userId));
   const confirmedNames   = new Set(all.filter(r => r.status === '確定' && !r.userId).map(r => r.name));
+  // 確定なしで複数キャンセルがある場合は最新の1件のみ表示
+  const latestCancelById = new Map(), latestCancelByName = new Map();
+  all.forEach(r => {
+    if (r.status !== 'キャンセル') return;
+    const key = r.userId || null;
+    const nameKey = r.name;
+    if (key) {
+      if (!confirmedUserIds.has(key)) {
+        const prev = latestCancelById.get(key);
+        if (!prev || (r.updatedAt || '') > (prev.updatedAt || '')) latestCancelById.set(key, r);
+      }
+    } else {
+      if (!confirmedNames.has(nameKey)) {
+        const prev = latestCancelByName.get(nameKey);
+        if (!prev || (r.updatedAt || '') > (prev.updatedAt || '')) latestCancelByName.set(nameKey, r);
+      }
+    }
+  });
   const deduped = all.filter(r => {
     if (r.status !== 'キャンセル') return true;
     if (r.userId && confirmedUserIds.has(r.userId)) return false;
     if (!r.userId && confirmedNames.has(r.name)) return false;
-    return true;
+    if (r.userId) return latestCancelById.get(r.userId) === r;
+    return latestCancelByName.get(r.name) === r;
   });
 
   const filtered = deduped.filter(r => {
@@ -5550,6 +5569,7 @@ async function initReservationsFromDB() {
           badge: isCancelled ? 'badge-d' : 'badge-s',
           memo: displayMemo,
           userId: r.user_id || null,
+          updatedAt: r.updated_at || r.created_at || '',
         });
       }
     });
