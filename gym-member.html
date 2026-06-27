@@ -1087,7 +1087,7 @@ function showApp(key) {
   if (key === 'res')       renderRes();
   if (key === 'info')      renderInfo();
   if (key === 'info-edit') fillEditForm();
-  if (key === 'res-view')  buildRvDayTabs();
+  if (key === 'res-view')  loadRvData();
   if (key === 'fights')    initMemberFights();
   closeSB();
   localStorage.setItem('gym_currentPage', key);
