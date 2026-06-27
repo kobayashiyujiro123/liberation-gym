@@ -1323,6 +1323,13 @@ function _buildRvDates() {
 
 const WEEKDAYS_RV = ['日','月','火','水','木','金','土'];
 
+// 同じ日に確定予約がある人のキャンセルは非表示
+function rvFilteredItems(dt) {
+  const all = rvData[dt] || [];
+  const confirmedNames = new Set(all.filter(r => r.status === '確定').map(r => r.name));
+  return all.filter(r => !(r.status === 'キャンセル' && confirmedNames.has(r.name)));
+}
+
 function buildRvDayTabs() {
   if (!rvDates.length) _buildRvDates();
   const base = new Date(); base.setHours(0,0,0,0);
@@ -1332,7 +1339,7 @@ function buildRvDayTabs() {
     const dow = WEEKDAYS_RV[d.getDay()];
     const label = i === 0 ? `今日` : i === 1 ? `明日` : `${d.getMonth()+1}/${d.getDate()}`;
     const isActive = dt === rvSelectedDate ? ' active' : '';
-    const count = (rvData[dt] || []).length;
+    const count = rvFilteredItems(dt).length;
     return `<div class="rv-day-tab${isActive}" onclick="rvSelectDate('${dt}')">
       <span class="day-label">${label}（${dow}）</span>
       <span class="day-sub">${count}件</span>
@@ -1352,7 +1359,7 @@ function renderResView() {
   const countLbl = document.getElementById('rv-count-lbl');
   if (!rvSelectedDate) return;
 
-  const items = (rvData[rvSelectedDate] || []).slice().sort((a,b) => a.time.localeCompare(b.time));
+  const items = rvFilteredItems(rvSelectedDate).slice().sort((a,b) => a.time.localeCompare(b.time));
 
   // カウント表示（管理側と同形式）
   const [y,m,d] = rvSelectedDate.split('-').map(Number);
