@@ -1357,7 +1357,7 @@ function buildRvDayTabs() {
     const dow = WEEKDAYS_RV[d.getDay()];
     const label = i === 0 ? `今日` : i === 1 ? `明日` : `${d.getMonth()+1}/${d.getDate()}`;
     const isActive = dt === rvSelectedDate ? ' active' : '';
-    const count = rvFilteredItems(dt).length;
+    const count = rvFilteredItems(dt).filter(r => r.status === '確定').length;
     return `<div class="rv-day-tab${isActive}" onclick="rvSelectDate('${dt}')">
       <span class="day-label">${label}（${dow}）</span>
       <span class="day-sub">${count}件</span>
@@ -1384,7 +1384,7 @@ function renderResView() {
   const selMs = new Date(y, m-1, d).getTime();
   const nowMs = (() => { const x=new Date(); x.setHours(0,0,0,0); return x.getTime(); })();
   const diff  = Math.round((selMs - nowMs) / 86400000);
-  countEl.textContent = items.length;
+  countEl.textContent = items.filter(r => r.status === '確定').length;
   countLbl.textContent = diff === 0 ? '本日の予約' : diff === 1 ? '明日の予約' : `${m}/${d}の予約`;
 
   if (!items.length) {
