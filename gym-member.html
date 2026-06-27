@@ -1301,6 +1301,7 @@ async function loadRvData() {
         memo: displayMemo,
         status: r.status === 'cancelled' ? 'キャンセル' : '確定',
         badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+        updatedAt: r.updated_at || r.created_at || '',
       });
     });
   } catch(e) {
@@ -1324,10 +1325,27 @@ function _buildRvDates() {
 const WEEKDAYS_RV = ['日','月','火','水','木','金','土'];
 
 // 同じ日に確定予約がある人のキャンセルは非表示
+// 確定なしで複数キャンセルがある場合は最後にキャンセルした1件のみ表示
 function rvFilteredItems(dt) {
   const all = rvData[dt] || [];
   const confirmedNames = new Set(all.filter(r => r.status === '確定').map(r => r.name));
-  return all.filter(r => !(r.status === 'キャンセル' && confirmedNames.has(r.name)));
+
+  // 確定なしの人で複数キャンセルがある場合、最新の1件IDを特定
+  const latestCancelId = new Map();
+  all.forEach(r => {
+    if (r.status === 'キャンセル' && !confirmedNames.has(r.name)) {
+      const prev = latestCancelId.get(r.name);
+      if (!prev || (r.updatedAt || '') > (prev.updatedAt || '')) {
+        latestCancelId.set(r.name, r);
+      }
+    }
+  });
+
+  return all.filter(r => {
+    if (r.status !== 'キャンセル') return true;
+    if (confirmedNames.has(r.name)) return false; // 確定ありならキャンセル非表示
+    return latestCancelId.get(r.name) === r;      // 最新のキャンセルのみ表示
+  });
 }
 
 function buildRvDayTabs() {
