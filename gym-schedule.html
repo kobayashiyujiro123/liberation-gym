@@ -983,6 +983,7 @@
             <div class="mem-field-row"><div class="mem-field-label">利用回数合計</div><div class="mem-field-val" id="md-visits"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">今年利用回数</div><div class="mem-field-val" id="md-visits-year"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">今月利用回数</div><div class="mem-field-val" id="md-visits-month"></div></div>
+            <div class="mem-field-row"><div class="mem-field-label">最終利用日</div><div class="mem-field-val" id="md-last-visit">—</div></div>
             <div class="mem-field-row"><div class="mem-field-label">退会日</div><div class="mem-field-val" id="md-left"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">状況ステータス</div><div class="mem-field-val" id="md-status"></div></div>
             <div class="mem-field-row"><div class="mem-field-label">担当トレーナー</div><div class="mem-field-val" id="md-coach"></div></div>
@@ -2421,6 +2422,17 @@ function openMemberDetail(id, fromView) {
   document.getElementById('md-visits').textContent       = m.visits + '回';
   document.getElementById('md-visits-year').textContent  = m.visitsYear + '回';
   document.getElementById('md-visits-month').textContent = m.visitsMonth + '回';
+  document.getElementById('md-last-visit').textContent   = '取得中...';
+  (async () => {
+    try {
+      const _r = await fetch(
+        `${SUPABASE_URL}/rest/v1/reservations?user_id=eq.${id}&status=eq.confirmed&order=date.desc&limit=1&select=date`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${_getAccessToken()}` } }
+      );
+      const _rows = _r.ok ? await _r.json() : [];
+      document.getElementById('md-last-visit').textContent = _rows.length ? fmtDate(_rows[0].date) : '—';
+    } catch(e) { document.getElementById('md-last-visit').textContent = '—'; }
+  })();
   document.getElementById('md-left').textContent         = m.leftDate ? fmtDate(m.leftDate) : '—';
   document.getElementById('md-status').innerHTML         = `<span class="badge ${m.badge}">${m.status}</span>`;
   document.getElementById('md-coach').textContent        = m.coach || '—';
