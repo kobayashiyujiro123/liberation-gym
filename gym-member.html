@@ -1454,8 +1454,8 @@ async function loadUserProfile(authUser, accessToken) {
     profile = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
   } catch(e) { console.warn('fetchProfile error:', e); }
   if (profile) {
-    // name が未設定 = completeReg() 未完了（管理側表示用に行だけ作った状態）→ 登録フォームへ
-    if (!profile.name) return false;
+    // name が未設定 = completeReg() 未完了（admin/coachは管理側で作成されるためスキップ）
+    if (!profile.name && profile.role !== 'admin' && profile.role !== 'coach') return false;
     const bd = (profile.birth_date && profile.birth_date.includes('-'))
       ? profile.birth_date.split('-') : ['1990','01','01'];
     const _by = parseInt(bd[0])||1990, _bm = parseInt(bd[1])||1, _bd2 = parseInt(bd[2])||1;
