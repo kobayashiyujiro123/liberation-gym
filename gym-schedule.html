@@ -324,6 +324,18 @@
     .coach-photo-overlay span { font-size:0.62rem;color:rgba(255,255,255,0.9);font-weight:600; }
     .coach-photo-hint { font-size:0.76rem;color:var(--text-light); }
     .coach-photo-remove-btn { font-size:0.74rem;color:#e05555;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline; }
+    /* 管理者ユーザ情報：縦長ポートレート写真 */
+    .ui-photo-portrait { position:relative;width:180px;height:240px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;cursor:pointer;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.18); }
+    .ui-photo-portrait img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0; }
+    .ui-photo-portrait .coach-photo-overlay { border-radius:0; }
+    .ui-photo-portrait:hover .coach-photo-overlay { opacity:1; }
+    /* 起動スプラッシュ（読み込み中） */
+    #boot-splash { position:fixed;inset:0;z-index:9999;background:var(--bg,#f4f5f7);display:flex;flex-direction:row;align-items:center;justify-content:center;gap:22px;transition:opacity 0.45s ease; }
+    #boot-splash.hide { opacity:0;pointer-events:none; }
+    #boot-splash-photo { width:108px;height:144px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.22); }
+    #boot-splash-photo img { width:100%;height:100%;object-fit:cover; }
+    #boot-splash-photo i { color:#fff;font-size:2.2rem; }
+    #boot-splash-text { display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600;color:var(--text-light,#888); }
     .coach-profile-id { font-size: 0.72rem; color: var(--text-light); letter-spacing: 1px; font-family: 'Oswald', sans-serif; }
     .coach-profile-name { font-family: 'Oswald', sans-serif; font-size: 1.6rem; font-weight: 500; line-height: 1.2; margin-top: 2px; }
     .coach-profile-specialty { font-size: 0.85rem; color: var(--primary); margin-top: 4px; font-weight: 500; }
@@ -710,6 +722,13 @@
   </style>
 </head>
 <body>
+
+<!-- 起動スプラッシュ：管理者写真＋読み込み中（写真は木村鋭景のブラウザのみキャッシュから表示） -->
+<div id="boot-splash">
+  <div id="boot-splash-photo"><i class="fas fa-user"></i></div>
+  <div id="boot-splash-text"><i class="fas fa-spinner fa-spin"></i>読み込み中...</div>
+</div>
+<script>try{var _ap=localStorage.getItem('gym_admin_photo');if(_ap){var _b=document.getElementById('boot-splash-photo');if(_b)_b.innerHTML='<img src="'+_ap+'" alt="">';}}catch(e){}</script>
 
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
@@ -1757,6 +1776,18 @@ if (DEMO_MODE) {
             var _uiEmail = document.getElementById('ui-email');
             if (_uiEmail) _uiEmail.textContent = p.email || sess.user.email || '';
             if (p.photo_url) _setUiPhoto(p.photo_url);
+            // 木村鋭景（ADMIN_PHOTO_EMAIL）のみ：縦長写真UI＋起動スプラッシュ写真キャッシュ
+            var _adminEmail = p.email || sess.user.email || '';
+            if (_adminEmail === ADMIN_PHOTO_EMAIL) {
+              var _circ = document.getElementById('ui-photo-circle');
+              if (_circ) { _circ.className = 'ui-photo-portrait'; _circ.style.width = ''; _circ.style.height = ''; }
+              var _icn = document.getElementById('ui-photo-icon');
+              if (_icn) _icn.style.fontSize = '2.6rem';
+              _cacheAdminPhoto(p.photo_url || null);
+            } else {
+              // 対象外の管理者のブラウザにキャッシュが残っていれば消す
+              try { localStorage.removeItem('gym_admin_photo'); } catch(e) {}
+            }
           }
         } else if (!p) {
           // プロフィールが存在しない（削除済みユーザー）→ ログアウトしてログイン画面へ
@@ -1773,6 +1804,7 @@ if (DEMO_MODE) {
       console.warn('Role check failed, proceeding as admin:', e);
     }
     applyRoleVisibility(role);
+    hideBootSplash();
     // \u30b5\u30a4\u30c9\u30d0\u30fc\u306b\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\u3092\u76f4\u63a5\u8868\u793a
     (function() {
       var _sbEl = document.getElementById('sidebar-coach-user');
@@ -4026,7 +4058,7 @@ function handleCoachPhotoChange(input) {
   reader.onload = e => {
     const tmpImg = new Image();
     tmpImg.onload = () => {
-      const MAX = 400;
+      const MAX = 720;
       let w = tmpImg.width, h = tmpImg.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -4072,7 +4104,7 @@ function handleUiPhotoChange(input) {
   reader.onload = e => {
     const tmpImg = new Image();
     tmpImg.onload = () => {
-      const MAX = 400;
+      const MAX = 720;
       let w = tmpImg.width, h = tmpImg.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -4094,6 +4126,24 @@ function removeUiPhoto() {
   _setUiPhoto(null);
   document.getElementById('ui-photo-input').value = '';
   document.getElementById('ui-photo-save-btn').style.display = '';
+}
+
+// ===== 起動スプラッシュ／管理者写真キャッシュ（木村鋭景専用）=====
+const ADMIN_PHOTO_EMAIL = 'toshikagek0826@gmail.com';
+function _renderBootSplashPhoto(url) {
+  const box = document.getElementById('boot-splash-photo');
+  if (!box) return;
+  box.innerHTML = url ? '<img src="' + url + '" alt="">' : '<i class="fas fa-user"></i>';
+}
+function _cacheAdminPhoto(url) {
+  try { if (url) localStorage.setItem('gym_admin_photo', url); else localStorage.removeItem('gym_admin_photo'); } catch(e) {}
+  _renderBootSplashPhoto(url);
+}
+function hideBootSplash() {
+  const s = document.getElementById('boot-splash');
+  if (!s) return;
+  s.classList.add('hide');
+  setTimeout(function() { if (s) s.style.display = 'none'; }, 500);
 }
 
 function _setUiPhoto(dataUrl) {
@@ -4136,6 +4186,12 @@ async function saveUiPhoto() {
   }
   if (res.ok || res.status === 204) {
     document.getElementById('ui-photo-save-btn').style.display = 'none';
+    // 木村鋭景のみ：起動スプラッシュ用キャッシュを更新
+    if (currentUserRole === 'admin') {
+      let _em = '';
+      try { const s = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null'); _em = (s && s.user && s.user.email) || ''; } catch(e) {}
+      if (_em === ADMIN_PHOTO_EMAIL) _cacheAdminPhoto(photoUrl);
+    }
     alert('写真を保存しました。');
   } else {
     alert('保存に失敗しました。もう一度お試しください。');
