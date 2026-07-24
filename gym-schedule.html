@@ -330,7 +330,7 @@
     .ui-photo-portrait .coach-photo-overlay { border-radius:0; }
     .ui-photo-portrait:hover .coach-photo-overlay { opacity:1; }
     /* 起動スプラッシュ（読み込み中） */
-    #boot-splash { position:fixed;inset:0;z-index:9999;background:var(--bg,#f4f5f7);display:flex;flex-direction:row;align-items:center;justify-content:center;gap:22px;transition:opacity 0.5s ease; }
+    #boot-splash { position:fixed;inset:0;z-index:9999;background:var(--bg,#f4f5f7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.5s ease; }
     #boot-splash.hide { opacity:0;pointer-events:none; }
     #boot-splash.hide #boot-splash-photo { transform:scale(1.06);transition:transform 0.5s ease; }
     #boot-splash-photo { position:relative;width:108px;height:144px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.22);animation:bootPhotoIn 0.7s cubic-bezier(0.22,0.9,0.28,1) both;transition:transform 0.5s ease; }
@@ -340,7 +340,7 @@
     #boot-splash-text { display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600;color:var(--text-light,#888);animation:bootTextIn 0.6s ease-out 0.35s both; }
     #boot-splash-text i { animation:bootSpin 0.9s linear infinite; }
     @keyframes bootPhotoIn { 0%{opacity:0;transform:translateY(14px) scale(0.88);} 60%{opacity:1;} 100%{opacity:1;transform:translateY(0) scale(1);} }
-    @keyframes bootTextIn { from{opacity:0;transform:translateX(-8px);} to{opacity:1;transform:translateX(0);} }
+    @keyframes bootTextIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
     @keyframes bootPulse { 0%{box-shadow:0 0 0 0 rgba(13,138,138,0.40);} 70%{box-shadow:0 0 0 16px rgba(13,138,138,0);} 100%{box-shadow:0 0 0 0 rgba(13,138,138,0);} }
     @keyframes bootIconFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
     @keyframes bootSpin { to{transform:rotate(360deg);} }
