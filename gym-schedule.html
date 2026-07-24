@@ -796,8 +796,8 @@
         <div class="dash-card" onclick="show('birthday')" data-admin-only><div class="dash-icon"><i class="fas fa-birthday-cake"></i></div><div class="dash-label">バースデー</div></div>
         <div id="dash-fights" class="dash-card" onclick="show('fights')" data-admin-only data-coach-fights-ok><div class="dash-icon"><i class="fas fa-trophy"></i></div><div class="dash-label">試合結果</div></div>
         <div class="dash-card" onclick="show('analytics')" data-admin-only><div class="dash-icon"><i class="fas fa-chart-bar"></i></div><div class="dash-label">ご利用状況</div></div>
-        <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">ユーザ情報</div></div>
         <div id="dash-password" class="dash-card" onclick="show('password')"><div class="dash-icon"><i class="fas fa-key"></i></div><div class="dash-label">パスワード変更</div></div>
+        <div id="dash-userinfo" class="dash-card" onclick="show('userinfo')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-user-circle"></i></div><div class="dash-label">ユーザ情報</div></div>
       </div>
     </div>
 
@@ -1076,6 +1076,7 @@
     <div class="view" id="view-userinfo">
       <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
       <div style="max-width:520px;margin-top:24px;">
+      <div id="ui-usage-section">
       <div class="usage-summary-card">
         <div class="usage-summary-title"><i class="fas fa-chart-bar"></i>&nbsp; 利用実績</div>
         <div class="usage-summary-stats">
@@ -1113,6 +1114,7 @@
           <div class="ui-detail-body" id="ui-detail-body"></div>
         </div>
       </div>
+      </div><!-- /ui-usage-section -->
       <div class="form-card" style="max-width:none;">
         <div class="coach-photo-upload-area">
           <input type="file" id="ui-photo-input" accept="image/*" style="display:none;" onchange="handleUiPhotoChange(this)">
@@ -1131,9 +1133,18 @@
           <div style="font-size:1.1rem;font-weight:700;color:var(--text);">ユーザ情報</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="coach-detail-card">
+          <!-- コーチ: 氏名表示のみ -->
+          <div class="coach-detail-card" id="ui-name-display-row">
             <div class="coach-detail-label"><i class="fas fa-user"></i> 氏名</div>
             <div class="coach-detail-val" id="ui-name" style="font-size:1rem;font-weight:600;"></div>
+          </div>
+          <!-- 管理者: 氏名編集 -->
+          <div class="coach-detail-card" id="ui-name-edit-row" style="display:none;">
+            <div class="coach-detail-label"><i class="fas fa-user"></i> 氏名</div>
+            <input type="text" id="ui-name-input" class="form-ctrl" placeholder="名前を入力" style="margin-top:6px;" oninput="document.getElementById('ui-name-save-btn').style.display=''">
+          </div>
+          <div id="ui-name-save-wrap" style="display:none;text-align:center;">
+            <button class="btn-p" id="ui-name-save-btn" style="display:none;width:100%;margin-top:0;" onclick="saveUiName()"><i class="fas fa-save"></i> 名前を保存</button>
           </div>
           <div class="coach-detail-card">
             <div class="coach-detail-label"><i class="fas fa-envelope"></i> メールアドレス</div>
@@ -1583,6 +1594,20 @@ function applyRoleVisibility(role) {
   } else if (role === 'admin') {
     // 管理者: admin-only 要素をすべて表示（viewer から遷移した場合などに備えてリセット）
     document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = ''; });
+    // 管理者にもユーザ情報を表示
+    const _navUi = document.getElementById('nav-userinfo');
+    const _dashUi = document.getElementById('dash-userinfo');
+    if (_navUi) _navUi.style.display = '';
+    if (_dashUi) _dashUi.style.display = '';
+    // 管理者向け: 利用実績を非表示、氏名を編集可に
+    const _usageSect = document.getElementById('ui-usage-section');
+    if (_usageSect) _usageSect.style.display = 'none';
+    const _nameDisp = document.getElementById('ui-name-display-row');
+    if (_nameDisp) _nameDisp.style.display = 'none';
+    const _nameEdit = document.getElementById('ui-name-edit-row');
+    if (_nameEdit) _nameEdit.style.display = '';
+    const _nameSaveWrap = document.getElementById('ui-name-save-wrap');
+    if (_nameSaveWrap) _nameSaveWrap.style.display = '';
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
@@ -1652,7 +1677,7 @@ if (DEMO_MODE) {
     let role = 'admin'; // デフォルト: セッションあり = アクセス許可
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name,email,tel,gender,birth_date,style,goal&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=role,can_view,name,email,tel,gender,birth_date,style,goal,photo_url&id=eq.${encodeURIComponent(sess.user.id)}&limit=1`,
         { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${sess.access_token}` } }
       );
       if (res.ok) {
@@ -1721,6 +1746,13 @@ if (DEMO_MODE) {
                 }
               }
             } catch(e) { console.warn('coach photo load error:', e); }
+          } else if (p.role === 'admin') {
+            // 管理者: ユーザ情報ページの初期値をセット
+            var _uiNameInput = document.getElementById('ui-name-input');
+            if (_uiNameInput) _uiNameInput.value = p.name || '';
+            var _uiEmail = document.getElementById('ui-email');
+            if (_uiEmail) _uiEmail.textContent = p.email || sess.user.email || '';
+            if (p.photo_url) _setUiPhoto(p.photo_url);
           }
         } else if (!p) {
           // プロフィールが存在しない（削除済みユーザー）→ ログアウトしてログイン画面へ
@@ -4079,21 +4111,48 @@ function _setUiPhoto(dataUrl) {
 }
 
 async function saveUiPhoto() {
-  if (!currentCoachName) { alert('コーチ情報が読み込まれていません。'); return; }
   const prev = document.getElementById('ui-photo-preview');
   const photoUrl = (prev && prev.style.display !== 'none' && prev.src && !prev.src.endsWith(window.location.pathname)) ? prev.src : null;
   const token = _getAccessToken();
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/coaches?name=eq.${encodeURIComponent(currentCoachName)}`,
-    {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ photo_url: photoUrl })
-    }
-  );
+  let res;
+  if (currentUserRole === 'admin') {
+    let userId = null;
+    try { const s = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null'); userId = s && s.user && s.user.id; } catch(e) {}
+    if (!userId) { alert('セッションが切れています。'); return; }
+    res = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`,
+      { method: 'PATCH', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ photo_url: photoUrl }) }
+    );
+  } else {
+    if (!currentCoachName) { alert('コーチ情報が読み込まれていません。'); return; }
+    res = await fetch(
+      `${SUPABASE_URL}/rest/v1/coaches?name=eq.${encodeURIComponent(currentCoachName)}`,
+      { method: 'PATCH', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ photo_url: photoUrl }) }
+    );
+  }
   if (res.ok || res.status === 204) {
     document.getElementById('ui-photo-save-btn').style.display = 'none';
     alert('写真を保存しました。');
+  } else {
+    alert('保存に失敗しました。もう一度お試しください。');
+  }
+}
+
+async function saveUiName() {
+  const input = document.getElementById('ui-name-input');
+  const newName = (input ? input.value : '').trim();
+  if (!newName) { alert('名前を入力してください。'); return; }
+  let userId = null;
+  try { const s = JSON.parse(localStorage.getItem('gym_auth_v1') || 'null'); userId = s && s.user && s.user.id; } catch(e) {}
+  if (!userId) { alert('セッションが切れています。'); return; }
+  const token = _getAccessToken();
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`,
+    { method: 'PATCH', headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ name: newName }) }
+  );
+  if (res.ok || res.status === 204) {
+    document.getElementById('ui-name-save-btn').style.display = 'none';
+    alert('名前を保存しました。');
   } else {
     alert('保存に失敗しました。もう一度お試しください。');
   }
@@ -4205,7 +4264,7 @@ async function deleteNotice(id) {
 }
 
 // リロード時にハッシュからページを復元
-const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights','analytics'];
+const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights','analytics','userinfo'];
 
 async function saveBasicInfo() {
   await saveBasicInfoToDB();
