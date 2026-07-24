@@ -1150,6 +1150,7 @@
             <div class="coach-detail-label"><i class="fas fa-envelope"></i> メールアドレス</div>
             <div class="coach-detail-val" id="ui-email"></div>
           </div>
+          <div id="ui-coach-fields">
           <div class="coach-detail-card">
             <div class="coach-detail-label"><i class="fas fa-phone"></i> 電話番号</div>
             <div class="coach-detail-val" id="ui-tel"></div>
@@ -1161,6 +1162,7 @@
           <div class="coach-detail-card">
             <div class="coach-detail-label"><i class="fas fa-birthday-cake"></i> 生年月日</div>
             <div class="coach-detail-val" id="ui-birth"></div>
+          </div>
           </div>
         </div>
         <div style="margin-top:20px;text-align:center;">
@@ -1608,6 +1610,8 @@ function applyRoleVisibility(role) {
     if (_nameEdit) _nameEdit.style.display = '';
     const _nameSaveWrap = document.getElementById('ui-name-save-wrap');
     if (_nameSaveWrap) _nameSaveWrap.style.display = '';
+    const _coachFields = document.getElementById('ui-coach-fields');
+    if (_coachFields) _coachFields.style.display = 'none';
   } else if (role === 'viewer') {
     // 予約管理のみ表示 — すべての nav・dash を非表示にして予約へ直接遷移
     document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
