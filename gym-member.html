@@ -1085,6 +1085,7 @@ function saveDemoReservations() {
 // ===== NAVIGATION =====
 // ===== 起動スプラッシュ（木村鋭景の写真 or 未設定アイコン）=====
 let _splashHidden = false;
+const _splashStart = Date.now();
 function _renderSplashPhoto(url) {
   const box = document.getElementById('boot-splash-photo');
   if (!box) return;
@@ -1101,10 +1102,14 @@ function _renderSplashPhoto(url) {
 function hideBootSplash() {
   if (_splashHidden) return;
   _splashHidden = true;
-  const s = document.getElementById('boot-splash');
-  if (!s) return;
-  s.classList.add('hide');
-  setTimeout(function() { if (s) s.style.display = 'none'; }, 500);
+  // 立ち上げ時は最低2秒間スプラッシュを表示してから消す
+  const _wait = Math.max(0, 2000 - (Date.now() - _splashStart));
+  setTimeout(function() {
+    const s = document.getElementById('boot-splash');
+    if (!s) return;
+    s.classList.add('hide');
+    setTimeout(function() { if (s) s.style.display = 'none'; }, 500);
+  }, _wait);
 }
 // 公開キー gym_settings.splash_photo から最新写真を取得（無ければアイコンのまま）
 async function _loadSplashPhoto() {
