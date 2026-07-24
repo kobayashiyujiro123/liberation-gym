@@ -438,7 +438,18 @@
   <div id="boot-splash-photo" class="is-logo"><i class="fas fa-dumbbell"></i></div>
   <div id="boot-splash-text"><i class="fas fa-spinner fa-spin"></i>読み込み中...</div>
 </div>
-<script>try{var _sp=localStorage.getItem('gym_member_splash_photo');var _b=document.getElementById('boot-splash-photo');if(_b&&_sp){_b.classList.remove('is-logo');_b.innerHTML='<img src="'+_sp+'" alt="">';}}catch(e){}</script>
+<script>try{
+  var _bs=document.getElementById('boot-splash');
+  if(sessionStorage.getItem('gym_splash_shown')){
+    if(_bs)_bs.style.display='none';
+    window._splashSkip=true;
+  }else{
+    sessionStorage.setItem('gym_splash_shown','1');
+    var _sp=localStorage.getItem('gym_member_splash_photo');
+    var _b=document.getElementById('boot-splash-photo');
+    if(_b&&_sp){_b.classList.remove('is-logo');_b.innerHTML='<img src="'+_sp+'" alt="">';}
+  }
+}catch(e){}</script>
 
 <!-- =========== AUTH SCREENS =========== -->
 
@@ -1127,6 +1138,7 @@ async function _loadSplashPhoto() {
 }
 // ロゴ要素はページ後半にあるため、DOM構築後に未設定時のロゴを差し込む
 document.addEventListener('DOMContentLoaded', function() {
+  if (window._splashSkip) return;
   var b = document.getElementById('boot-splash-photo');
   if (b && b.classList.contains('is-logo')) _renderSplashPhoto('');
 });
