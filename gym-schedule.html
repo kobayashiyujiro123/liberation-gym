@@ -2836,9 +2836,19 @@ function openCalModal(dateStr) {
     activeTimes = new Set(Object.keys(slotClassNames));
   }
 
+  // ボタン表示範囲：全カテゴリ営業時間の最小開始〜最大終了 ∪ 既存スロット時刻
+  // （平日でも特定日を早い時間から設定でき、営業時間外の既存コマも編集・保持できる）
+  const _startVals = ['bi-weekday-start','bi-weekend-start','bi-holiday-start']
+        .map(id => parseInt((document.getElementById(id)?.value || '').replace('時',''))).filter(n => !isNaN(n));
+  const _endVals = ['bi-weekday-end','bi-weekend-end','bi-holiday-end']
+        .map(id => parseInt((document.getElementById(id)?.value || '').replace('時',''))).filter(n => !isNaN(n));
+  const _existHours = [...activeTimes].map(t => parseInt(String(t).split(':')[0])).filter(n => !isNaN(n));
+  const btnStart = Math.min(startH, ..._startVals, ..._existHours);
+  const btnEnd   = Math.max(endH,   ..._endVals,   ..._existHours.map(n => n + 1));
+
   const grid = document.getElementById('cal-time-slots');
   grid.innerHTML = '';
-  for (let h = startH; h < endH; h++) {
+  for (let h = btnStart; h < btnEnd; h++) {
     const time = `${String(h).padStart(2,'0')}:00`;
     const btn = document.createElement('button');
     btn.className = 'cal-slot-btn' + (activeTimes.has(time) ? ' active' : '');
