@@ -98,8 +98,6 @@
     .hs-month-nav { display:flex; align-items:center; gap:8px; }
     .hs-month-label { font-family:'Oswald',sans-serif; font-size:1.1rem; min-width:110px; text-align:center; letter-spacing:1px; }
     .hs-chips { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-    .hs-chip-lbl { font-size:0.74rem; color:var(--text-light); white-space:nowrap; }
-    @media (min-width:769px) { .stats-row.hs-stats { grid-template-columns:repeat(4,1fr); } }
     .hs-list-head { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
     .hs-range-label { font-size:0.82rem; color:var(--text-light); }
     .hs-count { font-size:0.8rem; color:var(--text-light); margin-left:auto; white-space:nowrap; }
@@ -123,8 +121,6 @@
     .hs-day-body .data-table { min-width:560px; }
     .hs-day-body .data-table thead th { padding:8px 12px; font-size:0.74rem; }
     .hs-day-body .data-table tbody td { padding:8px 12px; font-size:0.82rem; }
-    .hs-badge-admin { background:rgba(0,188,212,0.12); color:var(--primary-dark); }
-    .hs-badge-member { background:rgba(0,0,0,0.05); color:var(--text-light); }
     .data-table tbody tr.hs-cancel td { color:var(--text-light); }
     @media (max-width:680px) {
       .hs-toolbar { gap:8px; margin-bottom:12px; }
@@ -133,11 +129,6 @@
       .hs-day-head { padding:10px 12px; gap:8px; }
       .hs-day-date { min-width:0; }
       .hs-day-body { padding:0 8px 12px 8px; }
-    }
-    @media (max-width:768px) {
-      .stats-row.hs-stats { grid-template-columns:repeat(2,1fr); gap:10px; }
-      .hs-stats .stat-card { padding:12px 14px; }
-      .hs-stats .stat-val { font-size:1.3rem; }
     }
 
     /* ─── ご利用状況 スマホ対応 ─── */
@@ -1000,18 +991,11 @@
           <button class="res-coach-tab" data-st="confirmed" onclick="hsSetStatus('confirmed')">確定</button>
           <button class="res-coach-tab" data-st="cancelled" onclick="hsSetStatus('cancelled')">キャンセル</button>
         </div>
-        <div class="hs-chips" id="hs-source-chips">
-          <span class="hs-chip-lbl">予約元</span>
-          <button class="res-coach-tab active" data-src="all" onclick="hsSetSource('all')">すべて</button>
-          <button class="res-coach-tab" data-src="member" onclick="hsSetSource('member')">会員ページ</button>
-          <button class="res-coach-tab" data-src="admin" onclick="hsSetSource('admin')">管理画面</button>
-        </div>
       </div>
-      <div class="stats-row hs-stats">
+      <div class="stats-row">
         <div class="stat-card"><div class="stat-ico ico-g"><i class="fas fa-check"></i></div><div><div class="stat-val" id="hs-confirmed">0</div><div class="stat-lbl">確定予約</div></div></div>
         <div class="stat-card"><div class="stat-ico ico-o"><i class="fas fa-ban"></i></div><div><div class="stat-val" id="hs-cancelled">0</div><div class="stat-lbl">キャンセル</div></div></div>
-        <div class="stat-card"><div class="stat-ico" style="background:rgba(0,188,212,0.12);color:var(--primary);"><i class="fas fa-desktop"></i></div><div><div class="stat-val" id="hs-admin">0</div><div class="stat-lbl">管理画面からの予約</div></div></div>
-        <div class="stat-card"><div class="stat-ico" style="background:rgba(94,53,177,0.1);color:#5e35b1;"><i class="fas fa-users"></i></div><div><div class="stat-val" id="hs-members">0</div><div class="stat-lbl">利用会員数</div></div></div>
+        <div class="stat-card"><div class="stat-ico" style="background:rgba(0,188,212,0.12);color:var(--primary);"><i class="fas fa-users"></i></div><div><div class="stat-val" id="hs-members">0</div><div class="stat-lbl">利用会員数</div></div></div>
       </div>
       <div class="data-wrap">
         <div class="hs-list-head">
@@ -2416,16 +2400,7 @@ async function submitAddRes() {
     : (`__name__:${name}` + (memo ? '\n' + memo : ''));
 
   const token = _getAccessToken();
-  const payload = {
-    user_id:    userId,
-    date:       dateStr,
-    time:       time,
-    class_name: CLASSES[0],
-    status:     'confirmed',
-    memo:       memoValue,
-    source:     'admin', // 予約元（予約履歴の「管理画面」絞り込み用）
-  };
-  const _postRes = body => fetch(`${SUPABASE_URL}/rest/v1/reservations`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reservations`, {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_ANON,
@@ -2433,14 +2408,15 @@ async function submitAddRes() {
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      user_id:    userId,
+      date:       dateStr,
+      time:       time,
+      class_name: CLASSES[0],
+      status:     'confirmed',
+      memo:       memoValue,
+    }),
   });
-  let res = await _postRes(payload);
-  if (!res.ok && res.status === 400 && (await res.clone().text()).includes("'source'")) {
-    // source 列が未追加（supabase/reservation_source.sql 未適用）の場合は列なしで再試行
-    delete payload.source;
-    res = await _postRes(payload);
-  }
   if (!res.ok) {
     const err = await res.text();
     alert('予約の追加に失敗しました: ' + err);
@@ -3821,13 +3797,11 @@ function closeUiDetail() {
 // ===== RESERVATION HISTORY / 予約履歴（管理者） =====
 // 今日までの全予約を日付ごとにまとめて表示（日付をクリックでその日の予約を展開）。
 // 期間: 月別（既定）/ 直近3ヶ月 / 今年 / 全期間。
-// 予約元（会員ページ / 管理画面）は reservations.source 列で判定（supabase/reservation_source.sql）。
 const _hsNow = new Date();
 let hsPeriod = 'month';
 let hsYear  = _hsNow.getFullYear();
 let hsMonth = _hsNow.getMonth() + 1;
 let hsStatus = 'all';      // all | confirmed | cancelled
-let hsSource = 'all';      // all | member | admin
 let hsRows = [];           // 現在の期間の全行（整形済み）
 let _hsDayRows = {};       // 絞り込み後の 日付 → 行配列
 const hsOpenDays = new Set();
@@ -3858,12 +3832,6 @@ function hsChangeMonth(delta) {
 function hsSetStatus(st) {
   hsStatus = st;
   document.querySelectorAll('#hs-status-chips .res-coach-tab').forEach(b => b.classList.toggle('active', b.dataset.st === st));
-  renderHistory();
-}
-
-function hsSetSource(src) {
-  hsSource = src;
-  document.querySelectorAll('#hs-source-chips .res-coach-tab').forEach(b => b.classList.toggle('active', b.dataset.src === src));
   renderHistory();
 }
 
@@ -3935,7 +3903,6 @@ function _hsShape(r, memberMap) {
     name, gender: m.gender || '',
     coach: r.coach || m.coach || '',
     status: r.status === 'cancelled' ? 'cancelled' : 'confirmed',
-    source: r.source === 'admin' ? 'admin' : 'member',
     memo,
   };
 }
@@ -3958,7 +3925,6 @@ function _hsDemoRows(start, end) {
       out.push({ id: `demo-${ds}-${i}`, userId: 'u' + ni, date: ds, time: times[Math.floor(rng() * times.length)],
         name: names[ni], gender: '', coach: coaches[Math.floor(rng() * coaches.length)],
         status: rng() < 0.12 ? 'cancelled' : 'confirmed',
-        source: rng() < 0.2 ? 'admin' : 'member',
         memo: rng() < 0.1 ? 'ミット打ち希望' : '' });
     }
   }
@@ -4000,7 +3966,6 @@ function _hsFilteredRows() {
   const q = (document.getElementById('hs-search').value || '').trim().toLowerCase();
   return hsRows.filter(r =>
     (hsStatus === 'all' || r.status === hsStatus) &&
-    (hsSource === 'all' || r.source === hsSource) &&
     (!q || r.name.toLowerCase().includes(q) || r.coach.toLowerCase().includes(q))
   );
 }
@@ -4012,7 +3977,6 @@ function renderHistory() {
   const confirmed = rows.filter(r => r.status === 'confirmed');
   document.getElementById('hs-confirmed').textContent = confirmed.length;
   document.getElementById('hs-cancelled').textContent = rows.length - confirmed.length;
-  document.getElementById('hs-admin').textContent     = rows.filter(r => r.source === 'admin').length;
   document.getElementById('hs-members').textContent   = new Set(confirmed.map(r => r.userId || r.name)).size;
 
   _hsDayRows = {};
@@ -4024,7 +3988,6 @@ function renderHistory() {
     const list = _hsDayRows[d];
     const c = list.filter(r => r.status === 'confirmed').length;
     const x = list.length - c;
-    const a = list.filter(r => r.source === 'admin').length;
     const dt = new Date(d + 'T00:00:00');
     const dow = isNaN(dt) ? '' : _HS_DOW[dt.getDay()];
     const dowCls = dow === '土' ? ' sat' : dow === '日' ? ' sun' : '';
@@ -4036,7 +3999,6 @@ function renderHistory() {
         <span class="hs-day-sum">
           <span class="badge badge-s">確定 ${c}</span>
           ${x ? `<span class="badge badge-d">キャンセル ${x}</span>` : ''}
-          ${a ? `<span class="badge hs-badge-admin">管理画面 ${a}</span>` : ''}
         </span>
         <span class="hs-day-total">${list.length}件</span>
       </div>
@@ -4049,16 +4011,14 @@ function renderHistory() {
 function _hsDayTableHtml(list) {
   const sorted = list.slice().sort((a, b) => a.time.localeCompare(b.time));
   return `<table class="data-table">
-    <thead><tr><th>時間</th><th>会員名</th><th>トレーナー</th><th>ステータス</th><th>予約元</th><th>メモ</th></tr></thead>
+    <thead><tr><th>時間</th><th>会員名</th><th>トレーナー</th><th>ステータス</th><th>メモ</th></tr></thead>
     <tbody>${sorted.map(r => {
       const isCancel = r.status === 'cancelled';
-      const isAdmin  = r.source === 'admin';
       return `<tr class="${isCancel ? 'hs-cancel' : ''}">
         <td style="white-space:nowrap;font-weight:600;">${_hsEsc(r.time)}</td>
         <td style="white-space:nowrap;">${_hsEsc(r.name)}</td>
         <td style="white-space:nowrap;">${r.coach ? _hsEsc(r.coach) : '<span style="color:var(--text-light);">—</span>'}</td>
         <td><span class="badge ${isCancel ? 'badge-d' : 'badge-s'}">${isCancel ? 'キャンセル' : '確定'}</span></td>
-        <td><span class="badge ${isAdmin ? 'hs-badge-admin' : 'hs-badge-member'}">${isAdmin ? '管理画面' : '会員ページ'}</span></td>
         <td style="font-size:0.78rem;color:var(--text-light);max-width:260px;">${_hsEsc(r.memo)}</td>
       </tr>`;
     }).join('')}</tbody>
