@@ -91,6 +91,27 @@
     #an-time-chart, #an-daily-chart { max-width:700px; }
     .an-loading { text-align:center;padding:28px;color:var(--text-light);font-size:0.88rem; }
 
+    /* RESERVATION HISTORY / 予約履歴 */
+    .hs-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .hs-select { padding:8px 32px 8px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); font-family:'Noto Sans JP',sans-serif; font-size:0.84rem; color:var(--text); outline:none; cursor:pointer; }
+    .hs-select:focus { border-color:var(--primary); }
+    .hs-month-nav { display:flex; align-items:center; gap:8px; }
+    .hs-month-label { font-family:'Oswald',sans-serif; font-size:1.1rem; min-width:110px; text-align:center; letter-spacing:1px; }
+    .hs-chips { display:flex; gap:6px; }
+    .hs-list-head { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .hs-range-label { font-size:0.82rem; color:var(--text-light); }
+    .hs-count { font-size:0.8rem; color:var(--text-light); margin-left:auto; white-space:nowrap; }
+    .hs-date-cell { white-space:nowrap; font-weight:600; }
+    .hs-dow { font-size:0.72rem; color:var(--text-light); margin-left:4px; font-weight:400; }
+    .hs-dow.sat { color:#1565c0; }
+    .hs-dow.sun { color:#e53935; }
+    .data-table tbody tr.hs-cancel td { color:var(--text-light); }
+    @media (max-width:680px) {
+      .hs-toolbar { gap:8px; margin-bottom:12px; }
+      .hs-month-label { font-size:0.95rem; min-width:90px; }
+      .hs-list-head { padding:8px 12px; }
+    }
+
     /* ─── ご利用状況 スマホ対応 ─── */
     @media (max-width:680px) {
       /* 月ナビ */
@@ -746,6 +767,9 @@
     <div class="nav-item" id="nav-reservation" onclick="show('reservation')">
       <i class="nav-icon fas fa-clipboard-list"></i><span>予約管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
+    <div class="nav-item" id="nav-history" onclick="show('history')" data-admin-only>
+      <i class="nav-icon fas fa-history"></i><span>予約履歴</span><i class="nav-arrow fas fa-chevron-right"></i>
+    </div>
     <div class="nav-item" id="nav-members" onclick="show('members')" data-admin-only data-coach-members-ok>
       <i class="nav-icon fas fa-users"></i><span>会員管理</span><i class="nav-arrow fas fa-chevron-right"></i>
     </div>
@@ -795,6 +819,7 @@
         <div class="dash-card" onclick="show('schedule')" data-admin-only><div class="dash-icon"><i class="fas fa-calendar-alt"></i></div><div class="dash-label">スケジュール登録</div></div>
         <div id="dash-member-schedule" class="dash-card" onclick="show('member-schedule')" data-coach-only style="display:none;"><div class="dash-icon"><i class="fas fa-calendar-week"></i></div><div class="dash-label">スケジュール予約</div></div>
         <div id="dash-reservation" class="dash-card" onclick="show('reservation')"><div class="dash-icon"><i class="fas fa-clipboard-list"></i></div><div class="dash-label">予約管理</div></div>
+        <div id="dash-history" class="dash-card" onclick="show('history')" data-admin-only><div class="dash-icon"><i class="fas fa-history"></i></div><div class="dash-label">予約履歴</div></div>
         <div id="dash-members" class="dash-card" onclick="show('members')" data-admin-only data-coach-members-ok><div class="dash-icon"><i class="fas fa-users"></i></div><div class="dash-label">会員管理</div></div>
         <div class="dash-card" onclick="show('coach')" data-admin-only><div class="dash-icon"><i class="fas fa-dumbbell"></i></div><div class="dash-label">トレーナー管理</div></div>
         <div class="dash-card" onclick="show('notice')" data-admin-only><div class="dash-icon"><i class="fas fa-envelope"></i></div><div class="dash-label">お知らせ作成</div></div>
@@ -924,6 +949,48 @@
       </div>
       <div class="res-coach-tabs" id="res-coach-tabs"></div>
       <div id="res-timeline"></div>
+    </div>
+
+    <!-- RESERVATION HISTORY / 予約履歴（管理者） -->
+    <div class="view" id="view-history">
+      <div class="mem-detail-breadcrumb"><span onclick="show('dashboard')" class="mem-breadcrumb-link"><i class="fas fa-chevron-left"></i> トップページに戻る</span></div>
+      <div class="hs-toolbar">
+        <select class="hs-select" id="hs-period" onchange="hsChangePeriod(this.value)">
+          <option value="month">月別</option>
+          <option value="3m">直近3ヶ月</option>
+          <option value="year">今年</option>
+          <option value="all">全期間</option>
+        </select>
+        <div class="hs-month-nav" id="hs-month-nav">
+          <button class="an-nav-btn" onclick="hsChangeMonth(-1)" title="前月"><i class="fas fa-chevron-left"></i></button>
+          <span class="hs-month-label" id="hs-month-label">—</span>
+          <button class="an-nav-btn" onclick="hsChangeMonth(1)" title="翌月"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="search-wrap" style="max-width:260px;"><i class="fas fa-search"></i><input class="search-inp" id="hs-search" placeholder="会員名・トレーナー名で絞り込み" oninput="hsPage=1;renderHistory()" /></div>
+        <div class="hs-chips" id="hs-status-chips">
+          <button class="res-coach-tab active" data-st="all" onclick="hsSetStatus('all')">すべて</button>
+          <button class="res-coach-tab" data-st="confirmed" onclick="hsSetStatus('confirmed')">確定</button>
+          <button class="res-coach-tab" data-st="cancelled" onclick="hsSetStatus('cancelled')">キャンセル</button>
+        </div>
+        <button class="btn-p" onclick="hsDownloadCsv()" title="表示中の一覧をCSVで保存"><i class="fas fa-download"></i> CSV</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-ico ico-g"><i class="fas fa-check"></i></div><div><div class="stat-val" id="hs-confirmed">0</div><div class="stat-lbl">確定予約</div></div></div>
+        <div class="stat-card"><div class="stat-ico ico-o"><i class="fas fa-ban"></i></div><div><div class="stat-val" id="hs-cancelled">0</div><div class="stat-lbl">キャンセル</div></div></div>
+        <div class="stat-card"><div class="stat-ico" style="background:rgba(0,188,212,0.12);color:var(--primary);"><i class="fas fa-users"></i></div><div><div class="stat-val" id="hs-members">0</div><div class="stat-lbl">利用会員数</div></div></div>
+      </div>
+      <div class="data-wrap" style="overflow-x:auto;">
+        <div class="hs-list-head">
+          <span class="hs-range-label" id="hs-range-label"></span>
+          <span class="hs-count" id="hs-count"></span>
+          <div class="pagination" id="hs-pagination-top" style="border-top:none;padding:0;"></div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>日付</th><th>時間</th><th>会員名</th><th>トレーナー</th><th>ステータス</th><th>メモ</th></tr></thead>
+          <tbody id="hs-tbody"></tbody>
+        </table>
+        <div class="pagination" id="hs-pagination"></div>
+      </div>
     </div>
 
     <!-- MEMBERS LIST -->
@@ -1535,7 +1602,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'トレーナー管理', 'coach-invite':'トレーナー招待メール送信', 'coach-register':'トレーナー情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理', analytics:'ご利用状況' };
+const titles = { dashboard:'トップページ', basicinfo:'基本情報設定', schedule:'スケジュール登録', reservation:'予約管理', members:'会員管理', password:'パスワード変更', notice:'お知らせ登録', birthday:'バースデー', coach:'トレーナー管理', 'coach-invite':'トレーナー招待メール送信', 'coach-register':'トレーナー情報登録', userinfo:'ユーザ情報', 'member-schedule':'スケジュール予約', fights:'試合結果管理', analytics:'ご利用状況', history:'予約履歴' };
 
 // ===== ROLE VISIBILITY =====
 let currentUserRole = 'admin';
@@ -2726,6 +2793,9 @@ function show(name) {
   if (name === 'analytics') {
     initAnalytics();
   }
+  if (name === 'history') {
+    initHistory();
+  }
   if (name === 'member-schedule') {
     msWeekOffset = 0;
     msSwitchTab(0);
@@ -3709,6 +3779,246 @@ function closeUiDetail() {
   document.body.style.overflow = '';
 }
 
+// ===== RESERVATION HISTORY / 予約履歴（管理者） =====
+// 今日までの全予約を期間別に一覧表示。月別（既定）/ 直近3ヶ月 / 今年 / 全期間。
+const _hsNow = new Date();
+let hsPeriod = 'month';
+let hsYear  = _hsNow.getFullYear();
+let hsMonth = _hsNow.getMonth() + 1;
+let hsStatus = 'all';
+let hsPage = 1;
+const HS_PAGE_SIZE = 50;
+let hsRows = [];           // 現在の期間の全行（整形済み）
+const _hsCache = {};       // 期間キー → 行配列（ページ滞在中のみ有効）
+let _hsMemberMap = null;   // user_id → { name, gender, coach }
+let _hsLoadSeq = 0;
+
+function initHistory() {
+  // ページを開くたびに最新を取得（滞在中の期間切り替えはキャッシュ利用）
+  Object.keys(_hsCache).forEach(k => delete _hsCache[k]);
+  _hsMemberMap = null;
+  hsPage = 1;
+  loadHistory();
+}
+
+function hsChangePeriod(v) { hsPeriod = v; hsPage = 1; loadHistory(); }
+
+function hsChangeMonth(delta) {
+  const cy = _hsNow.getFullYear(), cm = _hsNow.getMonth() + 1;
+  if (delta > 0 && (hsYear > cy || (hsYear === cy && hsMonth >= cm))) return; // 当月より先へは進めない
+  hsMonth += delta;
+  if (hsMonth > 12) { hsMonth = 1; hsYear++; }
+  if (hsMonth < 1)  { hsMonth = 12; hsYear--; }
+  hsPage = 1;
+  loadHistory();
+}
+
+function hsSetStatus(st) {
+  hsStatus = st; hsPage = 1;
+  document.querySelectorAll('#hs-status-chips .res-coach-tab').forEach(b => b.classList.toggle('active', b.dataset.st === st));
+  renderHistory();
+}
+
+function hsGoPage(p) {
+  hsPage = p;
+  renderHistory();
+  const head = document.getElementById('hs-range-label');
+  if (head) head.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function _hsPad(n) { return String(n).padStart(2, '0'); }
+function _hsEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// 期間（今日まで）を返す
+function _hsRange() {
+  const today = `${_hsNow.getFullYear()}-${_hsPad(_hsNow.getMonth()+1)}-${_hsPad(_hsNow.getDate())}`;
+  if (hsPeriod === 'month') {
+    const last = new Date(hsYear, hsMonth, 0).getDate();
+    const end  = `${hsYear}-${_hsPad(hsMonth)}-${_hsPad(last)}`;
+    return { start: `${hsYear}-${_hsPad(hsMonth)}-01`, end: end < today ? end : today, label: `${hsYear}年${hsMonth}月` };
+  }
+  if (hsPeriod === '3m') {
+    const s = new Date(_hsNow.getFullYear(), _hsNow.getMonth() - 2, 1);
+    return { start: `${s.getFullYear()}-${_hsPad(s.getMonth()+1)}-01`, end: today, label: '直近3ヶ月' };
+  }
+  if (hsPeriod === 'year') return { start: `${_hsNow.getFullYear()}-01-01`, end: today, label: `${_hsNow.getFullYear()}年` };
+  return { start: null, end: today, label: '全期間' };
+}
+
+// 期間内の予約を Range ヘッダで分割取得（PostgREST の 1000 行上限対策）
+async function _hsFetchAll(start, end) {
+  const token = _getAccessToken();
+  const base = `${SUPABASE_URL}/rest/v1/reservations?select=*${start ? `&date=gte.${start}` : ''}&date=lte.${end}&order=date.desc,time.desc,created_at.desc`;
+  const out = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const r = await fetch(base, { headers: {
+      'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`,
+      'Range-Unit': 'items', 'Range': `${from}-${from + PAGE - 1}`,
+    } });
+    if (!r.ok) break; // 416 = 範囲外（取得完了）
+    const rows = await r.json();
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
+async function _hsGetMemberMap() {
+  if (_hsMemberMap) return _hsMemberMap;
+  const map = {};
+  try {
+    const token = _getAccessToken();
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,name,gender,coach_name`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } });
+    if (r.ok) (await r.json()).forEach(p => { map[p.id] = { name: p.name || '', gender: p.gender || '', coach: p.coach_name || '' }; });
+  } catch(e) { console.warn('_hsGetMemberMap failed:', e); }
+  _hsMemberMap = map;
+  return map;
+}
+
+// DB 行 → 表示用行（予約管理と同じ名前復元ルール）
+function _hsShape(r, memberMap) {
+  const m = memberMap[r.user_id] || {};
+  let name = m.name || '';
+  let memo = r.memo || '';
+  if (!name && memo.startsWith('__name__:')) {
+    const nl = memo.indexOf('\n');
+    name = memo.slice('__name__:'.length, nl > 0 ? nl : undefined);
+    memo = nl > 0 ? memo.slice(nl + 1) : '';
+  }
+  if (!name) name = '不明';
+  return {
+    id: r.id, userId: r.user_id || '',
+    date: String(r.date || '').slice(0, 10), time: r.time || '',
+    name, gender: m.gender || '',
+    coach: r.coach || m.coach || '',
+    status: r.status === 'cancelled' ? 'cancelled' : 'confirmed',
+    memo,
+  };
+}
+
+// デモモード用ダミー履歴
+function _hsDemoRows(start, end) {
+  const names   = ['水野麻美','吉田レマン','桑田','中村','森','中庭','山下','ソエジ'];
+  const coaches = ['小林','鈴木',''];
+  const times   = ['10:00','11:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+  let s = 20240401;
+  const rng = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+  const e  = new Date(end + 'T00:00:00');
+  const st = start ? new Date(start + 'T00:00:00') : new Date(e.getFullYear(), e.getMonth() - 5, 1);
+  const out = [];
+  for (let d = new Date(st); d <= e; d.setDate(d.getDate() + 1)) {
+    const ds = `${d.getFullYear()}-${_hsPad(d.getMonth()+1)}-${_hsPad(d.getDate())}`;
+    const n = 1 + Math.floor(rng() * 5);
+    for (let i = 0; i < n; i++) {
+      const ni = Math.floor(rng() * names.length);
+      out.push({ id: `demo-${ds}-${i}`, userId: 'u' + ni, date: ds, time: times[Math.floor(rng() * times.length)],
+        name: names[ni], gender: '', coach: coaches[Math.floor(rng() * coaches.length)],
+        status: rng() < 0.12 ? 'cancelled' : 'confirmed', memo: rng() < 0.1 ? 'ミット打ち希望' : '' });
+    }
+  }
+  return out;
+}
+
+async function loadHistory() {
+  const rng = _hsRange();
+  document.getElementById('hs-period').value = hsPeriod;
+  document.getElementById('hs-month-nav').style.display = hsPeriod === 'month' ? '' : 'none';
+  document.getElementById('hs-month-label').textContent = `${hsYear}年${hsMonth}月`;
+  const fmt = d => d.replace(/-/g, '/');
+  document.getElementById('hs-range-label').textContent =
+    `${rng.label}（${rng.start ? fmt(rng.start) + '〜' : '〜'}${fmt(rng.end)}）`;
+
+  const key = `${rng.start}|${rng.end}`;
+  const seq = ++_hsLoadSeq;
+  if (_hsCache[key]) { hsRows = _hsCache[key]; renderHistory(); return; }
+
+  document.getElementById('hs-tbody').innerHTML =
+    '<tr><td colspan="6" class="an-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td></tr>';
+  let rows = [];
+  if (DEMO_MODE) {
+    rows = _hsDemoRows(rng.start, rng.end);
+  } else {
+    try {
+      const [raw, memberMap] = await Promise.all([_hsFetchAll(rng.start, rng.end), _hsGetMemberMap()]);
+      rows = raw.map(r => _hsShape(r, memberMap));
+    } catch(e) { console.warn('loadHistory failed:', e); }
+  }
+  rows.sort((a, b) => (b.date + ' ' + b.time).localeCompare(a.date + ' ' + a.time)); // 新しい順
+  if (seq !== _hsLoadSeq) return; // 後から開始した読み込みを優先
+  _hsCache[key] = rows;
+  hsRows = rows;
+  renderHistory();
+}
+
+function _hsFilteredRows() {
+  const q = (document.getElementById('hs-search').value || '').trim().toLowerCase();
+  return hsRows.filter(r =>
+    (hsStatus === 'all' || r.status === hsStatus) &&
+    (!q || r.name.toLowerCase().includes(q) || r.coach.toLowerCase().includes(q))
+  );
+}
+
+function renderHistory() {
+  const rows = _hsFilteredRows();
+  const confirmed = rows.filter(r => r.status === 'confirmed');
+  document.getElementById('hs-confirmed').textContent = confirmed.length;
+  document.getElementById('hs-cancelled').textContent = rows.length - confirmed.length;
+  document.getElementById('hs-members').textContent   = new Set(confirmed.map(r => r.userId || r.name)).size;
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / HS_PAGE_SIZE));
+  if (hsPage > totalPages) hsPage = totalPages;
+  const from = (hsPage - 1) * HS_PAGE_SIZE;
+  const pageItems = rows.slice(from, from + HS_PAGE_SIZE);
+  document.getElementById('hs-count').textContent = rows.length
+    ? `${rows.length}件中 ${from + 1}〜${Math.min(from + HS_PAGE_SIZE, rows.length)}件` : '0件';
+
+  const DOW = ['日','月','火','水','木','金','土'];
+  document.getElementById('hs-tbody').innerHTML = pageItems.length ? pageItems.map(r => {
+    const d = new Date(r.date + 'T00:00:00');
+    const dow = isNaN(d) ? '' : DOW[d.getDay()];
+    const dowCls = dow === '土' ? ' sat' : dow === '日' ? ' sun' : '';
+    const isCancel = r.status === 'cancelled';
+    return `<tr class="${isCancel ? 'hs-cancel' : ''}">
+      <td class="hs-date-cell">${_hsEsc(r.date.replace(/-/g, '/'))}<span class="hs-dow${dowCls}">(${dow})</span></td>
+      <td style="white-space:nowrap;">${_hsEsc(r.time)}</td>
+      <td style="font-weight:600;white-space:nowrap;">${_hsEsc(r.name)}</td>
+      <td style="white-space:nowrap;">${r.coach ? _hsEsc(r.coach) : '<span style="color:var(--text-light);">—</span>'}</td>
+      <td><span class="badge ${isCancel ? 'badge-d' : 'badge-s'}">${isCancel ? 'キャンセル' : '確定'}</span></td>
+      <td style="font-size:0.78rem;color:var(--text-light);max-width:260px;">${_hsEsc(r.memo)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-light);">該当する予約はありません</td></tr>';
+
+  // ページ送り（現在ページを中心に最大7ページ分）
+  let html = '';
+  if (totalPages > 1) {
+    let pf = Math.max(1, hsPage - 3), pt = Math.min(totalPages, pf + 6); pf = Math.max(1, pt - 6);
+    html += `<button class="pg-btn" onclick="hsGoPage(${hsPage-1})" ${hsPage===1?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-left"></i></button>`;
+    for (let i = pf; i <= pt; i++) html += `<button class="pg-btn ${i===hsPage?'active':''}" onclick="hsGoPage(${i})">${i}</button>`;
+    html += `<button class="pg-btn" onclick="hsGoPage(${hsPage+1})" ${hsPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''}><i class="fas fa-chevron-right"></i></button>`;
+  }
+  document.getElementById('hs-pagination').innerHTML = html;
+  document.getElementById('hs-pagination-top').innerHTML = html;
+  document.getElementById('hs-pagination').style.display = html ? '' : 'none';
+}
+
+// 表示中（絞り込み後）の一覧を CSV 保存
+function hsDownloadCsv() {
+  const rows = _hsFilteredRows();
+  const head = ['日付','時間','会員名','トレーナー','ステータス','メモ'];
+  const body = rows.map(r => [r.date, r.time, r.name, r.coach, r.status === 'cancelled' ? 'キャンセル' : '確定', r.memo]);
+  const csv = [head].concat(body)
+    .map(cols => cols.map(c => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM 付き（Excel 対応）
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `予約履歴_${_hsRange().label}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 // ===== ANALYTICS / ご利用状況 =====
 // デフォルトは前月（今月は未完了のため）
 const _anNow = new Date();
@@ -4314,7 +4624,7 @@ async function deleteNotice(id) {
 }
 
 // リロード時にハッシュからページを復元
-const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights','analytics','userinfo'];
+const validViews = ['dashboard','basicinfo','schedule','reservation','members','password','notice','birthday','coach','coach-invite','coach-register','fights','analytics','userinfo','history'];
 
 async function saveBasicInfo() {
   await saveBasicInfoToDB();
