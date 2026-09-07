@@ -1001,8 +1001,7 @@
         <div class="hs-list-head">
           <span class="hs-range-label" id="hs-range-label"></span>
           <span class="hs-count" id="hs-count"></span>
-          <button class="hs-link-btn" onclick="hsToggleAll(true)"><i class="fas fa-angle-double-down"></i> すべて開く</button>
-          <button class="hs-link-btn" onclick="hsToggleAll(false)"><i class="fas fa-angle-double-up"></i> すべて閉じる</button>
+          <button class="hs-link-btn" id="hs-toggle-all" onclick="hsToggleAllBtn()"><i class="fas fa-angle-double-down"></i> すべて開く</button>
         </div>
         <div id="hs-days"></div>
       </div>
@@ -4005,6 +4004,7 @@ function renderHistory() {
       <div class="hs-day-body"${open ? ' data-rendered="1"' : ' hidden'}>${open ? _hsDayTableHtml(list) : ''}</div>
     </div>`;
   }).join('') : '<div style="text-align:center;padding:28px;color:var(--text-light);">該当する予約はありません</div>';
+  _hsUpdateToggleAllBtn();
 }
 
 // その日の予約一覧（展開時に描画）
@@ -4041,12 +4041,30 @@ function _hsApplyDayState(d) {
 function hsToggleDay(d) {
   if (hsOpenDays.has(d)) hsOpenDays.delete(d); else hsOpenDays.add(d);
   _hsApplyDayState(d);
+  _hsUpdateToggleAllBtn();
 }
 
 function hsToggleAll(open) {
   const days = Object.keys(_hsDayRows);
   if (open) days.forEach(d => hsOpenDays.add(d)); else hsOpenDays.clear();
   days.forEach(_hsApplyDayState);
+  _hsUpdateToggleAllBtn();
+}
+
+// 「すべて開く／すべて閉じる」トグル（全日展開済みなら閉じる、それ以外は開く）
+function _hsAllOpen() {
+  const days = Object.keys(_hsDayRows);
+  return days.length > 0 && days.every(d => hsOpenDays.has(d));
+}
+function hsToggleAllBtn() { hsToggleAll(!_hsAllOpen()); }
+function _hsUpdateToggleAllBtn() {
+  const btn = document.getElementById('hs-toggle-all');
+  if (!btn) return;
+  const allOpen = _hsAllOpen();
+  btn.innerHTML = allOpen
+    ? '<i class="fas fa-angle-double-up"></i> すべて閉じる'
+    : '<i class="fas fa-angle-double-down"></i> すべて開く';
+  btn.style.display = Object.keys(_hsDayRows).length ? '' : 'none';
 }
 
 // ===== ANALYTICS / ご利用状況 =====
