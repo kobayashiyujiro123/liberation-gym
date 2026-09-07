@@ -3997,7 +3997,7 @@ function renderHistory() {
         <i class="fas fa-chevron-right hs-day-chev"></i>
         <span class="hs-day-date">${d.replace(/-/g, '/')}<span class="hs-dow${dowCls}">(${dow})</span></span>
         <span class="hs-day-sum">
-          <span class="badge badge-s">確定 ${c}</span>
+          ${c ? `<span class="badge badge-s">確定 ${c}</span>` : ''}
           ${x ? `<span class="badge badge-d">キャンセル ${x}</span>` : ''}
         </span>
         <span class="hs-day-total">${list.length}件</span>
