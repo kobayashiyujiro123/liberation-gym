@@ -131,6 +131,20 @@
     .top-card-label { font-size: 0.92rem; font-weight: 700; }
     .top-card-desc { font-size: 0.75rem; color: var(--text-light); margin-top: 6px; }
 
+    /* 最強軍団の予約状況 */
+    .top-card-icon.squad-icon { margin-bottom: 12px; }
+    .top-card-icon.squad-icon img { width: 112px; height: 84px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,151,167,0.25); display: block; margin: 0 auto; }
+    .nav-icon.squad-nav-icon img { width: 20px; height: 20px; object-fit: cover; border-radius: 50%; display: block; }
+    .squad-hero { display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, #0d3b45, #0097a7); color: #fff; border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; }
+    .squad-hero img { width: 120px; height: 90px; object-fit: cover; border-radius: 10px; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .squad-hero-title { font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; }
+    .squad-hero-sub { font-size: 0.76rem; opacity: 0.85; margin-top: 4px; }
+    .squad-members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .squad-chip { font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); }
+    .squad-chip.me { background: #fff; color: var(--primary-dark); font-weight: 700; }
+    .rv-card.is-me { background: rgba(0,188,212,0.07); }
+    .rv-me-badge { font-size: 0.62rem; background: var(--primary); color: #fff; padding: 1px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+
     /* 試合結果 (member view) */
     .mfight-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.07); margin-bottom:16px; overflow:hidden; }
     .mfight-card-header { padding:14px 16px 10px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; display:flex; align-items:flex-start; gap:8px; }
@@ -290,6 +304,10 @@
       .hamburger { display: flex; }
       .top-cards { grid-template-columns: repeat(2,1fr); gap: 14px; }
       .top-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 12px; }
+      .top-card-icon.squad-icon img { width: 88px; height: 66px; }
+      .squad-hero { flex-direction: column; text-align: center; }
+      .squad-hero img { width: 160px; height: 120px; }
+      .squad-members { justify-content: center; }
       .info-key { width: 110px; padding: 12px; font-size: 0.78rem; }
       .info-val { padding: 12px; font-size: 0.83rem; }
       .content { padding: 16px; }
@@ -670,6 +688,10 @@
         <span class="nav-icon"><i class="fas fa-users"></i></span>予約状況閲覧
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
+      <div class="nav-item" id="nav-squad" onclick="showApp('squad')" style="display:none;">
+        <span class="nav-icon squad-nav-icon"><img src="squad-icon.jpg" alt=""></span>最強軍団の予約状況
+        <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
+      </div>
       <div class="nav-item nav-logout" onclick="doLogout()">
         <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>ログアウト
       </div>
@@ -730,6 +752,11 @@
             <div class="top-card-icon"><i class="fas fa-users"></i></div>
             <div class="top-card-label">予約状況閲覧</div>
             <div class="top-card-desc">全体の予約状況を確認</div>
+          </div>
+          <div class="top-card" id="top-card-squad" onclick="showApp('squad')" style="display:none;">
+            <div class="top-card-icon squad-icon"><img src="squad-icon.jpg" alt="最強軍団"></div>
+            <div class="top-card-label">最強軍団の予約状況</div>
+            <div class="top-card-desc">鈴木コーチ担当メンバーの予約を確認</div>
           </div>
         </div>
       </div>
@@ -941,6 +968,28 @@
           </div>
         </div>
         <div id="rv-timeline"></div>
+      </div>
+
+      <!-- 最強軍団の予約状況（担当コーチが同じ会員グループ） -->
+      <div class="page" id="app-squad">
+        <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
+        <div class="squad-hero">
+          <img src="squad-icon.jpg" alt="最強軍団">
+          <div style="flex:1;min-width:0;">
+            <div class="squad-hero-title"><i class="fas fa-fist-raised"></i> 最強軍団</div>
+            <div class="squad-hero-sub" id="sq-hero-sub">鈴木コーチ担当メンバーの予約状況（あなたを含む）</div>
+            <div class="squad-members" id="sq-members"></div>
+          </div>
+        </div>
+        <div class="rv-day-tabs" id="sq-day-tabs"></div>
+        <div class="rv-stat-card">
+          <div class="rv-stat-ico"><i class="fas fa-clock"></i></div>
+          <div>
+            <div class="rv-stat-val" id="sq-count">0</div>
+            <div class="rv-stat-lbl" id="sq-count-lbl">本日の予約</div>
+          </div>
+        </div>
+        <div id="sq-timeline"></div>
       </div>
 
       <!-- 公式サイトフッター -->
@@ -1160,9 +1209,12 @@ const APP_PAGES = {
   'pw-done':   { el:'app-pw-done',   nav:'nav-pw',       title:'パスワード変更完了' },
   'res-view':  { el:'app-res-view',  nav:'nav-res-view', title:'予約状況閲覧' },
   'fights':    { el:'app-fights',    nav:'nav-fights',   title:'試合結果' },
+  'squad':     { el:'app-squad',     nav:'nav-squad',    title:'最強軍団の予約状況' },
 };
 
 function showApp(key) {
+  // 最強軍団ページは対象会員（担当コーチが鈴木）のみ
+  if (key === 'squad' && !_squadEnabled) key = 'top';
   const cfg = APP_PAGES[key];
   if (!cfg) return;
   document.querySelectorAll('#app-wrap .page').forEach(p => p.classList.remove('active'));
@@ -1176,6 +1228,7 @@ function showApp(key) {
   if (key === 'info')      renderInfo();
   if (key === 'info-edit') fillEditForm();
   if (key === 'res-view')  loadRvData();
+  if (key === 'squad')     loadSquadData();
   if (key === 'fights')    initMemberFights();
   closeSB();
   localStorage.setItem('gym_currentPage', key);
@@ -1275,6 +1328,10 @@ function enterApp() {
   const canView = user.canView || false;
   document.getElementById('nav-res-view').style.display    = canView ? '' : 'none';
   document.getElementById('top-card-res-view').style.display = canView ? '' : 'none';
+  // 担当コーチが鈴木の会員のみ「最強軍団の予約状況」を表示
+  _squadEnabled = !_isCoach && _isSquadCoach(user.coachName);
+  document.getElementById('nav-squad').style.display      = _squadEnabled ? '' : 'none';
+  document.getElementById('top-card-squad').style.display = _squadEnabled ? '' : 'none';
   equalizeTopCards();
   // コーチが ?schedule=1 で来た場合はスケジュール予約画面へ直接遷移
   if (_isCoach && new URLSearchParams(location.search).get('schedule') === '1') {
@@ -1415,8 +1472,8 @@ const WEEKDAYS_RV = ['日','月','火','水','木','金','土'];
 
 // 同じ日に確定予約がある人のキャンセルは非表示
 // 確定なしで複数キャンセルがある場合は最後にキャンセルした1件のみ表示
-function rvFilteredItems(dt) {
-  const all = rvData[dt] || [];
+function rvFilteredItems(dt) { return _filterDayItems(rvData[dt] || []); }
+function _filterDayItems(all) {
   const confirmedNames = new Set(all.filter(r => r.status === '確定').map(r => r.name));
 
   // 確定なしの人で複数キャンセルがある場合、最新の1件IDを特定
@@ -1461,15 +1518,19 @@ function rvSelectDate(dt) {
 }
 
 function renderResView() {
-  const timeline = document.getElementById('rv-timeline');
-  const countEl  = document.getElementById('rv-count');
-  const countLbl = document.getElementById('rv-count-lbl');
   if (!rvSelectedDate) return;
-
   const items = rvFilteredItems(rvSelectedDate).slice().sort((a,b) => a.time.localeCompare(b.time));
+  _renderRvTimeline(items, rvSelectedDate, 'rv-timeline', 'rv-count', 'rv-count-lbl');
+}
+
+// 予約タイムライン描画（予約状況閲覧・最強軍団の予約状況で共用）
+function _renderRvTimeline(items, selectedDate, timelineId, countId, countLblId) {
+  const timeline = document.getElementById(timelineId);
+  const countEl  = document.getElementById(countId);
+  const countLbl = document.getElementById(countLblId);
 
   // カウント表示（管理側と同形式）
-  const [y,m,d] = rvSelectedDate.split('-').map(Number);
+  const [y,m,d] = selectedDate.split('-').map(Number);
   const selMs = new Date(y, m-1, d).getTime();
   const nowMs = (() => { const x=new Date(); x.setHours(0,0,0,0); return x.getTime(); })();
   const diff  = Math.round((selMs - nowMs) / 86400000);
@@ -1499,10 +1560,10 @@ function renderResView() {
       // border-left-color を class外で上書きするため、classとstyleを分けて組み立てる
       const borderStyle = isCancel ? '' : isMale
         ? 'border-left-color:#1565c0;' : isFemale ? 'border-left-color:#ba68c8;' : '';
-      return `<div class="rv-card${isCancel ? ' status-cancel' : ''}" style="${borderStyle}">
+      return `<div class="rv-card${isCancel ? ' status-cancel' : ''}${r.isMe ? ' is-me' : ''}" style="${borderStyle}">
         <div class="rv-card-avatar" ${avStyle}>${escHtml(r.name).slice(0,2)}</div>
         <div class="rv-card-body">
-          <div class="rv-card-name">${escHtml(r.name)}</div>
+          <div class="rv-card-name">${escHtml(r.name)}${r.isMe ? '<span class="rv-me-badge">あなた</span>' : ''}</div>
           <div class="rv-card-meta">
             ${r.coach ? `<span><i class="fas fa-user-tie"></i>${escHtml(r.coach)}</span>` : ''}
             <span><span class="badge ${r.badge}" style="font-size:0.68rem;padding:1px 7px;">${r.status}</span></span>
@@ -1521,6 +1582,125 @@ function renderResView() {
       <div class="rv-card-list">${cards}</div>
     </div>`;
   }).join('');
+}
+
+// ===== 最強軍団の予約状況（担当コーチが鈴木の会員グループ） =====
+// DB 側: supabase/squad_reservations.sql の get_squad_members / get_squad_reservations を使用
+const SQUAD_COACH = '鈴木';
+let _squadEnabled = false;
+const sqData = {};   // key: YYYY-MM-DD → 予約配列
+let sqDates = [];
+let sqSelectedDate = null;
+let sqMembers = [];
+
+function _normCoachName(s) { return String(s || '').replace(/[\s　]/g, ''); }
+function _isSquadCoach(name) { return _normCoachName(name) === SQUAD_COACH; }
+
+function _next7Dates() {
+  const out = [];
+  const base = new Date(); base.setHours(0,0,0,0);
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(base); dt.setDate(base.getDate() + i);
+    out.push(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`);
+  }
+  return out;
+}
+
+async function loadSquadData() {
+  sqDates = _next7Dates();
+  if (!sqSelectedDate || !sqDates.includes(sqSelectedDate)) sqSelectedDate = sqDates[0];
+  Object.keys(sqData).forEach(k => delete sqData[k]);
+  sqDates.forEach(d => { sqData[d] = []; });
+  buildSqDayTabs();
+  document.getElementById('sq-timeline').innerHTML =
+    '<div style="text-align:center;padding:40px;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i></div>';
+
+  if (DEMO_MODE) {
+    // デモ: 自分 + ダミー会員4名を軍団メンバーとして表示
+    sqMembers = [{ id: user.id, name: user.name, gender: user.gender }]
+      .concat(_RV_MEMBERS.filter(m => m.name !== user.name).slice(0, 4).map((m, i) => ({ id: 'demo-sq-' + i, name: m.name, gender: m.gender })));
+    const gen = _rvGenData();
+    sqDates.forEach(d => {
+      sqData[d] = (gen[d] || [])
+        .filter(r => sqMembers.some(m => m.name === r.name))
+        .map(r => Object.assign({}, r, { isMe: r.name === user.name }));
+    });
+    renderSquadMembers(); buildSqDayTabs(); renderSquadView();
+    return;
+  }
+
+  try {
+    const token = _getToken();
+    const headers = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    const [mResp, rResp] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/get_squad_members`, { method: 'POST', headers, body: '{}' }),
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/get_squad_reservations`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ p_start: sqDates[0], p_end: sqDates[sqDates.length - 1] })
+      }),
+    ]);
+    if (!mResp.ok) console.warn('get_squad_members failed:', mResp.status);
+    if (!rResp.ok) console.warn('get_squad_reservations failed:', rResp.status);
+    sqMembers = mResp.ok ? await mResp.json() : [];
+    const rows = rResp.ok ? await rResp.json() : [];
+    rows.forEach(r => {
+      if (!sqData[r.date]) return;
+      sqData[r.date].push({
+        id:        r.id,
+        name:      r.member_name || '不明',
+        gender:    r.member_gender || '男',
+        time:      r.time,
+        coach:     r.coach || '',
+        memo:      r.memo || '',
+        status:    r.status === 'cancelled' ? 'キャンセル' : '確定',
+        badge:     r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+        updatedAt: r.created_at || '',
+        isMe:      r.user_id === user.id,
+      });
+    });
+  } catch(e) {
+    console.warn('loadSquadData failed:', e);
+  }
+  renderSquadMembers();
+  buildSqDayTabs();
+  renderSquadView();
+}
+
+function renderSquadMembers() {
+  const sub = document.getElementById('sq-hero-sub');
+  const el  = document.getElementById('sq-members');
+  sub.textContent = `${SQUAD_COACH}コーチ担当メンバー${sqMembers.length ? ` ${sqMembers.length}名` : ''}の予約状況（あなたを含む）`;
+  el.innerHTML = sqMembers.map(m => {
+    const isMe = m.id === user.id;
+    return `<span class="squad-chip${isMe ? ' me' : ''}">${escHtml(m.name || '')}${isMe ? '（あなた）' : ''}</span>`;
+  }).join('');
+}
+
+function buildSqDayTabs() {
+  const tabs = document.getElementById('sq-day-tabs');
+  tabs.innerHTML = sqDates.map((dt, i) => {
+    const d = new Date(dt + 'T00:00:00');
+    const dow = WEEKDAYS_RV[d.getDay()];
+    const label = i === 0 ? '今日' : i === 1 ? '明日' : `${d.getMonth()+1}/${d.getDate()}`;
+    const isActive = dt === sqSelectedDate ? ' active' : '';
+    const count = _filterDayItems(sqData[dt] || []).filter(r => r.status === '確定').length;
+    return `<div class="rv-day-tab${isActive}" onclick="sqSelectDate('${dt}')">
+      <span class="day-label">${label}（${dow}）</span>
+      <span class="day-sub">${count}件</span>
+    </div>`;
+  }).join('');
+}
+
+function sqSelectDate(dt) {
+  sqSelectedDate = dt;
+  buildSqDayTabs();
+  renderSquadView();
+}
+
+function renderSquadView() {
+  if (!sqSelectedDate) return;
+  const items = _filterDayItems(sqData[sqSelectedDate] || []).slice().sort((a,b) => a.time.localeCompare(b.time));
+  _renderRvTimeline(items, sqSelectedDate, 'sq-timeline', 'sq-count', 'sq-count-lbl');
 }
 
 // ===== HELPERS =====
@@ -1562,6 +1742,7 @@ async function loadUserProfile(authUser, accessToken) {
       style:        profile.style         || 'オーソドックス',
       goal:         profile.goal          || '',
       canView:      profile.can_view      || false,
+      coachName:    profile.coach_name    || '',
       role:         profile.role          || 'member',
       wins, losses, draws,
       fights:       wins + losses + draws,
@@ -1616,6 +1797,8 @@ if (DEMO_MODE) {
   const savedUser = localStorage.getItem('demo_user');
   if (savedUser) {
     user = JSON.parse(savedUser);
+    // デモでは最強軍団（担当コーチ鈴木）のメンバーとして表示
+    if (user.coachName == null) user.coachName = '鈴木';
     // gym_member_profile の最新値でマージ（管理ページからの更新を反映）
     const _p = (JSON.parse(localStorage.getItem('gym_member_profile') || '{}'))['M001'];
     if (_p) {
@@ -1967,6 +2150,7 @@ function demoLogin() {
     style:        _p.style        != null ? _p.style        : 'オーソドックス',
     goal:         _p.goal         != null ? _p.goal         : '',
     canView:      _p.canView      != null ? _p.canView      : false,
+    coachName:    _p.coachName    != null ? _p.coachName    : '鈴木', // デモでは最強軍団メンバー
     wins:         _p.wins         != null ? _p.wins         : 0,
     losses:       _p.losses       != null ? _p.losses       : 0,
     draws:        _p.draws        != null ? _p.draws        : 0,
