@@ -2134,7 +2134,8 @@ function renderReservations() {
 
   // 時間順にソートして描画
   timeline.innerHTML = Object.keys(groups).sort().map(time => {
-    const items = groups[time];
+    // 同じ時間枠内は予約した順（作成日時の昇順）
+    const items = groups[time].slice().sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
     const cards = items.map(r => {
       let cardClass = 'res-card';
       if (r.status === 'キャンセル') cardClass += ' status-cancel';
@@ -6045,7 +6046,7 @@ async function initReservationsFromDB() {
     const token = _getAccessToken();
     // joinなしで予約取得（外部キー未設定のため）
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
+      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc,created_at.asc`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }
     );
     const data = res.ok ? await res.json() : null;
@@ -6103,6 +6104,7 @@ async function initReservationsFromDB() {
           badge: isCancelled ? 'badge-d' : 'badge-s',
           memo: displayMemo,
           userId: r.user_id || null,
+          createdAt: r.created_at || '',
           updatedAt: r.updated_at || r.created_at || '',
         });
       }

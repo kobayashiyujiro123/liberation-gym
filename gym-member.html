@@ -1408,7 +1408,7 @@ async function loadRvData() {
     const token = _getToken();
     // 予約取得（全カラム）
     const resResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc`,
+      `${SUPABASE_URL}/rest/v1/reservations?select=*&date=gte.${startStr}&date=lte.${endStr}&order=date.asc,time.asc,created_at.asc`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
     );
     const resRows = resResp.ok ? await resResp.json() : [];
@@ -1447,6 +1447,7 @@ async function loadRvData() {
         memo: displayMemo,
         status: r.status === 'cancelled' ? 'キャンセル' : '確定',
         badge: r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+        createdAt: r.created_at || '',
         updatedAt: r.updated_at || r.created_at || '',
       });
     });
@@ -1519,7 +1520,7 @@ function rvSelectDate(dt) {
 
 function renderResView() {
   if (!rvSelectedDate) return;
-  const items = rvFilteredItems(rvSelectedDate).slice().sort((a,b) => a.time.localeCompare(b.time));
+  const items = rvFilteredItems(rvSelectedDate).slice().sort((a,b) => a.time.localeCompare(b.time) || (a.createdAt || '').localeCompare(b.createdAt || ''));
   _renderRvTimeline(items, rvSelectedDate, 'rv-timeline', 'rv-count', 'rv-count-lbl');
 }
 
@@ -1654,6 +1655,7 @@ async function loadSquadData() {
         memo:      r.memo || '',
         status:    r.status === 'cancelled' ? 'キャンセル' : '確定',
         badge:     r.status === 'cancelled' ? 'badge-d' : 'badge-s',
+        createdAt: r.created_at || '',
         updatedAt: r.created_at || '',
         isMe:      r.user_id === user.id,
       });
@@ -1699,7 +1701,7 @@ function sqSelectDate(dt) {
 
 function renderSquadView() {
   if (!sqSelectedDate) return;
-  const items = _filterDayItems(sqData[sqSelectedDate] || []).slice().sort((a,b) => a.time.localeCompare(b.time));
+  const items = _filterDayItems(sqData[sqSelectedDate] || []).slice().sort((a,b) => a.time.localeCompare(b.time) || (a.createdAt || '').localeCompare(b.createdAt || ''));
   _renderRvTimeline(items, sqSelectedDate, 'sq-timeline', 'sq-count', 'sq-count-lbl');
 }
 
