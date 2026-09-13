@@ -3312,7 +3312,7 @@ function daysUntilBirthday(m, d) {
 function makeBdayCard(m, isToday, mode) {
   const days = daysUntilBirthday(m.month, m.day);
   let label = isToday ? '<span class="bday-tag today">🎂 本日！</span>'
-            : mode === 'month' ? `<span class="bday-tag month">${(document.getElementById('bday-search')?.value || '').trim() ? m.month + '月' : ''}${m.day}日</span>`
+            : mode === 'month' ? ''  // 月別一覧は下に日付があるためタグなし
             : `<span class="bday-tag soon">あと${days}日</span>`;
   if (m.status === '退会') label += '<span class="bday-tag left">退会</span>';
   const cardClass = isToday ? 'bday-card is-today' : 'bday-card';
