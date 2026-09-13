@@ -315,6 +315,12 @@
     .bday-section-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
     .today-icon { background: rgba(240,98,146,0.12); color: #e91e8c; }
     .week-icon { background: rgba(0,188,212,0.1); color: var(--primary); }
+    .month-icon { background: rgba(94,53,177,0.1); color: #5e35b1; }
+    .bday-month-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .bday-month-tabs .res-coach-tab { padding: 5px 12px; font-size: 0.8rem; }
+    .bday-month-tabs .res-coach-tab .tab-cnt { font-size: 0.7rem; opacity: 0.75; margin-left: 3px; }
+    .bday-tag.month { background: rgba(94,53,177,0.1); color: #5e35b1; }
+    .bday-tag.left { background: rgba(0,0,0,0.06); color: var(--text-light); margin-left: 4px; }
     .bday-section-title { font-weight: 700; font-size: 1rem; }
     .bday-count { margin-left: 6px; background: var(--border); color: var(--text-light); font-size: 0.75rem; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
     .bday-empty { background: var(--card-bg); border: 1px dashed var(--border); border-radius: 10px; padding: 24px; text-align: center; color: var(--text-light); font-size: 0.86rem; margin-bottom: 4px; }
@@ -1313,6 +1319,15 @@
         <span class="bday-count" id="week-count">0名</span>
       </div>
       <div class="bday-grid" id="bday-week"></div>
+
+      <!-- 月別（全会員） -->
+      <div class="bday-section-header" style="margin-top:28px;">
+        <span class="bday-section-icon month-icon"><i class="fas fa-calendar-alt"></i></span>
+        <span class="bday-section-title">月別の誕生日</span>
+        <span class="bday-count" id="bday-month-count">0名</span>
+      </div>
+      <div class="bday-month-tabs" id="bday-month-tabs"></div>
+      <div class="bday-grid" id="bday-month"></div>
     </div>
 
     <!-- COACH LIST -->
@@ -3291,9 +3306,12 @@ function daysUntilBirthday(m, d) {
   return diff;
 }
 
-function makeBdayCard(m, isToday) {
+function makeBdayCard(m, isToday, mode) {
   const days = daysUntilBirthday(m.month, m.day);
-  const label = isToday ? '<span class="bday-tag today">🎂 本日！</span>' : `<span class="bday-tag soon">あと${days}日</span>`;
+  let label = isToday ? '<span class="bday-tag today">🎂 本日！</span>'
+            : mode === 'month' ? `<span class="bday-tag month">${m.day}日</span>`
+            : `<span class="bday-tag soon">あと${days}日</span>`;
+  if (m.status === '退会') label += '<span class="bday-tag left">退会</span>';
   const cardClass = isToday ? 'bday-card is-today' : 'bday-card';
   const isMale = m.gender === '男';
   const isFemale = m.gender === '女';
@@ -3329,7 +3347,7 @@ function openMemberFromBday(name) {
 function renderBirthdays() {
   const bdayMembers = allMembers.filter(m => m.birthday).map(m => {
     const parts = m.birthday.split('-').map(Number);
-    return { name: m.name, gender: m.gender, month: parts[1], day: parts[2], isCoach: false };
+    return { name: m.name, gender: m.gender, month: parts[1], day: parts[2], isCoach: false, status: m.status };
   });
   const bdayCoaches = allCoaches.filter(c => c.birthday).map(c => {
     const parts = c.birthday.split('-').map(Number);
@@ -3352,6 +3370,35 @@ function renderBirthdays() {
   weekEl.innerHTML = weekList.length
     ? weekList.map(m => makeBdayCard(m, false)).join('')
     : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>該当する方はいません</div>';
+
+  _bdayAll = bdayAll;
+  renderBirthdayMonth();
+}
+
+// ===== 月別の誕生日（全会員・トレーナー） =====
+let _bdayAll = [];
+let bdayMonth = new Date().getMonth() + 1;
+
+function bdaySelectMonth(m) {
+  bdayMonth = m;
+  renderBirthdayMonth();
+}
+
+function renderBirthdayMonth() {
+  const tabs = document.getElementById('bday-month-tabs');
+  const grid = document.getElementById('bday-month');
+  if (!tabs || !grid) return;
+  const counts = Array(13).fill(0);
+  _bdayAll.forEach(m => { if (m.month >= 1 && m.month <= 12) counts[m.month]++; });
+  tabs.innerHTML = Array.from({ length: 12 }, (_, i) => i + 1).map(m =>
+    `<button class="res-coach-tab${m === bdayMonth ? ' active' : ''}" onclick="bdaySelectMonth(${m})">${m}月<span class="tab-cnt">(${counts[m]})</span></button>`
+  ).join('');
+
+  const list = _bdayAll.filter(m => m.month === bdayMonth).sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'ja'));
+  document.getElementById('bday-month-count').textContent = list.length + '名';
+  grid.innerHTML = list.length
+    ? list.map(m => makeBdayCard(m, daysUntilBirthday(m.month, m.day) === 0, 'month')).join('')
+    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>' + bdayMonth + '月が誕生日の方はいません</div>';
 }
 
 // ===== COACH LOGIC =====
