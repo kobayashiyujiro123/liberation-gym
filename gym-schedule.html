@@ -319,6 +319,7 @@
     .bday-month-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .bday-month-tabs .res-coach-tab { padding: 5px 12px; font-size: 0.8rem; }
     .bday-month-tabs .res-coach-tab .tab-cnt { font-size: 0.7rem; opacity: 0.75; margin-left: 3px; }
+    .bday-month-tabs.is-searching { opacity: 0.45; }
     .bday-tag.month { background: rgba(94,53,177,0.1); color: #5e35b1; }
     .bday-tag.left { background: rgba(0,0,0,0.06); color: var(--text-light); margin-left: 4px; }
     .bday-section-title { font-weight: 700; font-size: 1rem; }
@@ -1326,6 +1327,7 @@
         <span class="bday-section-title">月別の誕生日</span>
         <span class="bday-count" id="bday-month-count">0名</span>
       </div>
+      <div class="search-wrap" style="max-width:300px;margin-bottom:12px;"><i class="fas fa-search"></i><input class="search-inp" id="bday-search" placeholder="名前で検索（全月から探します）" oninput="renderBirthdayMonth()" /></div>
       <div class="bday-month-tabs" id="bday-month-tabs"></div>
       <div class="bday-grid" id="bday-month"></div>
     </div>
@@ -3309,7 +3311,7 @@ function daysUntilBirthday(m, d) {
 function makeBdayCard(m, isToday, mode) {
   const days = daysUntilBirthday(m.month, m.day);
   let label = isToday ? '<span class="bday-tag today">🎂 本日！</span>'
-            : mode === 'month' ? `<span class="bday-tag month">${m.day}日</span>`
+            : mode === 'month' ? `<span class="bday-tag month">${(document.getElementById('bday-search')?.value || '').trim() ? m.month + '月' : ''}${m.day}日</span>`
             : `<span class="bday-tag soon">あと${days}日</span>`;
   if (m.status === '退会') label += '<span class="bday-tag left">退会</span>';
   const cardClass = isToday ? 'bday-card is-today' : 'bday-card';
@@ -3394,11 +3396,17 @@ function renderBirthdayMonth() {
     `<button class="res-coach-tab${m === bdayMonth ? ' active' : ''}" onclick="bdaySelectMonth(${m})">${m}月<span class="tab-cnt">(${counts[m]})</span></button>`
   ).join('');
 
-  const list = _bdayAll.filter(m => m.month === bdayMonth).sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'ja'));
+  const q = (document.getElementById('bday-search')?.value || '').trim().toLowerCase();
+  const list = (q
+    ? _bdayAll.filter(m => (m.name || '').toLowerCase().includes(q))
+    : _bdayAll.filter(m => m.month === bdayMonth)
+  ).sort((a, b) => a.month - b.month || a.day - b.day || a.name.localeCompare(b.name, 'ja'));
+  tabs.classList.toggle('is-searching', !!q);
   document.getElementById('bday-month-count').textContent = list.length + '名';
+  const emptyMsg = q ? `「${q}」に一致する方はいません` : bdayMonth + '月が誕生日の方はいません';
   grid.innerHTML = list.length
     ? list.map(m => makeBdayCard(m, daysUntilBirthday(m.month, m.day) === 0, 'month')).join('')
-    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>' + bdayMonth + '月が誕生日の方はいません</div>';
+    : '<div class="bday-empty"><i class="fas fa-info-circle" style="margin-right:6px;"></i>' + emptyMsg.replace(/</g, '&lt;') + '</div>';
 }
 
 // ===== COACH LOGIC =====
