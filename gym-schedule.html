@@ -278,6 +278,11 @@
     .form-label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
     .form-ctrl { width: 100%; padding: 9px 13px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.87rem; color: var(--text); outline: none; transition: border-color 0.15s; }
     .form-ctrl:focus { border-color: var(--primary); }
+    /* 大会MVP */
+    .fight-mvp-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(251,140,0,0.12); color:#ef6c00; font-size:0.72rem; font-weight:700; padding:2px 10px; border-radius:20px; white-space:nowrap; }
+    .fight-mvp-note { display:flex; align-items:flex-start; gap:8px; margin:10px 16px 14px; padding:10px 12px; background:rgba(251,140,0,0.07); border:1px solid rgba(251,140,0,0.25); border-radius:8px; font-size:0.82rem; color:var(--text); }
+    .fight-mvp-note i { color:#ef6c00; margin-top:2px; }
+    .fight-mvp-reason { font-size:0.78rem; color:var(--text-light); margin-top:3px; white-space:pre-wrap; }
     textarea.form-ctrl { resize: vertical; min-height: 110px; }
     .form-actions { display: flex; gap: 10px; margin-top: 22px; }
 
@@ -1512,6 +1517,19 @@
         <div class="fight-section-title" style="margin-bottom:10px;"><i class="fas fa-user" style="margin-right:6px;"></i>出場選手</div>
         <div id="fight-fighter-rows" style="display:flex;flex-direction:column;gap:10px;"></div>
         <button type="button" class="btn-o" style="margin-top:10px;font-size:0.82rem;" onclick="addFighterRow()"><i class="fas fa-plus"></i> 選手を追加</button>
+        <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:16px;">
+          <div class="fight-section-title" style="margin-bottom:10px;"><i class="fas fa-crown" style="margin-right:6px;"></i>MVP <span style="font-weight:400;color:var(--text-light);font-size:0.72rem;">（任意）</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;">
+            <div class="form-group" style="flex:1;min-width:180px;">
+              <label class="form-label">MVP選手</label>
+              <select class="form-ctrl" id="fight-mvp" onfocus="refreshNewMvpOptions()"><option value="">（未設定）</option></select>
+            </div>
+            <div class="form-group" style="flex:2;min-width:220px;">
+              <label class="form-label">選出理由 <span style="font-weight:400;color:var(--text-light);">（任意）</span></label>
+              <textarea class="form-ctrl" id="fight-mvp-reason" style="min-height:68px;" maxlength="300" placeholder="例：劣勢からの逆転KOでチームを勢いづけた"></textarea>
+            </div>
+          </div>
+        </div>
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
           <button class="btn-p" onclick="saveFight()"><i class="fas fa-save"></i> 試合を登録</button>
         </div>
@@ -4970,6 +4988,51 @@ function _attachTouchDrag({ handle, row, container, draggingClass, dragOverClass
 
 let _dragSrc = null;
 
+// ===== 大会MVP =====
+// 入力中の出場選手からMVP候補を組み立てる（選択済みの値は保持）
+function _collectFighterNames(rowSelector, selSelector) {
+  const out = [];
+  document.querySelectorAll(rowSelector).forEach(row => {
+    const sel = row.querySelector(selSelector);
+    const v = sel && sel.value;
+    if (!v) return;
+    const m = allMembers.find(x => x.id === v);
+    const nm = m && m.name ? m.name : '';
+    if (nm && !out.includes(nm)) out.push(nm);
+  });
+  return out;
+}
+
+function _refreshMvpSelect(selectId, rowSelector, selSelector, keepName) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const cur = (keepName != null ? keepName : sel.value) || '';
+  const names = _collectFighterNames(rowSelector, selSelector);
+  if (cur && !names.includes(cur)) names.push(cur); // 既に外れた選手でも表示を維持
+  sel.innerHTML = '';
+  const none = document.createElement('option');
+  none.value = ''; none.textContent = '（未設定）';
+  sel.appendChild(none);
+  names.forEach(nm => {
+    const o = document.createElement('option');
+    o.value = nm; o.textContent = nm;
+    sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+
+function refreshNewMvpOptions(keepName) {
+  _refreshMvpSelect('fight-mvp', '#fight-fighter-rows .fight-fighter-row', '.fight-sel-member', keepName);
+}
+function refreshEditMvpOptions(keepName) {
+  _refreshMvpSelect('fight-edit-mvp', '#fight-edit-fighter-rows .fight-edit-fighter-row', '.fight-edit-sel', keepName);
+}
+
+// mvp列が未追加（supabase/match_mvp.sql 未適用）の場合に備えた判定
+function _isMvpColumnError(status, text) {
+  return status === 400 && /mvp_name|mvp_reason/.test(text || '');
+}
+
 function addFighterRow(fighterId, opponent) {
   fighterRowCount++;
   const idx = fighterRowCount;
@@ -5131,6 +5194,7 @@ function renderFights() {
             <div class="fight-row-line2">
               <span class="fight-date">${dateStr}</span>
               ${summaryBadge}
+              ${match.mvp_name ? `<span class="fight-mvp-badge"><i class="fas fa-crown"></i>MVP ${escHtml(match.mvp_name)}</span>` : ''}
             </div>
             ${rowActions}
           </div>
@@ -5138,6 +5202,7 @@ function renderFights() {
       </div>
       <div class="fight-detail" id="fight-detail-${match.id}">
         ${fighters.length ? `<div class="fight-simple-list">${simpleRows}</div>` : '<div style="padding:12px 16px;font-size:0.82rem;color:#bbb;">選手情報なし</div>'}
+        ${match.mvp_name ? `<div class="fight-mvp-note"><i class="fas fa-crown"></i><div><b>MVP：${escHtml(match.mvp_name)}</b>${match.mvp_reason ? `<div class="fight-mvp-reason">${escHtml(match.mvp_reason)}</div>` : ''}</div></div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -5569,12 +5634,19 @@ async function saveFight() {
   }
   if (!fighters.length) { alert('選手を1名以上追加してください'); return; }
 
+  const mvpName   = (document.getElementById('fight-mvp')?.value || '').trim();
+  const mvpReason = (document.getElementById('fight-mvp-reason')?.value || '').trim();
+
   const token = _getAccessToken();
-  const matchRes = await fetch(`${SUPABASE_URL}/rest/v1/matches`, {
+  const _postMatch = body => fetch(`${SUPABASE_URL}/rest/v1/matches`, {
     method: 'POST',
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-    body: JSON.stringify({ title, match_date: date })
+    body: JSON.stringify(body)
   });
+  let matchRes = await _postMatch({ title, match_date: date, mvp_name: mvpName || null, mvp_reason: mvpReason || null });
+  if (!matchRes.ok && _isMvpColumnError(matchRes.status, await matchRes.clone().text())) {
+    matchRes = await _postMatch({ title, match_date: date }); // MVP列が未追加の環境では従来どおり登録
+  }
   if (!matchRes.ok) { alert('登録に失敗しました'); return; }
   const [newMatch] = await matchRes.json();
 
@@ -5592,9 +5664,14 @@ async function saveFight() {
 
   document.getElementById('fight-title').value = '';
   document.getElementById('fight-date').value = '';
+  const _mvpEl = document.getElementById('fight-mvp');
+  if (_mvpEl) _mvpEl.value = '';
+  const _mvpRe = document.getElementById('fight-mvp-reason');
+  if (_mvpRe) _mvpRe.value = '';
   fighterRowCount = 0;
   document.getElementById('fight-fighter-rows').innerHTML = '';
   addFighterRow();
+  refreshNewMvpOptions('');
 }
 
 async function updateFightResult(fighterId, result) {
@@ -5740,6 +5817,9 @@ async function openFightEditModal(matchId) {
   } else {
     addFightEditFighterRow();
   }
+  const _emvpRe = document.getElementById('fight-edit-mvp-reason');
+  if (_emvpRe) _emvpRe.value = match.mvp_reason || '';
+  refreshEditMvpOptions(match.mvp_name || '');
   document.getElementById('fight-edit-modal-overlay').classList.add('open');
 }
 
@@ -5766,11 +5846,19 @@ async function saveFightEdit() {
 
   const token = _getAccessToken();
   // matches更新
-  const mRes = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${matchId}`, {
+  const mvpName   = (document.getElementById('fight-edit-mvp')?.value || '').trim();
+  const mvpReason = (document.getElementById('fight-edit-mvp-reason')?.value || '').trim();
+  const _patchMatch = body => fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${matchId}`, {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ title, match_date: date })
+    body: JSON.stringify(body)
   });
+  let mRes = await _patchMatch({ title, match_date: date, mvp_name: mvpName || null, mvp_reason: mvpReason || null });
+  let mvpSaved = mRes.ok;
+  if (!mRes.ok && _isMvpColumnError(mRes.status, await mRes.clone().text())) {
+    mRes = await _patchMatch({ title, match_date: date }); // MVP列が未追加の環境では従来どおり更新
+    mvpSaved = false;
+  }
   if (!mRes.ok) { alert('試合情報の更新に失敗しました'); return; }
 
   const match = allFights.find(m => m.id === matchId);
@@ -5811,6 +5899,7 @@ async function saveFightEdit() {
   if (match) {
     match.title = title;
     match.match_date = date;
+    if (mvpSaved) { match.mvp_name = mvpName || null; match.mvp_reason = mvpReason || null; }
     // 既存選手のresultを引き継ぐ
     updatedFighters.forEach(uf => {
       const old = (match.match_fighters || []).find(f => f.id === uf.id);
@@ -6505,6 +6594,17 @@ function msCloseBkSuccess() {
     <div style="font-size:0.75rem;font-weight:700;color:var(--primary);letter-spacing:0.5px;margin-bottom:8px;">出場選手</div>
     <div id="fight-edit-fighter-rows" style="display:flex;flex-direction:column;gap:0;"></div>
     <button type="button" onclick="addFightEditFighterRow()" style="margin-top:10px;background:none;border:1.5px dashed var(--primary);color:var(--primary);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;width:100%;"><i class="fas fa-plus" style="margin-right:6px;"></i>選手を追加</button>
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--primary);letter-spacing:0.5px;margin-bottom:8px;"><i class="fas fa-crown" style="margin-right:6px;"></i>MVP（任意）</div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" style="font-size:0.73rem;">MVP選手</label>
+        <select class="form-ctrl" id="fight-edit-mvp" onfocus="refreshEditMvpOptions()"><option value="">（未設定）</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:0.73rem;">選出理由 <span style="font-weight:400;color:var(--text-light);">(任意)</span></label>
+        <textarea class="form-ctrl" id="fight-edit-mvp-reason" style="min-height:68px;" maxlength="300" placeholder="任意で入力"></textarea>
+      </div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button class="btn btn-primary" onclick="saveFightEdit()" style="flex:1;"><i class="fas fa-save" style="margin-right:6px;"></i>保存</button>
       <button class="btn" onclick="closeFightEditModal()" style="flex:1;background:#f5f5f5;color:#666;border:none;">キャンセル</button>

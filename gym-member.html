@@ -165,6 +165,12 @@
     .mfight-badge.ko-lose, .mfight-badge.lose { background:rgba(229,57,53,0.1);  color:#e53935; }
     .mfight-badge.draw    { background:rgba(251,140,0,0.1); color:#fb8c00; }
     .mfight-badge.pending { background:#f5f5f5; color:#9e9e9e; }
+    /* 大会MVP */
+    .mfight-mvp { font-size:0.76rem; font-weight:700; color:#ef6c00; margin-top:3px; }
+    .mfight-mvp i { margin-right:3px; }
+    .mfight-mvp-note { display:flex; align-items:flex-start; gap:8px; margin:10px 16px 14px; padding:10px 12px; background:rgba(251,140,0,0.07); border:1px solid rgba(251,140,0,0.25); border-radius:8px; font-size:0.82rem; }
+    .mfight-mvp-note i { color:#ef6c00; margin-top:2px; }
+    .mfight-mvp-reason { font-size:0.78rem; color:var(--text-light); margin-top:3px; white-space:pre-wrap; }
 
     /* Info table */
     .info-table { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -746,7 +752,7 @@
           <div class="top-card" onclick="showApp('fights')">
             <div class="top-card-icon"><i class="fas fa-trophy"></i></div>
             <div class="top-card-label">試合結果</div>
-            <div class="top-card-desc">あなたの試合の記録を確認</div>
+            <div class="top-card-desc">ジム全体の試合結果を確認</div>
           </div>
           <div class="top-card" id="top-card-res-view" onclick="openResView()" style="display:none;">
             <div class="top-card-icon"><i class="fas fa-users"></i></div>
@@ -952,7 +958,7 @@
       <!-- 試合結果 -->
       <div class="page" id="app-fights">
         <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
-        <p style="font-size:0.82rem;color:var(--text-light);margin:0 0 16px;">あなたが過去に出場した大会の試合結果のみ表示されます。</p>
+        <p style="font-size:0.82rem;color:var(--text-light);margin:0 0 16px;">ジムの全試合結果を表示しています。あなたが出場した試合は色付きで表示されます。</p>
         <div id="fights-list"><div style="text-align:center;padding:40px;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i></div></div>
       </div>
 
@@ -2739,25 +2745,29 @@ function escHtml(s) {
 async function initMemberFights() {
   const el = document.getElementById('fights-list');
   el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i></div>';
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/matches?select=id,title,match_date,match_fighters(id,fighter_name,opponent,result,sort_order)&order=match_date.desc`,
-    { headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + _getToken() } }
+  const _headers = { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + _getToken() };
+  const _fields = 'id,title,match_date,match_fighters(id,fighter_name,opponent,result,sort_order)';
+  let res = await fetch(
+    `${SUPABASE_URL}/rest/v1/matches?select=${_fields},mvp_name,mvp_reason&order=match_date.desc`,
+    { headers: _headers }
   );
+  if (!res.ok && res.status === 400) {
+    // MVP列が未追加（supabase/match_mvp.sql 未適用）の場合は従来の項目で取得
+    res = await fetch(
+      `${SUPABASE_URL}/rest/v1/matches?select=${_fields}&order=match_date.desc`,
+      { headers: _headers }
+    );
+  }
   if (!res.ok) { el.innerHTML = '<p style="color:#e53935;padding:20px;">データ取得に失敗しました。</p>'; return; }
   const matches = await res.json();
   const myName = (user.name || '').trim();
-  const myMatches = (matches || []).filter(m =>
-    Array.isArray(m.match_fighters) &&
-    m.match_fighters.some(f =>
-      (f.fighter_name || '').trim() === myName || (f.opponent || '').trim() === myName
-    )
-  );
-  renderMemberFights(myMatches, myName, el);
+  // ジムの全試合結果を表示（自分の出場分は renderMemberFights 内でハイライト）
+  renderMemberFights(matches || [], myName, el);
 }
 
 function renderMemberFights(matches, myName, el) {
   if (!matches || matches.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-light);"><i class="fas fa-trophy" style="font-size:2.5rem;opacity:0.3;display:block;margin-bottom:16px;"></i>あなたはまだ試合に出場したことがありません</div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-light);"><i class="fas fa-trophy" style="font-size:2.5rem;opacity:0.3;display:block;margin-bottom:16px;"></i>試合結果はまだ登録されていません</div>';
     return;
   }
   const resultMap = { 'KO勝ち':'ko-win', '判定勝ち':'win', 'KO負け':'ko-lose', '判定負け':'lose', '引き分け':'draw' };
@@ -2814,10 +2824,13 @@ function renderMemberFights(matches, myName, el) {
           '<div class="mfight-card-title">' + escHtml(m.title || '大会') + '</div>' +
           (dateStr ? '<div class="mfight-card-date" style="margin-top:4px;"><i class="fas fa-calendar-alt"></i> ' + dateStr + '</div>' : '') +
           '<div style="font-size:0.78rem;font-weight:700;color:var(--primary);margin-top:3px;">チーム戦績：' + total + '戦 ' + recordStr + '</div>' +
+          (m.mvp_name ? '<div class="mfight-mvp"><i class="fas fa-crown"></i> MVP：' + escHtml(m.mvp_name) + '</div>' : '') +
         '</div>' +
         '<i class="fas fa-chevron-down mfight-card-chevron"></i>' +
       '</div>' +
-      '<div class="mfight-body">' + rows + '</div>' +
+      '<div class="mfight-body">' + rows +
+        (m.mvp_name && m.mvp_reason ? '<div class="mfight-mvp-note"><i class="fas fa-crown"></i><div><b>MVP：' + escHtml(m.mvp_name) + '</b><div class="mfight-mvp-reason">' + escHtml(m.mvp_reason) + '</div></div></div>' : '') +
+      '</div>' +
     '</div>';
   }).join('');
 }
