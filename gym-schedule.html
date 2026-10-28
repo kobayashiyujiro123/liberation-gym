@@ -702,6 +702,18 @@
     .fight-edit-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
     .fight-edit-modal-overlay.open { display:flex; }
     .fight-edit-modal { background:#fff; border-radius:14px; padding:24px; width:100%; max-width:600px; margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.22); }
+    /* 確認ポップアップ（ブラウザ標準の confirm に依存しない） */
+    .app-confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; padding:20px; }
+    .app-confirm-overlay.open { display:flex; }
+    .app-confirm-box { background:#fff; border-radius:14px; padding:24px 22px 18px; width:100%; max-width:380px; box-shadow:0 8px 40px rgba(0,0,0,0.25); text-align:center; }
+    .app-confirm-icon { width:48px; height:48px; border-radius:50%; background:rgba(229,57,53,0.1); color:#e53935; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin:0 auto 14px; }
+    .app-confirm-text { font-size:0.92rem; line-height:1.6; color:var(--text); white-space:pre-wrap; margin-bottom:20px; }
+    .app-confirm-actions { display:flex; gap:10px; }
+    .app-confirm-btn { flex:1; padding:11px 14px; border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:0.86rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+    .app-confirm-btn.cancel { background:#f5f5f5; color:#666; border:none; }
+    .app-confirm-btn.cancel:hover { background:#ebebeb; }
+    .app-confirm-btn.ok { background:#e53935; color:#fff; border:none; }
+    .app-confirm-btn.ok:hover { background:#c62828; }
     .fight-edit-modal-title { font-size:1rem; font-weight:700; color:var(--primary-dark); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
     .fight-edit-fighter-row { background:#f9f9f9; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; }
     .fight-edit-fighter-row + .fight-edit-fighter-row { margin-top:8px; }
@@ -5741,8 +5753,38 @@ function _updateMatchSummaryBadge(matchId) {
   if (badge) { badge.className = `fight-result-badge ${cls}`; badge.textContent = txt; }
 }
 
+// ===== 確認ポップアップ =====
+// ブラウザ標準の confirm はダイアログ抑止の設定で出ないことがあるため、画面内で表示する
+let _appConfirmResolve = null;
+
+function appConfirm(message, okLabel) {
+  const overlay = document.getElementById('app-confirm-overlay');
+  if (!overlay) return Promise.resolve(confirm(message)); // 念のためのフォールバック
+  document.getElementById('app-confirm-text').textContent = message;
+  const okBtn = document.getElementById('app-confirm-ok');
+  okBtn.textContent = okLabel || 'OK';
+  overlay.classList.add('open');
+  setTimeout(() => okBtn.focus(), 0);
+  return new Promise(resolve => { _appConfirmResolve = resolve; });
+}
+
+function _appConfirmClose(result) {
+  const overlay = document.getElementById('app-confirm-overlay');
+  if (overlay) overlay.classList.remove('open');
+  const resolve = _appConfirmResolve;
+  _appConfirmResolve = null;
+  if (resolve) resolve(result);
+}
+
+document.addEventListener('keydown', e => {
+  if (!_appConfirmResolve) return;
+  if (e.key === 'Escape') { e.preventDefault(); _appConfirmClose(false); }
+  else if (e.key === 'Enter') { e.preventDefault(); _appConfirmClose(true); }
+});
+
 async function clearAllFightResults(matchId) {
-  if (!confirm('この試合の全選手の結果をクリアしますか？')) return;
+  const ok = await appConfirm('この試合の全選手の結果をクリアします。\n本当によろしいですか？', 'クリアする');
+  if (!ok) return;
   const match = allFights.find(m => m.id === matchId);
   if (!match) return;
   const fighters = match.match_fighters || [];
@@ -6562,6 +6604,18 @@ function msCloseBkSuccess() {
     <div class="ms-bk-modal-sub" id="ms-bk-success-detail" style="margin-bottom:6px;"></div>
     <div class="ms-bk-btns">
       <button class="ms-bk-btn-ok" onclick="msCloseBkSuccess()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- 確認ポップアップ -->
+<div class="app-confirm-overlay" id="app-confirm-overlay" onclick="if(event.target===this)_appConfirmClose(false)">
+  <div class="app-confirm-box" role="alertdialog" aria-modal="true">
+    <div class="app-confirm-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="app-confirm-text" id="app-confirm-text"></div>
+    <div class="app-confirm-actions">
+      <button type="button" class="app-confirm-btn cancel" onclick="_appConfirmClose(false)">キャンセル</button>
+      <button type="button" class="app-confirm-btn ok" id="app-confirm-ok" onclick="_appConfirmClose(true)">OK</button>
     </div>
   </div>
 </div>

@@ -2746,7 +2746,7 @@ async function initMemberFights() {
   const el = document.getElementById('fights-list');
   el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i></div>';
   const _headers = { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + _getToken() };
-  const _fields = 'id,title,match_date,match_fighters(id,fighter_name,opponent,result,sort_order)';
+  const _fields = 'id,title,match_date,match_fighters(id,fighter_id,fighter_name,opponent,result,sort_order)';
   let res = await fetch(
     `${SUPABASE_URL}/rest/v1/matches?select=${_fields},mvp_name,mvp_reason&order=match_date.desc`,
     { headers: _headers }
@@ -2766,6 +2766,7 @@ async function initMemberFights() {
 }
 
 function renderMemberFights(matches, myName, el) {
+  const myId = (typeof user !== 'undefined' && user && user.id) ? user.id : '';
   if (!matches || matches.length === 0) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-light);"><i class="fas fa-trophy" style="font-size:2.5rem;opacity:0.3;display:block;margin-bottom:16px;"></i>試合結果はまだ登録されていません</div>';
     return;
@@ -2797,7 +2798,8 @@ function renderMemberFights(matches, myName, el) {
 
     // 全選手の行を生成
     const rows = fighters.map(f => {
-      const nameIsMe = (f.fighter_name||'').trim() === myName;
+      // 出場選手は fighter_id（会員ID）で判定。対戦相手欄は外部の選手で ID を持たないため名前で判定
+      const nameIsMe = !!myId && f.fighter_id === myId;
       const oppIsMe  = (f.opponent||'').trim() === myName;
       const isMeRow  = nameIsMe || oppIsMe;
       let rc = RC(f.result);
