@@ -5,11 +5,11 @@
 --       「行が存在しない」と誤判定して role='member' で上書きしていた。
 --       （アプリ側は修正済み。このSQLはデータの復旧と二重の防止策）
 --
--- 適用方法: Supabase ダッシュボード → SQL Editor で【1つずつ】実行
+-- 適用方法: Supabase ダッシュボード → SQL Editor で【手順ごとに】実行
 -- ============================================================
 
 
--- ── 手順1：現状の確認 ───────────────────────────────────────
+-- ── 手順1：現状の確認（読み取りのみ・安全） ─────────────────
 -- 管理者・トレーナーと、木村さんの現在の権限を表示する
 SELECT id, name, email, role, status
   FROM public.profiles
@@ -33,23 +33,49 @@ SELECT id, name, email, role, status
  WHERE name ILIKE '%木村%';
 
 
--- ── 手順3（推奨）：会員が自分の権限を書き換えられないようにする ──
--- 以降、role と can_view は管理者以外からは変更できなくなる。
--- SQL Editor からの変更（auth.uid() が無い状態）は従来どおり可能。
+-- ============================================================
+-- 手順3（任意）：会員が自分の権限を書き換えられないようにする
+--
+-- role と can_view の変更を、管理者とSQL Editorからのみに制限する。
+-- トレーナー招待による「会員 → トレーナー」への変更は、招待レコードが
+-- 存在する場合に限り許可するため、招待フローは今までどおり動作する。
+--
+-- ※ 手順1・手順2を終えてから実行してください。
+-- ============================================================
 CREATE OR REPLACE FUNCTION public.protect_profile_role()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+  -- role も can_view も変わらないなら何もしない
+  IF NEW.role IS NOT DISTINCT FROM OLD.role
+     AND NEW.can_view IS NOT DISTINCT FROM OLD.can_view THEN
+    RETURN NEW;
+  END IF;
+
   -- SQL Editor / サーバー側からの変更はそのまま通す
   IF auth.uid() IS NULL THEN
     RETURN NEW;
   END IF;
+
   -- 管理者による変更はそのまま通す
   IF public.is_admin() THEN
     RETURN NEW;
   END IF;
+
+  -- トレーナー招待による「会員 → トレーナー」だけは許可する
+  IF OLD.role = 'member'
+     AND NEW.role = 'coach'
+     AND NEW.can_view IS NOT DISTINCT FROM OLD.can_view
+     AND EXISTS (
+           SELECT 1 FROM public.pending_invites pi
+            WHERE pi.email = NEW.email
+              AND pi.role  = 'coach'
+         ) THEN
+    RETURN NEW;
+  END IF;
+
   -- それ以外は role / can_view の変更を無効化（元の値に戻す）
   NEW.role     := OLD.role;
   NEW.can_view := OLD.can_view;
@@ -61,3 +87,8 @@ DROP TRIGGER IF EXISTS profiles_protect_role ON public.profiles;
 CREATE TRIGGER profiles_protect_role
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.protect_profile_role();
+
+
+-- ── 手順3を取り消したい場合 ─────────────────────────────────
+-- DROP TRIGGER IF EXISTS profiles_protect_role ON public.profiles;
+-- DROP FUNCTION IF EXISTS public.protect_profile_role();
