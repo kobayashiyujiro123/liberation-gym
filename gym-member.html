@@ -1720,12 +1720,14 @@ function escHtml(s) {
 async function loadUserProfile(authUser, accessToken) {
   // Supabase JSクライアントがハングするためraw fetchで直接REST API呼び出し
   let profile = null;
+  let profileFetchOk = false; // 取得そのものが成功したか（失敗と「行が無い」を区別する）
   try {
     const token = accessToken || _getToken();
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*&limit=1`,
       { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
     );
+    profileFetchOk = res.ok;
     const rows = res.ok ? await res.json() : [];
     profile = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
   } catch(e) { console.warn('fetchProfile error:', e); }
@@ -1778,16 +1780,23 @@ async function loadUserProfile(authUser, accessToken) {
     } catch(e) { console.warn('visit count error:', e); }
     return true;
   }
-  // profiles 行が存在しない場合（登録途中など）: 最低限の行を作成して管理側に表示されるようにする
+  // 取得に失敗しただけの場合は行を作らない。
+  // （ここで upsert すると、既存の admin / coach の role を 'member' で上書きしてしまう）
+  if (!profileFetchOk) {
+    console.warn('profile fetch failed - skip profile creation to protect existing role');
+    return false;
+  }
+  // 本当に profiles 行が存在しない場合（登録途中など）だけ、最低限の行を作成する。
+  // merge-duplicates は使わない（既存行があれば 409 で何もしないのが正しい）。
   try {
     const token = accessToken || _getToken();
-    await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON,
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal',
+        'Prefer': 'return=minimal',
       },
       body: JSON.stringify({
         id:    authUser.id,
@@ -1796,7 +1805,7 @@ async function loadUserProfile(authUser, accessToken) {
         status: 'active',
       }),
     });
-  } catch(e) { console.warn('profiles upsert error:', e); }
+  } catch(e) { console.warn('profiles insert error:', e); }
   return false;
 }
 
@@ -2309,6 +2318,18 @@ async function completeReg() {
         body: JSON.stringify({ completed_at: new Date().toISOString() }),
       }).catch(() => {});
     }
+    // 既存行が admin / coach の場合は role を上書きしない（権限が会員に落ちるのを防ぐ）
+    let keepRole = profileRole;
+    try {
+      const chk = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(sess.user.id)}&select=role&limit=1`, {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
+      });
+      if (chk.ok) {
+        const _rows = await chk.json();
+        const _existingRole = _rows && _rows[0] && _rows[0].role;
+        if (_existingRole === 'admin' || _existingRole === 'coach') keepRole = _existingRole;
+      }
+    } catch(e) { console.warn('role check error:', e); }
     await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
       method: 'POST',
       headers: {
@@ -2323,7 +2344,7 @@ async function completeReg() {
         name,
         gender,
         birth_date,
-        role:       profileRole,
+        role:       keepRole,
         status:     'active',
       }),
     });
