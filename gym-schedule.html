@@ -587,6 +587,9 @@
     .ms-bk-btns { display: flex; gap: 10px; }
     .ms-bk-btn-ok { flex:1; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
     .ms-bk-btn-ok:hover { background: var(--primary-dark); }
+    .ms-bk-btn-ok:disabled { opacity: 0.6; cursor: default; }
+    .ms-bk-btn-ok:disabled:hover { background: var(--primary); }
+    .btn-p:disabled { opacity: 0.6; cursor: default; }
     .ms-bk-btn-cl { flex:1; padding: 12px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; }
     .ms-bk-btn-cl:hover { background: var(--bg); }
     @media (max-width: 600px) { .ms-week-grid { grid-template-columns: repeat(3,1fr); } }
@@ -1629,7 +1632,7 @@
       <textarea id="add-res-memo" class="form-ctrl" placeholder="備考・メモを入力..." style="min-height:70px;"></textarea>
     </div>
     <div class="cal-modal-footer">
-      <button class="btn-p" onclick="submitAddRes()"><i class="fas fa-check"></i> 予約を追加</button>
+      <button class="btn-p" id="add-res-submit" onclick="submitAddRes()"><i class="fas fa-check"></i> 予約を追加</button>
       <button class="btn-o" style="margin-left:auto;" onclick="closeAddResModal()">閉じる</button>
     </div>
   </div>
@@ -2414,11 +2417,35 @@ function openAddResModal() {
   setTimeout(() => document.getElementById('add-res-name').focus(), 50);
 }
 
-function closeAddResModal() {
+function closeAddResModal(force) {
+  if (_addResSubmitting && !force) return; // 送信中は閉じさせない
   document.getElementById('add-res-overlay').classList.remove('open');
 }
 
+// 送信中フラグ。二度押しによる二重予約を防ぐ
+let _addResSubmitting = false;
+
+function _addResSetSubmitting(on) {
+  _addResSubmitting = on;
+  const btn = document.getElementById('add-res-submit');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<i class="fas fa-spinner fa-spin"></i> 追加中…'
+    : '<i class="fas fa-check"></i> 予約を追加';
+}
+
 async function submitAddRes() {
+  if (_addResSubmitting) return;        // すでに送信中なら何もしない
+  _addResSetSubmitting(true);
+  try {
+    await _submitAddResBody();
+  } finally {
+    _addResSetSubmitting(false);
+  }
+}
+
+async function _submitAddResBody() {
   const name = document.getElementById('add-res-name').value.trim();
   if (!name) { document.getElementById('add-res-name').focus(); return; }
   const gender = document.getElementById('add-res-gender').value;
@@ -2431,7 +2458,7 @@ async function submitAddRes() {
     resData[resSelectedDate].push({ id, name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo });
     resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
     saveResDataToStorage();
-    closeAddResModal();
+    closeAddResModal(true);
     buildDayTabs();
     renderReservations();
     return;
@@ -2477,7 +2504,7 @@ async function submitAddRes() {
     name, gender, cls: CLASSES[0], time, coach: '', status: '確定', badge: 'badge-s', memo,
   });
   resData[resSelectedDate].sort((a,b) => a.time.localeCompare(b.time));
-  closeAddResModal();
+  closeAddResModal(true);
   buildDayTabs();
   renderReservations();
 }
@@ -6505,14 +6532,38 @@ function msOpenBkModal(dateStr, time, className) {
   document.getElementById('ms-bk-overlay').classList.add('open');
 }
 
-function msCloseBkModal() {
+function msCloseBkModal(force) {
+  if (_msBkSubmitting && !force) return; // 送信中は閉じさせない
   document.getElementById('ms-bk-overlay').classList.remove('open');
   document.getElementById('ms-bk-memo').value = '';
   msBkDate = msBkTime = msBkClass = null;
 }
 
+// 送信中フラグ。二度押しによる二重予約を防ぐ
+let _msBkSubmitting = false;
+
+function _msBkSetSubmitting(on) {
+  _msBkSubmitting = on;
+  const btn = document.getElementById('ms-bk-btn-ok');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<i class="fas fa-spinner fa-spin"></i> 予約中…'
+    : '<i class="fas fa-check"></i> 予約する';
+}
+
 async function msSubmitBkModal() {
+  if (_msBkSubmitting) return;          // すでに送信中なら何もしない
   if (!msBkDate || !msBkTime || !msBkClass) return;
+  _msBkSetSubmitting(true);
+  try {
+    await _msSubmitBkModalBody();
+  } finally {
+    _msBkSetSubmitting(false);
+  }
+}
+
+async function _msSubmitBkModalBody() {
   const [y,m,d] = msBkDate.split('-').map(Number);
   const dow = new Date(y,m-1,d).getDay();
   const DAYS = ['日','月','火','水','木','金','土'];
@@ -6531,7 +6582,7 @@ async function msSubmitBkModal() {
     alert('予約に失敗しました: ' + (err.message || res.status));
     return;
   }
-  msCloseBkModal();
+  msCloseBkModal(true);
   document.getElementById('ms-bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
   document.getElementById('ms-bk-success-overlay').classList.add('open');
 }
@@ -6590,7 +6641,7 @@ function msCloseBkSuccess() {
       <textarea id="ms-bk-memo" class="ms-bk-memo" rows="3" maxlength="200" placeholder="体調や連絡事項など…"></textarea>
     </div>
     <div class="ms-bk-btns">
-      <button class="ms-bk-btn-ok" onclick="msSubmitBkModal()"><i class="fas fa-check"></i> 予約する</button>
+      <button class="ms-bk-btn-ok" id="ms-bk-btn-ok" onclick="msSubmitBkModal()"><i class="fas fa-check"></i> 予約する</button>
       <button class="ms-bk-btn-cl" onclick="msCloseBkModal()">閉じる</button>
     </div>
   </div>

@@ -389,6 +389,8 @@
     .bk-btns { display: flex; gap: 10px; }
     .bk-btn-ok  { flex:1; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
     .bk-btn-ok:hover { background: var(--primary-dark); }
+    .bk-btn-ok:disabled { opacity: 0.6; cursor: default; }
+    .bk-btn-ok:disabled:hover { background: var(--primary); }
     .bk-btn-cl  { flex:1; padding: 12px; background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; }
     .bk-btn-cl:hover { background: var(--bg); }
 
@@ -1019,7 +1021,7 @@
       <textarea id="bk-memo" class="bk-memo" rows="3" maxlength="200" placeholder="体調や連絡事項など…"></textarea>
     </div>
     <div class="bk-btns">
-      <button class="bk-btn-ok" onclick="submitBkModal()"><i class="fas fa-check"></i> 予約する</button>
+      <button class="bk-btn-ok" id="bk-btn-ok" onclick="submitBkModal()"><i class="fas fa-check"></i> 予約する</button>
       <button class="bk-btn-cl" onclick="closeBkModal()">閉じる</button>
     </div>
   </div>
@@ -3182,13 +3184,38 @@ async function openBkModal(dateStr, time, className) {
   document.getElementById('bk-overlay').classList.add('open');
 }
 
-function closeBkModal() {
+function closeBkModal(force) {
+  if (_bkSubmitting && !force) return; // 送信中は閉じさせない
   document.getElementById('bk-overlay').classList.remove('open');
   document.getElementById('bk-memo').value = '';
   bkDate = bkTime = bkClass = null;
 }
 
+// 送信中フラグ。二度押しによる二重予約を防ぐ
+let _bkSubmitting = false;
+
+function _bkSetSubmitting(on) {
+  _bkSubmitting = on;
+  const btn = document.getElementById('bk-btn-ok');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<i class="fas fa-spinner fa-spin"></i> 予約中…'
+    : '<i class="fas fa-check"></i> 予約する';
+}
+
 async function submitBkModal() {
+  if (_bkSubmitting) return;            // すでに送信中なら何もしない
+  if (!bkDate || !bkTime || !bkClass) return;
+  _bkSetSubmitting(true);
+  try {
+    await _submitBkModalBody();
+  } finally {
+    _bkSetSubmitting(false);
+  }
+}
+
+async function _submitBkModalBody() {
   const [y,m,d] = bkDate.split('-').map(Number);
   const dow = new Date(y,m-1,d).getDay();
   const DAYS = ['日','月','火','水','木','金','土'];
@@ -3197,7 +3224,7 @@ async function submitBkModal() {
   if (DEMO_MODE) {
     demoReservations.unshift({ id: 'demo-' + demoResId++, date: bkDate, time, class_name: cls, status: 'confirmed', memo, memberName: user.name, memberGender: user.gender });
     saveDemoReservations();
-    closeBkModal();
+    closeBkModal(true);
     document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
     document.getElementById('bk-success-overlay').classList.add('open');
     return;
@@ -3213,7 +3240,7 @@ async function submitBkModal() {
     memo:       memo || null,
   });
   if (error) { alert('予約に失敗しました: ' + error.message); return; }
-  closeBkModal();
+  closeBkModal(true);
   document.getElementById('bk-success-detail').textContent = `${m}月${d}日（${DAYS[dow]}） ${time}　${cls}`;
   document.getElementById('bk-success-overlay').classList.add('open');
 }
