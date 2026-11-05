@@ -1179,7 +1179,7 @@
               <div><select id="cal-plan-time" class="cal-time-sel"></select></div>
               <textarea id="cal-plan" class="cal-ta" maxlength="2000" placeholder="例）〇〇さんとランニング"></textarea>
             </div>
-            <div class="cal-field">
+            <div class="cal-field" id="cal-log-field">
               <div class="cal-field-label"><span class="cal-chip log">記録</span>実際にやったこと</div>
               <textarea id="cal-body" class="cal-ta" maxlength="2000" placeholder="例）5km走った。ジャブの戻りを意識した"></textarea>
             </div>
@@ -2565,9 +2565,11 @@ function renderCalDetail() {
     renderCalIconRow();
     renderCalTimeOptions(calPlanTime);
     document.getElementById('cal-plan').value = cur ? (cur.plan || '') : '';
-    // 過ぎた日に予定は書けない（入力欄だけ隠す。すでに入っている予定は保持される）
-    const _past = calSelected < _localDateStr(new Date());
-    document.getElementById('cal-plan-field').style.display = _past ? 'none' : '';
+    // 過ぎた日に予定は書けず、これから来る日に記録は書けない。
+    // 入力欄を隠すだけなので、すでに入っている内容は保持される。
+    const _todayStr = _localDateStr(new Date());
+    document.getElementById('cal-plan-field').style.display = calSelected < _todayStr ? 'none' : '';
+    document.getElementById('cal-log-field').style.display  = calSelected > _todayStr ? 'none' : '';
     document.getElementById('cal-body').value = cur ? (cur.body || '') : '';
     document.getElementById('cal-del').style.display = cur ? '' : 'none';
   } else {
@@ -2608,7 +2610,8 @@ function calStartEdit() {
   if (!calSelected) return;
   calEditing = true;
   renderCalDetail();
-  const ta = document.getElementById('cal-plan');
+  const past = calSelected < _localDateStr(new Date());
+  const ta = document.getElementById(past ? 'cal-body' : 'cal-plan');
   if (ta) setTimeout(() => ta.focus(), 0);
 }
 
