@@ -2504,6 +2504,13 @@ function renderCalendar() {
   renderCalEvents();
 }
 
+// アイコンに対応する名前（文章が無いときの表示に使う）
+function _calIconLabel(icon) {
+  if (!icon) return '';
+  const found = CAL_ICONS.find(i => i.k === icon);
+  return found ? found.label : '';
+}
+
 // この月のイベント一覧。ジムが登録したイベントと、自分の予定をまとめて並べる。
 function renderCalEvents() {
   const wrap = document.getElementById('cal-events-wrap');
@@ -2513,8 +2520,12 @@ function renderCalEvents() {
   const rows = [];
   calEvents.forEach((note, ds) => rows.push({ ds, mine: false, time: '', icon: '', text: note }));
   calLogs.forEach((v, ds) => {
-    const p = (v.plan || '').trim();
-    if (p) rows.push({ ds, mine: true, time: v.planTime || '', icon: v.icon || '', text: p });
+    const p   = (v.plan || '').trim();
+    const log = (v.body || '').trim();
+    // 文章が無くても、時間かアイコンだけ入れた予定は一覧に出す
+    if (!p && !v.planTime && !(v.icon && !log)) return;
+    const label = p || _calIconLabel(v.icon) || '予定';
+    rows.push({ ds, mine: true, time: v.planTime || '', icon: v.icon || '', text: label });
   });
   rows.sort((a, b) => a.ds.localeCompare(b.ds) || (a.time || '99').localeCompare(b.time || '99'));
 
