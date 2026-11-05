@@ -448,6 +448,14 @@
     .cal-mk.note.is-plan { color: #ef6c00; }
     .cal-mk.note.is-log { color: var(--primary); }
     .cal-mk.emoji { width: auto; height: auto; border-radius: 0; font-size: 0.72rem; line-height: 1; }
+    .cal-cell.has-event::after { content: ''; position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: #f57c00; }
+    .cal-cell.selected.has-event::after { background: #fff; }
+    .cal-ev-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f57c00; }
+    .cal-tag.event { background: rgba(245,124,0,0.12); color: #e65100; }
+    .cal-ev { display: flex; align-items: center; gap: 10px; background: #fff8ef; border: 1px solid #ffd9a8; border-radius: 10px; padding: 10px 13px; margin-bottom: 8px; cursor: pointer; }
+    .cal-ev:hover { border-color: #f57c00; }
+    .cal-ev-date { font-size: 0.8rem; font-weight: 700; color: #e65100; flex-shrink: 0; }
+    .cal-ev-name { font-size: 0.85rem; font-weight: 700; color: var(--text); word-break: break-word; }
     .cal-icon-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
     .cal-icon-btn { width: 36px; height: 36px; padding: 0; border-radius: 9px; border: 1.5px solid var(--border); background: #fff; font-size: 1rem; line-height: 1; color: var(--text-light); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.12s, background 0.12s; }
     .cal-icon-btn:hover { border-color: var(--primary); }
@@ -1104,6 +1112,7 @@
             <span><span class="cal-mk plan"></span>予約あり</span>
             <span><i class="fas fa-pen cal-mk note is-plan"></i>予定</span>
             <span><i class="fas fa-pen cal-mk note is-log"></i>記録</span>
+            <span><span class="cal-ev-dot"></span>ジムのイベント</span>
           </div>
         </div>
 
@@ -1120,6 +1129,11 @@
             <button class="cal-del" id="cal-del" onclick="calDelete()" style="display:none;"><i class="fas fa-trash"></i> 削除</button>
             <span class="cal-saved" id="cal-saved">保存しました</span>
           </div>
+        </div>
+
+        <div id="cal-events-wrap" style="display:none;">
+          <div style="font-weight:700;margin:20px 0 10px;font-size:0.9rem;"><i class="fas fa-star" style="color:#f57c00;margin-right:5px;font-size:0.82rem;"></i>この月のイベント</div>
+          <div id="cal-events"></div>
         </div>
 
         <div style="font-weight:700;margin:20px 0 10px;font-size:0.9rem;" id="cal-list-title">この月の書き込み</div>
@@ -2213,8 +2227,9 @@ function _calFmtDate(ds) {
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth();   // 0-11
 let calSelected = null;                 // 'YYYY-MM-DD'
-let calRes   = new Map();               // date -> { time, className, done }
-let calLogs  = new Map();               // date -> { id, body }
+let calRes    = new Map();              // date -> { time, className, done }
+let calLogs   = new Map();              // date -> { id, body, icon }
+let calEvents = new Map();              // date -> イベント名（管理側の day_notes）
 let calLoadSeq = 0;
 let calSaving  = false;
 let calTableMissing = false;
@@ -2275,8 +2290,9 @@ function _calDemoLogs() {
 async function loadCalendar() {
   const seq = ++calLoadSeq;
   const { start, end } = _calMonthRange();
-  calRes  = new Map();
-  calLogs = new Map();
+  calRes    = new Map();
+  calLogs   = new Map();
+  calEvents = new Map();
 
   if (DEMO_MODE) {
     demoReservations
@@ -2291,16 +2307,24 @@ async function loadCalendar() {
         : { id: 'demo', body: v.body || '', icon: v.icon || '' });
     });
     calTableMissing = false;
+    try {
+      const notes = JSON.parse(localStorage.getItem('demo_dayNotes') || '{}');
+      Object.keys(notes).forEach(d => {
+        if (d >= start && d <= end && notes[d]) calEvents.set(d, notes[d]);
+      });
+    } catch(e) {}
   } else {
     const sess = _getSession();
     if (!sess || !sess.user) return;
     const uid = encodeURIComponent(sess.user.id);
     const logQs = `user_id=eq.${uid}&date=gte.${start}&date=lte.${end}&select=`;
-    const [resR, logR0] = await Promise.all([
+    const [resR, logR0, evR] = await Promise.all([
       _restAPI('GET', 'reservations', `user_id=eq.${uid}&status=eq.confirmed&date=gte.${start}&date=lte.${end}&select=date,time,class_name`),
       _restAPI('GET', 'training_logs', logQs + 'id,date,body,icon'),
+      _restAPI('GET', 'day_notes', `date=gte.${start}&date=lte.${end}&select=date,note`),
     ]);
     if (seq !== calLoadSeq) return;
+    (evR.data || []).forEach(e => { if (e.note) calEvents.set(e.date, e.note); });
     // icon 列がまだ無い環境では取り直す（SQL適用前でもページが動くように）
     let logR = logR0;
     if (logR0.error && _calIsMissingIcon(logR0.error)) {
@@ -2339,6 +2363,7 @@ function renderCalendar() {
   let noteCount = 0;
   calLogs.forEach(v => { if (_calHasEntry(v)) noteCount++; });
   const stats = [];
+  if (calEvents.size) stats.push(`イベント ${calEvents.size}件`);
   if (doneCount) stats.push(`練習 ${doneCount}回`);
   if (planCount) stats.push(`予約 ${planCount}件`);
   if (noteCount) stats.push(`書き込み ${noteCount}件`);
@@ -2357,6 +2382,7 @@ function renderCalendar() {
     const ds = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dt = _calDayType(ds);
     const cls = ['cal-cell', dt.type === 'weekday' ? '' : dt.type];
+    if (calEvents.has(ds)) cls.push('has-event');
     if (ds === today) cls.push('today');
     if (ds === calSelected) cls.push('selected');
 
@@ -2370,7 +2396,8 @@ function renderCalendar() {
         : `<i class="fas fa-pen cal-mk note ${_calKind(ds).key === 'log' ? 'is-log' : 'is-plan'}"></i>`;
     }
 
-    const title = dt.name ? ` title="${escHtml(dt.name)}"` : '';
+    const tips = [dt.name, calEvents.get(ds)].filter(Boolean).join(' / ');
+    const title = tips ? ` title="${escHtml(tips)}"` : '';
     html += `<div class="${cls.filter(Boolean).join(' ')}"${title} onclick="calSelectDate('${ds}')">` +
             `<span class="cal-d">${d}</span><span class="cal-marks">${marks}</span></div>`;
   }
@@ -2395,7 +2422,23 @@ function renderCalendar() {
   }
 
   renderCalDetail();
+  renderCalEvents();
   renderCalList();
+}
+
+// 管理側で登録されたイベントの一覧（会員は編集できない）
+function renderCalEvents() {
+  const wrap = document.getElementById('cal-events-wrap');
+  const el = document.getElementById('cal-events');
+  if (!wrap || !el) return;
+  const rows = Array.from(calEvents.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  if (!rows.length) { wrap.style.display = 'none'; el.innerHTML = ''; return; }
+  wrap.style.display = '';
+  el.innerHTML = rows.map(([ds, note]) =>
+    `<div class="cal-ev" onclick="calSelectDate('${ds}')">` +
+    `<span class="cal-ev-date">${escHtml(_calFmtDate(ds))}</span>` +
+    `<span class="cal-ev-name">${escHtml(note)}</span></div>`
+  ).join('');
 }
 
 function calSelectDate(ds) {
@@ -2417,16 +2460,20 @@ function renderCalDetail() {
     (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '') +
     `<span class="cal-item-kind ${kind.key}" style="margin-left:8px;vertical-align:2px;">${kind.label}</span>`;
 
+  const ev = calEvents.get(calSelected);
+  const evTag = ev
+    ? `<span class="cal-tag event"><i class="fas fa-star"></i> ${escHtml(ev)}</span>`
+    : '';
   const r = calRes.get(calSelected);
   const sub = document.getElementById('cal-detail-sub');
   if (r && r.done) {
-    sub.innerHTML = '<span class="cal-tag done"><i class="fas fa-check"></i> 練習に行った日</span>' +
+    sub.innerHTML = evTag + '<span class="cal-tag done"><i class="fas fa-check"></i> 練習に行った日</span>' +
                     `<span>${escHtml(r.time || '')}　${escHtml(r.className || '')}</span>`;
   } else if (r) {
-    sub.innerHTML = '<span class="cal-tag plan"><i class="fas fa-calendar-check"></i> 予約あり</span>' +
+    sub.innerHTML = evTag + '<span class="cal-tag plan"><i class="fas fa-calendar-check"></i> 予約あり</span>' +
                     `<span>${escHtml(r.time || '')}　${escHtml(r.className || '')}</span>`;
   } else {
-    sub.innerHTML = '<span>ジムの予約はありません。予定や記録を自由に書けます。</span>';
+    sub.innerHTML = evTag + '<span>ジムの予約はありません。予定や記録を自由に書けます。</span>';
   }
 
   const cur = calLogs.get(calSelected);
