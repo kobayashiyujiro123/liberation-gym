@@ -1174,7 +1174,7 @@
           <div id="cal-edit" style="display:none;">
             <div class="cal-icon-row" id="cal-icon-row"></div>
             <div class="cal-icon-label" id="cal-icon-label"></div>
-            <div class="cal-field">
+            <div class="cal-field" id="cal-plan-field">
               <div class="cal-field-label"><span class="cal-chip plan">予定</span>この日にやること</div>
               <div><select id="cal-plan-time" class="cal-time-sel"></select></div>
               <textarea id="cal-plan" class="cal-ta" maxlength="2000" placeholder="例）〇〇さんとランニング"></textarea>
@@ -2565,6 +2565,9 @@ function renderCalDetail() {
     renderCalIconRow();
     renderCalTimeOptions(calPlanTime);
     document.getElementById('cal-plan').value = cur ? (cur.plan || '') : '';
+    // 過ぎた日に予定は書けない（入力欄だけ隠す。すでに入っている予定は保持される）
+    const _past = calSelected < _localDateStr(new Date());
+    document.getElementById('cal-plan-field').style.display = _past ? 'none' : '';
     document.getElementById('cal-body').value = cur ? (cur.body || '') : '';
     document.getElementById('cal-del').style.display = cur ? '' : 'none';
   } else {
