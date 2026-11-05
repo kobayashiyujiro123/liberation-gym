@@ -440,13 +440,20 @@
     .cal-cell.selected .cal-mk.done { background: #fff; }
     .cal-cell.selected .cal-mk.plan { border-color: #fff; }
     .cal-cell.selected .cal-mk.note { color: #fff; }
-    .cal-marks { display: flex; align-items: center; gap: 3px; height: 8px; }
+    .cal-marks { display: flex; align-items: center; gap: 3px; height: 11px; }
     .cal-mk { display: inline-block; width: 7px; height: 7px; border-radius: 50%; box-sizing: border-box; }
     .cal-mk.done { background: var(--primary); }
     .cal-mk.plan { border: 1.5px solid var(--primary); }
     .cal-mk.note { width: auto; height: auto; border-radius: 0; color: var(--warning); font-size: 0.56rem; line-height: 1; }
     .cal-mk.note.is-plan { color: #ef6c00; }
     .cal-mk.note.is-log { color: var(--primary); }
+    .cal-mk.emoji { width: auto; height: auto; border-radius: 0; font-size: 0.72rem; line-height: 1; }
+    .cal-icon-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .cal-icon-btn { width: 36px; height: 36px; padding: 0; border-radius: 9px; border: 1.5px solid var(--border); background: #fff; font-size: 1rem; line-height: 1; color: var(--text-light); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.12s, background 0.12s; }
+    .cal-icon-btn:hover { border-color: var(--primary); }
+    .cal-icon-btn.selected { border-color: var(--primary); background: rgba(0,151,167,0.10); box-shadow: 0 0 0 2px rgba(0,151,167,0.18); }
+    .cal-icon-label { font-size: 0.76rem; color: var(--text-light); margin-bottom: 10px; }
+    .cal-item-icon { font-size: 0.98rem; margin-right: 3px; }
     .cal-privacy { display: flex; align-items: flex-start; gap: 8px; background: #f1f8f9; border: 1px solid #cfe7ea; color: #37606b; border-radius: 10px; padding: 10px 12px; font-size: 0.78rem; line-height: 1.65; margin-bottom: 14px; }
     .cal-privacy i { margin-top: 3px; flex-shrink: 0; }
     .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.72rem; color: var(--text-light); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); justify-content: center; }
@@ -1105,6 +1112,8 @@
         <div class="cal-detail" id="cal-detail" style="display:none;">
           <div class="cal-detail-date" id="cal-detail-date"></div>
           <div class="cal-detail-sub" id="cal-detail-sub"></div>
+          <div class="cal-icon-row" id="cal-icon-row"></div>
+          <div class="cal-icon-label" id="cal-icon-label"></div>
           <textarea id="cal-body" class="cal-ta" maxlength="2000" placeholder="練習の内容、予定、気づいたことなど…"></textarea>
           <div class="cal-actions">
             <button class="cal-save" id="cal-save" onclick="calSave()"><i class="fas fa-check"></i> 保存</button>
@@ -2209,6 +2218,40 @@ let calLogs  = new Map();               // date -> { id, body }
 let calLoadSeq = 0;
 let calSaving  = false;
 let calTableMissing = false;
+let calIcon = '';                  // いま編集中の日のアイコン
+let calIconColumnMissing = false;  // icon 列がまだDBに無い場合
+
+// 予定・記録に付けられるアイコン。絵文字をそのまま保存する。
+const CAL_ICONS = [
+  { k: '',   label: 'なし' },
+  { k: '🥊', label: '練習' },
+  { k: '💪', label: '筋トレ' },
+  { k: '🏃', label: 'ランニング' },
+  { k: '🏆', label: '試合' },
+  { k: '⚖️', label: '計量' },
+  { k: '😴', label: '休養' },
+  { k: '🍺', label: '飲み会' },
+  { k: '🍽️', label: '食事' },
+  { k: '☕', label: 'カフェ' },
+  { k: '💼', label: '仕事' },
+  { k: '🏥', label: '病院' },
+  { k: '🦷', label: '歯医者' },
+  { k: '✈️', label: '旅行' },
+  { k: '🎂', label: '誕生日' },
+  { k: '🎉', label: 'イベント' },
+  { k: '⭐', label: 'その他' },
+];
+
+// 本文かアイコンのどちらかがあれば「書き込みあり」とみなす
+function _calHasEntry(v) {
+  return !!(v && ((v.body || '').trim() || v.icon));
+}
+
+// icon 列がまだ無いことによるエラーか
+function _calIsMissingIcon(err) {
+  if (!err) return false;
+  return err.code === '42703' || /icon/i.test(err.message || '');
+}
 
 // 予約の日時がすでに過ぎているか（= 練習に行った日）
 function _calIsDone(date, time) {
@@ -2243,23 +2286,35 @@ async function loadCalendar() {
       .forEach(r => calRes.set(r.date, { time: r.time, className: r.class_name, done: _calIsDone(r.date, r.time) }));
     const store = _calDemoLogs();
     Object.keys(store).forEach(d => {
-      if (d >= start && d <= end) calLogs.set(d, { id: 'demo', body: store[d] });
+      if (d < start || d > end) return;
+      const v = store[d];
+      calLogs.set(d, typeof v === 'string'
+        ? { id: 'demo', body: v, icon: '' }
+        : { id: 'demo', body: v.body || '', icon: v.icon || '' });
     });
     calTableMissing = false;
   } else {
     const sess = _getSession();
     if (!sess || !sess.user) return;
     const uid = encodeURIComponent(sess.user.id);
-    const [resR, logR] = await Promise.all([
+    const logQs = `user_id=eq.${uid}&date=gte.${start}&date=lte.${end}&select=`;
+    const [resR, logR0] = await Promise.all([
       _restAPI('GET', 'reservations', `user_id=eq.${uid}&status=eq.confirmed&date=gte.${start}&date=lte.${end}&select=date,time,class_name`),
-      _restAPI('GET', 'training_logs', `user_id=eq.${uid}&date=gte.${start}&date=lte.${end}&select=id,date,body`),
+      _restAPI('GET', 'training_logs', logQs + 'id,date,body,icon'),
     ]);
     if (seq !== calLoadSeq) return;
+    // icon 列がまだ無い環境では取り直す（SQL適用前でもページが動くように）
+    let logR = logR0;
+    if (logR0.error && _calIsMissingIcon(logR0.error)) {
+      calIconColumnMissing = true;
+      logR = await _restAPI('GET', 'training_logs', logQs + 'id,date,body');
+      if (seq !== calLoadSeq) return;
+    }
     (resR.data || []).forEach(r => {
       calRes.set(r.date, { time: r.time, className: r.class_name, done: _calIsDone(r.date, r.time) });
     });
     calTableMissing = !!logR.error;
-    (logR.data || []).forEach(l => calLogs.set(l.date, { id: l.id, body: l.body || '' }));
+    (logR.data || []).forEach(l => calLogs.set(l.date, { id: l.id, body: l.body || '', icon: l.icon || '' }));
   }
   if (seq !== calLoadSeq) return;
 
@@ -2284,7 +2339,7 @@ function renderCalendar() {
   let doneCount = 0, planCount = 0;
   calRes.forEach(v => { if (v.done) doneCount++; else planCount++; });
   let noteCount = 0;
-  calLogs.forEach(v => { if ((v.body || '').trim()) noteCount++; });
+  calLogs.forEach(v => { if (_calHasEntry(v)) noteCount++; });
   const stats = [];
   if (doneCount) stats.push(`練習 ${doneCount}回`);
   if (planCount) stats.push(`予約 ${planCount}件`);
@@ -2311,8 +2366,10 @@ function renderCalendar() {
     const log = calLogs.get(ds);
     let marks = '';
     if (r) marks += `<span class="cal-mk ${r.done ? 'done' : 'plan'}"></span>`;
-    if (log && (log.body || '').trim()) {
-      marks += `<i class="fas fa-pen cal-mk note ${_calKind(ds).key === 'log' ? 'is-log' : 'is-plan'}"></i>`;
+    if (_calHasEntry(log)) {
+      marks += log.icon
+        ? `<span class="cal-mk emoji">${log.icon}</span>`
+        : `<i class="fas fa-pen cal-mk note ${_calKind(ds).key === 'log' ? 'is-log' : 'is-plan'}"></i>`;
     }
 
     const title = dt.name ? ` title="${escHtml(dt.name)}"` : '';
@@ -2331,6 +2388,10 @@ function renderCalendar() {
     notice.style.display = '';
     notice.innerHTML = '⚠️ 書き込みの保存先（training_logs テーブル）がまだ作成されていません。<br>' +
                        'Supabase で supabase/training_logs.sql を実行すると書き込めるようになります。';
+  } else if (calIconColumnMissing) {
+    notice.style.display = '';
+    notice.innerHTML = '⚠️ アイコンの保存先（icon 列）がまだ作成されていません。<br>' +
+                       'Supabase で supabase/training_logs_icon.sql を実行すると使えるようになります。';
   } else {
     notice.style.display = 'none';
   }
@@ -2371,6 +2432,8 @@ function renderCalDetail() {
   }
 
   const cur = calLogs.get(calSelected);
+  calIcon = cur ? (cur.icon || '') : '';
+  renderCalIconRow();
   const ta = document.getElementById('cal-body');
   ta.value = cur ? (cur.body || '') : '';
   ta.placeholder = kind.key === 'plan' ? 'この日の予定…'
@@ -2380,10 +2443,27 @@ function renderCalDetail() {
   document.getElementById('cal-saved').classList.remove('show');
 }
 
+function renderCalIconRow() {
+  const row = document.getElementById('cal-icon-row');
+  if (!row) return;
+  row.innerHTML = CAL_ICONS.map(ic =>
+    `<button type="button" class="cal-icon-btn${ic.k === calIcon ? ' selected' : ''}"` +
+    ` title="${escHtml(ic.label)}" onclick="calPickIcon('${ic.k}')">${ic.k || '—'}</button>`
+  ).join('');
+  const cur = CAL_ICONS.find(i => i.k === calIcon) || CAL_ICONS[0];
+  const lbl = document.getElementById('cal-icon-label');
+  if (lbl) lbl.textContent = cur.k ? `アイコン：${cur.k} ${cur.label}` : 'アイコン：なし';
+}
+
+function calPickIcon(k) {
+  calIcon = (k === calIcon) ? '' : k;   // もう一度押すと解除
+  renderCalIconRow();
+}
+
 function renderCalList() {
   const el = document.getElementById('cal-list');
   const rows = Array.from(calLogs.entries())
-    .filter(([, v]) => (v.body || '').trim())
+    .filter(([, v]) => _calHasEntry(v))
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   if (!rows.length) {
@@ -2397,7 +2477,7 @@ function renderCalList() {
     const hol = dt.name ? `<span class="cal-item-kind" style="background:#fdeef0;color:#d32f2f;">${escHtml(dt.name)}</span>` : '';
     return `<div class="cal-item ${kind.key === 'log' ? 'is-log' : 'is-plan'}" onclick="calSelectDate('${ds}')">
       <div class="cal-item-hd">
-        <span class="cal-item-date${dcls}">${escHtml(_calFmtDate(ds))}</span>
+        <span class="cal-item-date${dcls}">${v.icon ? `<span class="cal-item-icon">${v.icon}</span>` : ''}${escHtml(_calFmtDate(ds))}</span>
         ${hol}
         <span class="cal-item-kind ${kind.key}">${kind.label}</span>
       </div>
@@ -2428,8 +2508,8 @@ async function calSave() {
   if (calSaving || !calSelected) return;
   const body = document.getElementById('cal-body').value.trim();
   const cur = calLogs.get(calSelected);
-  if (!body) {
-    // 空のまま保存＝削除とみなす（元々書き込みが無ければ何もしない）
+  if (!body && !calIcon) {
+    // 本文もアイコンも無い状態での保存＝削除とみなす
     if (cur) await calDelete();
     return;
   }
@@ -2437,13 +2517,13 @@ async function calSave() {
   try {
     if (DEMO_MODE) {
       const store = _calDemoLogs();
-      store[calSelected] = body;
+      store[calSelected] = { body, icon: calIcon };
       localStorage.setItem('demo_training_logs', JSON.stringify(store));
-      calLogs.set(calSelected, { id: 'demo', body });
+      calLogs.set(calSelected, { id: 'demo', body, icon: calIcon });
     } else {
       const sess = _getSession();
       if (!sess || !sess.user) { alert('ログインが必要です'); return; }
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/training_logs?on_conflict=user_id,date`, {
+      const post = payload => fetch(`${SUPABASE_URL}/rest/v1/training_logs?on_conflict=user_id,date`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_ANON,
@@ -2451,15 +2531,29 @@ async function calSave() {
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates,return=representation',
         },
-        body: JSON.stringify({ user_id: sess.user.id, date: calSelected, body }),
+        body: JSON.stringify(payload),
       });
+      const base = { user_id: sess.user.id, date: calSelected, body };
+      let res = await post(calIconColumnMissing ? base : { ...base, icon: calIcon || null });
+      if (!res.ok && !calIconColumnMissing) {
+        // icon 列がまだ無いときは、アイコン抜きで保存し直す
+        const err = await res.clone().json().catch(() => ({}));
+        if (_calIsMissingIcon(err)) {
+          calIconColumnMissing = true;
+          res = await post(base);
+        }
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         alert('保存に失敗しました: ' + (err.message || res.status));
         return;
       }
       const rows = await res.json().catch(() => []);
-      calLogs.set(calSelected, { id: (rows && rows[0] && rows[0].id) || '', body });
+      calLogs.set(calSelected, {
+        id: (rows && rows[0] && rows[0].id) || '',
+        body,
+        icon: calIconColumnMissing ? '' : calIcon,
+      });
     }
     renderCalendar();
     _calFlashSaved();
