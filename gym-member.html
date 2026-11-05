@@ -487,6 +487,24 @@
     .cal-chip.log { background: rgba(0,151,167,0.14); color: var(--primary-dark); }
     .cal-line { display: flex; align-items: flex-start; gap: 7px; margin-top: 5px; }
     .cal-line .cal-chip { margin-top: 2px; }
+    .cal-view-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .cal-view-row .cal-chip { margin-top: 2px; }
+    .cal-view-time { font-weight: 700; font-size: 0.85rem; color: var(--text); flex-shrink: 0; margin-top: 1px; }
+    .cal-view-text { font-size: 0.88rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+    .cal-view-empty { font-size: 0.84rem; color: var(--text-light); padding: 6px 0 10px; }
+    .cal-view-icon { font-size: 1.05rem; margin-left: 8px; vertical-align: -1px; }
+    .cal-edit-btn { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); border-radius: 8px; padding: 9px 22px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+    .cal-edit-btn:hover { background: rgba(0,151,167,0.07); }
+    .cal-cancel { background: #fff; color: var(--text-light); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 18px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.84rem; cursor: pointer; }
+    .cal-cancel:hover { background: var(--bg); }
+    .cal-cancel:disabled { opacity: 0.6; cursor: default; }
+    .cal-time-sel { border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; color: var(--text); background: #fff; margin-bottom: 7px; cursor: pointer; }
+    .cal-time-sel:focus { outline: none; border-color: var(--primary); }
+    .cal-ev.mine { background: #f3fbfc; border-color: #cfe7ea; }
+    .cal-ev.mine .cal-ev-date { color: var(--primary-dark); }
+    .cal-ev-ico { flex-shrink: 0; font-size: 0.95rem; width: 18px; text-align: center; }
+    .cal-ev-ico .fa-star { color: #f57c00; font-size: 0.82rem; }
+    .cal-ev-time { flex-shrink: 0; font-size: 0.8rem; font-weight: 700; color: var(--text); }
     .cal-ta:focus { outline: none; border-color: var(--primary); }
     .cal-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
     .cal-save { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
@@ -1142,20 +1160,34 @@
         <div class="cal-detail" id="cal-detail" style="display:none;">
           <div class="cal-detail-date" id="cal-detail-date"></div>
           <div class="cal-detail-sub" id="cal-detail-sub"></div>
-          <div class="cal-icon-row" id="cal-icon-row"></div>
-          <div class="cal-icon-label" id="cal-icon-label"></div>
-          <div class="cal-field">
-            <div class="cal-field-label"><span class="cal-chip plan">予定</span>この日にやること</div>
-            <textarea id="cal-plan" class="cal-ta" maxlength="2000" placeholder="例）19:00 〇〇さんとランニング"></textarea>
+
+          <!-- 表示モード -->
+          <div id="cal-view">
+            <div id="cal-view-body"></div>
+            <div class="cal-actions">
+              <button class="cal-edit-btn" onclick="calStartEdit()"><i class="fas fa-pen"></i> 編集</button>
+              <span class="cal-saved" id="cal-saved">保存しました</span>
+            </div>
           </div>
-          <div class="cal-field">
-            <div class="cal-field-label"><span class="cal-chip log">記録</span>実際にやったこと</div>
-            <textarea id="cal-body" class="cal-ta" maxlength="2000" placeholder="例）5km走った。ジャブの戻りを意識した"></textarea>
-          </div>
-          <div class="cal-actions">
-            <button class="cal-save" id="cal-save" onclick="calSave()"><i class="fas fa-check"></i> 保存</button>
-            <button class="cal-del" id="cal-del" onclick="calDelete()" style="display:none;"><i class="fas fa-trash"></i> 削除</button>
-            <span class="cal-saved" id="cal-saved">保存しました</span>
+
+          <!-- 編集モード -->
+          <div id="cal-edit" style="display:none;">
+            <div class="cal-icon-row" id="cal-icon-row"></div>
+            <div class="cal-icon-label" id="cal-icon-label"></div>
+            <div class="cal-field">
+              <div class="cal-field-label"><span class="cal-chip plan">予定</span>この日にやること</div>
+              <div><select id="cal-plan-time" class="cal-time-sel"></select></div>
+              <textarea id="cal-plan" class="cal-ta" maxlength="2000" placeholder="例）〇〇さんとランニング"></textarea>
+            </div>
+            <div class="cal-field">
+              <div class="cal-field-label"><span class="cal-chip log">記録</span>実際にやったこと</div>
+              <textarea id="cal-body" class="cal-ta" maxlength="2000" placeholder="例）5km走った。ジャブの戻りを意識した"></textarea>
+            </div>
+            <div class="cal-actions">
+              <button class="cal-save" id="cal-save" onclick="calSave()"><i class="fas fa-check"></i> 保存</button>
+              <button class="cal-cancel" id="cal-cancel" onclick="calCancelEdit()">キャンセル</button>
+              <button class="cal-del" id="cal-del" onclick="calDelete()" style="display:none;"><i class="fas fa-trash"></i> 削除</button>
+            </div>
           </div>
         </div>
 
@@ -1164,8 +1196,6 @@
           <div id="cal-events"></div>
         </div>
 
-        <div style="font-weight:700;margin:20px 0 10px;font-size:0.9rem;" id="cal-list-title">この月の書き込み</div>
-        <div id="cal-list"></div>
       </div>
 
       <!-- 最強軍団の予約状況（担当コーチが同じ会員グループ） -->
@@ -2256,6 +2286,8 @@ let calTableMissing = false;
 let calIcon = '';                  // いま編集中の日のアイコン
 let calIconColumnMissing = false;  // icon 列がまだDBに無い場合
 let calPlanColumnMissing = false;  // plan 列がまだDBに無い場合
+let calEditing = false;            // 編集モードかどうか
+let calPlanTime = '';              // 編集中の予定の時刻（'HH:MM' / 空は未定）
 
 // 予定・記録に付けられるアイコン。絵文字をそのまま保存する。
 const CAL_ICONS = [
@@ -2324,8 +2356,8 @@ async function loadCalendar() {
       if (d < start || d > end) return;
       const v = store[d];
       calLogs.set(d, typeof v === 'string'
-        ? { id: 'demo', body: v, icon: '', plan: '' }
-        : { id: 'demo', body: v.body || '', icon: v.icon || '', plan: v.plan || '' });
+        ? { id: 'demo', body: v, icon: '', plan: '', planTime: '' }
+        : { id: 'demo', body: v.body || '', icon: v.icon || '', plan: v.plan || '', planTime: v.planTime || '' });
     });
     calTableMissing = false;
     try {
@@ -2341,7 +2373,7 @@ async function loadCalendar() {
     const logQs = `user_id=eq.${uid}&date=gte.${start}&date=lte.${end}&select=`;
     const [resR, logR0, evR] = await Promise.all([
       _restAPI('GET', 'reservations', `user_id=eq.${uid}&status=eq.confirmed&date=gte.${start}&date=lte.${end}&select=date,time,class_name`),
-      _restAPI('GET', 'training_logs', logQs + 'id,date,body,icon,plan'),
+      _restAPI('GET', 'training_logs', logQs + 'id,date,body,icon,plan,plan_time'),
       _restAPI('GET', 'day_notes', `date=gte.${start}&date=lte.${end}&select=date,note`),
     ]);
     if (seq !== calLoadSeq) return;
@@ -2362,7 +2394,7 @@ async function loadCalendar() {
       calRes.set(r.date, { time: r.time, className: r.class_name, done: _calIsDone(r.date, r.time) });
     });
     calTableMissing = !!logR.error;
-    (logR.data || []).forEach(l => calLogs.set(l.date, { id: l.id, body: l.body || '', icon: l.icon || '', plan: l.plan || '' }));
+    (logR.data || []).forEach(l => calLogs.set(l.date, { id: l.id, body: l.body || '', icon: l.icon || '', plan: l.plan || '', planTime: l.plan_time || '' }));
   }
   if (seq !== calLoadSeq) return;
 
@@ -2378,6 +2410,7 @@ function calShiftMonth(delta) {
   calYear = d.getFullYear();
   calMonth = d.getMonth();
   calSelected = null;
+  calEditing = false;
   loadCalendar();
 }
 
@@ -2455,25 +2488,39 @@ function renderCalendar() {
 
   renderCalDetail();
   renderCalEvents();
-  renderCalList();
 }
 
-// 管理側で登録されたイベントの一覧（会員は編集できない）
+// この月のイベント一覧。ジムが登録したイベントと、自分の予定をまとめて並べる。
 function renderCalEvents() {
   const wrap = document.getElementById('cal-events-wrap');
   const el = document.getElementById('cal-events');
   if (!wrap || !el) return;
-  const rows = Array.from(calEvents.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+  const rows = [];
+  calEvents.forEach((note, ds) => rows.push({ ds, mine: false, time: '', icon: '', text: note }));
+  calLogs.forEach((v, ds) => {
+    const p = (v.plan || '').trim();
+    if (p) rows.push({ ds, mine: true, time: v.planTime || '', icon: v.icon || '', text: p });
+  });
+  rows.sort((a, b) => a.ds.localeCompare(b.ds) || (a.time || '99').localeCompare(b.time || '99'));
+
   if (!rows.length) { wrap.style.display = 'none'; el.innerHTML = ''; return; }
   wrap.style.display = '';
-  el.innerHTML = rows.map(([ds, note]) =>
-    `<div class="cal-ev" onclick="calSelectDate('${ds}')">` +
-    `<span class="cal-ev-date">${escHtml(_calFmtDate(ds))}</span>` +
-    `<span class="cal-ev-name">${escHtml(note)}</span></div>`
-  ).join('');
+  el.innerHTML = rows.map(r => {
+    const ico = r.mine
+      ? (r.icon ? escHtml(r.icon) : '<i class="fas fa-pen" style="color:var(--primary);font-size:0.76rem;"></i>')
+      : '<i class="fas fa-star"></i>';
+    const time = r.time ? `<span class="cal-ev-time">${escHtml(r.time)}</span>` : '';
+    return `<div class="cal-ev${r.mine ? ' mine' : ''}" onclick="calSelectDate('${r.ds}')">` +
+           `<span class="cal-ev-ico">${ico}</span>` +
+           `<span class="cal-ev-date">${escHtml(_calFmtDate(r.ds))}</span>` +
+           time +
+           `<span class="cal-ev-name">${escHtml(r.text)}</span></div>`;
+  }).join('');
 }
 
 function calSelectDate(ds) {
+  if (calSelected !== ds) calEditing = false;   // 別の日に移ったら表示モードに戻す
   calSelected = ds;
   renderCalendar();
   const box = document.getElementById('cal-detail');
@@ -2486,9 +2533,11 @@ function renderCalDetail() {
   box.style.display = '';
 
   const dt = _calDayType(calSelected);
+  const _cur = calLogs.get(calSelected);
   document.getElementById('cal-detail-date').innerHTML =
     escHtml(_calFmtDate(calSelected)) +
-    (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '');
+    (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '') +
+    (!calEditing && _cur && _cur.icon ? `<span class="cal-view-icon">${escHtml(_cur.icon)}</span>` : '');
 
   const ev = calEvents.get(calSelected);
   const evTag = ev
@@ -2507,12 +2556,72 @@ function renderCalDetail() {
   }
 
   const cur = calLogs.get(calSelected);
-  calIcon = cur ? (cur.icon || '') : '';
-  renderCalIconRow();
-  document.getElementById('cal-plan').value = cur ? (cur.plan || '') : '';
-  document.getElementById('cal-body').value = cur ? (cur.body || '') : '';
-  document.getElementById('cal-del').style.display = cur ? '' : 'none';
+  document.getElementById('cal-view').style.display = calEditing ? 'none' : '';
+  document.getElementById('cal-edit').style.display = calEditing ? '' : 'none';
+
+  if (calEditing) {
+    calIcon = cur ? (cur.icon || '') : '';
+    calPlanTime = cur ? (cur.planTime || '') : '';
+    renderCalIconRow();
+    renderCalTimeOptions(calPlanTime);
+    document.getElementById('cal-plan').value = cur ? (cur.plan || '') : '';
+    document.getElementById('cal-body').value = cur ? (cur.body || '') : '';
+    document.getElementById('cal-del').style.display = cur ? '' : 'none';
+  } else {
+    document.getElementById('cal-view-body').innerHTML = _calViewHtml(cur);
+  }
   document.getElementById('cal-saved').classList.remove('show');
+}
+
+// 表示モードの中身（ラベルだけ。編集は「編集」ボタンから）
+function _calViewHtml(cur) {
+  if (!_calHasEntry(cur)) {
+    return '<div class="cal-view-empty">まだ書き込みはありません。</div>';
+  }
+  const plan = (cur.plan || '').trim();
+  const log  = (cur.body || '').trim();
+  let html = '';
+  if (plan) {
+    html += '<div class="cal-view-row"><span class="cal-chip plan">予定</span>' +
+            (cur.planTime ? `<span class="cal-view-time">${escHtml(cur.planTime)}</span>` : '') +
+            `<span class="cal-view-text">${escHtml(plan)}</span></div>`;
+  }
+  if (log) {
+    html += '<div class="cal-view-row"><span class="cal-chip log">記録</span>' +
+            `<span class="cal-view-text">${escHtml(log)}</span></div>`;
+  }
+  if (!plan && !log && cur.icon) {
+    html += `<div class="cal-view-row"><span class="cal-view-text">${escHtml(cur.icon)}</span></div>`;
+  }
+  return html;
+}
+
+function calStartEdit() {
+  if (!calSelected) return;
+  calEditing = true;
+  renderCalDetail();
+  const ta = document.getElementById('cal-plan');
+  if (ta) setTimeout(() => ta.focus(), 0);
+}
+
+function calCancelEdit() {
+  if (calSaving) return;
+  calEditing = false;
+  renderCalDetail();
+}
+
+// 予定の時刻の選択肢（30分刻み）
+function renderCalTimeOptions(selected) {
+  const sel = document.getElementById('cal-plan-time');
+  if (!sel) return;
+  let html = '<option value="">時間未定</option>';
+  for (let m = 0; m < 24 * 60; m += 30) {
+    const t = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    html += `<option value="${t}">${t}</option>`;
+  }
+  sel.innerHTML = html;
+  sel.value = selected || '';
+  if (sel.value !== (selected || '')) sel.value = '';   // 保存済みの値が刻みに合わない場合
 }
 
 function renderCalIconRow() {
@@ -2532,34 +2641,6 @@ function calPickIcon(k) {
   renderCalIconRow();
 }
 
-function renderCalList() {
-  const el = document.getElementById('cal-list');
-  const rows = Array.from(calLogs.entries())
-    .filter(([, v]) => _calHasEntry(v))
-    .sort((a, b) => a[0].localeCompare(b[0]));
-
-  if (!rows.length) {
-    el.innerHTML = '<div class="cal-empty">この月の書き込みはまだありません。<br>日付をタップすると書き込めます。</div>';
-    return;
-  }
-  el.innerHTML = rows.map(([ds, v]) => {
-    const dt = _calDayType(ds);
-    const dcls = dt.type === 'weekday' ? '' : ' ' + dt.type;
-    const hol = dt.name ? `<span class="cal-item-kind" style="background:#fdeef0;color:#d32f2f;">${escHtml(dt.name)}</span>` : '';
-    const plan = (v.plan || '').trim();
-    const log  = (v.body || '').trim();
-    const lines =
-      (plan ? `<div class="cal-line"><span class="cal-chip plan">予定</span><span class="cal-item-body">${escHtml(plan)}</span></div>` : '') +
-      (log  ? `<div class="cal-line"><span class="cal-chip log">記録</span><span class="cal-item-body">${escHtml(log)}</span></div>` : '');
-    return `<div class="cal-item ${log ? 'is-log' : 'is-plan'}" onclick="calSelectDate('${ds}')">
-      <div class="cal-item-hd">
-        <span class="cal-item-date${dcls}">${v.icon ? `<span class="cal-item-icon">${v.icon}</span>` : ''}${escHtml(_calFmtDate(ds))}</span>
-        ${hol}
-      </div>
-      ${lines}
-    </div>`;
-  }).join('');
-}
 
 function _calSetSaving(on) {
   calSaving = on;
@@ -2570,6 +2651,8 @@ function _calSetSaving(on) {
     save.innerHTML = on ? '<i class="fas fa-spinner fa-spin"></i> 保存中…' : '<i class="fas fa-check"></i> 保存';
   }
   if (del) del.disabled = on;
+  const cancel = document.getElementById('cal-cancel');
+  if (cancel) cancel.disabled = on;
 }
 
 function _calFlashSaved() {
@@ -2583,6 +2666,7 @@ async function calSave() {
   if (calSaving || !calSelected) return;
   const body = document.getElementById('cal-body').value.trim();
   const plan = document.getElementById('cal-plan').value.trim();
+  const planTime = plan ? (document.getElementById('cal-plan-time').value || '') : '';
   const cur = calLogs.get(calSelected);
   if (!body && !plan && !calIcon) {
     // 予定も記録もアイコンも無い状態での保存＝削除とみなす
@@ -2593,9 +2677,9 @@ async function calSave() {
   try {
     if (DEMO_MODE) {
       const store = _calDemoLogs();
-      store[calSelected] = { body, icon: calIcon, plan };
+      store[calSelected] = { body, icon: calIcon, plan, planTime };
       localStorage.setItem('demo_training_logs', JSON.stringify(store));
-      calLogs.set(calSelected, { id: 'demo', body, icon: calIcon, plan });
+      calLogs.set(calSelected, { id: 'demo', body, icon: calIcon, plan, planTime });
     } else {
       const sess = _getSession();
       if (!sess || !sess.user) { alert('ログインが必要です'); return; }
@@ -2612,7 +2696,7 @@ async function calSave() {
       const build = () => {
         const p = { user_id: sess.user.id, date: calSelected, body };
         if (!calIconColumnMissing) p.icon = calIcon || null;
-        if (!calPlanColumnMissing) p.plan = plan || null;
+        if (!calPlanColumnMissing) { p.plan = plan || null; p.plan_time = planTime || null; }
         return p;
       };
       let res = await post(build());
@@ -2635,8 +2719,10 @@ async function calSave() {
         body,
         icon: calIconColumnMissing ? '' : calIcon,
         plan: calPlanColumnMissing ? '' : plan,
+        planTime: calPlanColumnMissing ? '' : planTime,
       });
     }
+    calEditing = false;
     renderCalendar();
     _calFlashSaved();
   } finally {
@@ -2690,6 +2776,7 @@ async function calDelete() {
       if (error) { alert('削除に失敗しました: ' + (error.message || '')); return; }
     }
     calLogs.delete(calSelected);
+    calEditing = false;
     renderCalendar();
   } finally {
     _calSetSaving(false);
