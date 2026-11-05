@@ -1165,7 +1165,7 @@
           <div id="cal-view">
             <div id="cal-view-body"></div>
             <div class="cal-actions">
-              <button class="cal-edit-btn" onclick="calStartEdit()"><i class="fas fa-pen"></i> 編集</button>
+              <button class="cal-edit-btn" id="cal-edit-btn" onclick="calStartEdit()"><i class="fas fa-pen"></i> 編集</button>
               <span class="cal-saved" id="cal-saved">保存しました</span>
             </div>
           </div>
@@ -2569,6 +2569,11 @@ function renderCalDetail() {
     document.getElementById('cal-del').style.display = cur ? '' : 'none';
   } else {
     document.getElementById('cal-view-body').innerHTML = _calViewHtml(cur);
+    // 何も書かれていない日は「書き込む」、すでにある日は「編集」
+    const btn = document.getElementById('cal-edit-btn');
+    if (btn) btn.innerHTML = _calHasEntry(cur)
+      ? '<i class="fas fa-pen"></i> 編集'
+      : '<i class="fas fa-plus"></i> 書き込む';
   }
   document.getElementById('cal-saved').classList.remove('show');
 }
