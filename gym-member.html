@@ -3291,7 +3291,14 @@ async function sendReset() {
     body: JSON.stringify({ email }),
   });
   const rd = await _res.json().catch(() => ({}));
-  if (!_res.ok) { alert('送信に失敗しました: ' + (rd.error_description || rd.error || 'エラー')); goTo('page-pw-reset'); }
+  if (!_res.ok) {
+    // 429 は Supabase のメール送信レート制限。原因が分かるように文言を分ける。
+    const msg = _res.status === 429
+      ? '短時間に送信しすぎたため、しばらく送信できません。1時間ほど空けてからお試しください。'
+      : (rd.error_description || rd.msg || rd.error || 'エラー');
+    alert('送信に失敗しました: ' + msg);
+    goTo('page-pw-reset1');
+  }
 }
 
 async function doLogout() {
