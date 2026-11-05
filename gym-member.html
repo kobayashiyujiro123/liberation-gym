@@ -2552,8 +2552,10 @@ function renderCalDetail() {
     sub.innerHTML = evTag + '<span class="cal-tag plan"><i class="fas fa-calendar-check"></i> 予約あり</span>' +
                     `<span>${escHtml(r.time || '')}　${escHtml(r.className || '')}</span>`;
   } else {
-    sub.innerHTML = evTag + '<span>ジムの予約はありません。予定や記録を自由に書けます。</span>';
+    sub.innerHTML = evTag;
   }
+  // 中身が何も無いときは余白が出ないよう隠す
+  sub.style.display = sub.innerHTML.trim() ? '' : 'none';
 
   const cur = calLogs.get(calSelected);
   document.getElementById('cal-view').style.display = calEditing ? 'none' : '';
