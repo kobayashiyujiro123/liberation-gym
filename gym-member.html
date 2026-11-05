@@ -509,6 +509,8 @@
     .cal-ev-ico { flex-shrink: 0; font-size: 0.95rem; width: 18px; text-align: center; }
     .cal-ev-ico .fa-star { color: #f57c00; font-size: 0.82rem; }
     .cal-ev-time { flex-shrink: 0; font-size: 0.8rem; font-weight: 700; color: var(--text); }
+    .cal-ev-head { font-weight: 700; margin: 20px 0 10px; font-size: 0.9rem; }
+    .cal-ev-head i { margin-right: 5px; font-size: 0.82rem; }
     .cal-ta:focus { outline: none; border-color: var(--primary); }
     .cal-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
     .cal-save { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
@@ -1196,9 +1198,14 @@
           </div>
         </div>
 
-        <div id="cal-events-wrap" style="display:none;">
-          <div style="font-weight:700;margin:20px 0 10px;font-size:0.9rem;"><i class="fas fa-star" style="color:#f57c00;margin-right:5px;font-size:0.82rem;"></i>この月のイベント</div>
-          <div id="cal-events"></div>
+        <div id="cal-ev-gym-wrap" style="display:none;">
+          <div class="cal-ev-head"><i class="fas fa-star" style="color:#f57c00;"></i>この月のジムのイベント</div>
+          <div id="cal-ev-gym"></div>
+        </div>
+
+        <div id="cal-ev-mine-wrap" style="display:none;">
+          <div class="cal-ev-head"><i class="fas fa-pen" style="color:var(--primary);"></i>この月のあなたの予定</div>
+          <div id="cal-ev-mine"></div>
         </div>
 
       </div>
@@ -2511,37 +2518,41 @@ function _calIconLabel(icon) {
   return found ? found.label : '';
 }
 
-// この月のイベント一覧。ジムが登録したイベントと、自分の予定をまとめて並べる。
-function renderCalEvents() {
-  const wrap = document.getElementById('cal-events-wrap');
-  const el = document.getElementById('cal-events');
-  if (!wrap || !el) return;
+// 行のHTMLを1件分つくる
+function _calEvRow(r) {
+  const ico = r.mine
+    ? (r.icon ? escHtml(r.icon) : '<i class="fas fa-pen" style="color:var(--primary);font-size:0.76rem;"></i>')
+    : '<i class="fas fa-star"></i>';
+  const time = r.time ? `<span class="cal-ev-time">${escHtml(r.time)}</span>` : '';
+  return `<div class="cal-ev${r.mine ? ' mine' : ''}" onclick="calSelectDate('${r.ds}')">` +
+         `<span class="cal-ev-ico">${ico}</span>` +
+         `<span class="cal-ev-date">${escHtml(_calFmtDate(r.ds))}</span>` +
+         time +
+         `<span class="cal-ev-name">${escHtml(r.text)}</span></div>`;
+}
 
-  const rows = [];
-  calEvents.forEach((note, ds) => rows.push({ ds, mine: false, time: '', icon: '', text: note }));
+// この月の一覧。ジムが登録したイベントと、自分の予定は別々のまとまりで表示する。
+function renderCalEvents() {
+  const gym = [], mine = [];
+  calEvents.forEach((note, ds) => gym.push({ ds, mine: false, time: '', icon: '', text: note }));
   calLogs.forEach((v, ds) => {
     const p   = (v.plan || '').trim();
     const log = (v.body || '').trim();
     // 文章が無くても、時間かアイコンだけ入れた予定は一覧に出す
     if (!p && !v.planTime && !(v.icon && !log)) return;
     const label = p || _calIconLabel(v.icon) || '予定';
-    rows.push({ ds, mine: true, time: v.planTime || '', icon: v.icon || '', text: label });
+    mine.push({ ds, mine: true, time: v.planTime || '', icon: v.icon || '', text: label });
   });
-  rows.sort((a, b) => a.ds.localeCompare(b.ds) || (a.time || '99').localeCompare(b.time || '99'));
+  const bySort = (a, b) => a.ds.localeCompare(b.ds) || (a.time || '99').localeCompare(b.time || '99');
+  gym.sort(bySort);
+  mine.sort(bySort);
 
-  if (!rows.length) { wrap.style.display = 'none'; el.innerHTML = ''; return; }
-  wrap.style.display = '';
-  el.innerHTML = rows.map(r => {
-    const ico = r.mine
-      ? (r.icon ? escHtml(r.icon) : '<i class="fas fa-pen" style="color:var(--primary);font-size:0.76rem;"></i>')
-      : '<i class="fas fa-star"></i>';
-    const time = r.time ? `<span class="cal-ev-time">${escHtml(r.time)}</span>` : '';
-    return `<div class="cal-ev${r.mine ? ' mine' : ''}" onclick="calSelectDate('${r.ds}')">` +
-           `<span class="cal-ev-ico">${ico}</span>` +
-           `<span class="cal-ev-date">${escHtml(_calFmtDate(r.ds))}</span>` +
-           time +
-           `<span class="cal-ev-name">${escHtml(r.text)}</span></div>`;
-  }).join('');
+  [['cal-ev-gym', gym], ['cal-ev-mine', mine]].forEach(([id, rows]) => {
+    const el = document.getElementById(id), wrap = document.getElementById(id + '-wrap');
+    if (!el || !wrap) return;
+    wrap.style.display = rows.length ? '' : 'none';
+    el.innerHTML = rows.map(_calEvRow).join('');
+  });
 }
 
 function calSelectDate(ds) {
