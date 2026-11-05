@@ -445,6 +445,10 @@
     .cal-mk.done { background: var(--primary); }
     .cal-mk.plan { border: 1.5px solid var(--primary); }
     .cal-mk.note { width: auto; height: auto; border-radius: 0; color: var(--warning); font-size: 0.56rem; line-height: 1; }
+    .cal-mk.note.is-plan { color: #ef6c00; }
+    .cal-mk.note.is-log { color: var(--primary); }
+    .cal-privacy { display: flex; align-items: flex-start; gap: 8px; background: #f1f8f9; border: 1px solid #cfe7ea; color: #37606b; border-radius: 10px; padding: 10px 12px; font-size: 0.78rem; line-height: 1.65; margin-bottom: 14px; }
+    .cal-privacy i { margin-top: 3px; flex-shrink: 0; }
     .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.72rem; color: var(--text-light); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); justify-content: center; }
     .cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
     .cal-sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--border); }
@@ -472,14 +476,14 @@
     .cal-saved.show { opacity: 1; }
     .cal-item { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
     .cal-item:hover { border-color: var(--primary); border-left-color: var(--primary); }
-    .cal-item.is-plan { border-left-color: var(--primary-light); }
+    .cal-item.is-plan { border-left-color: #ef6c00; }
     .cal-item.is-log { border-left-color: var(--primary); }
     .cal-item-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
     .cal-item-date { font-size: 0.82rem; font-weight: 700; color: var(--text); }
     .cal-item-date.sun, .cal-item-date.holiday { color: #d32f2f; }
     .cal-item-date.sat { color: #1565c0; }
     .cal-item-kind { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
-    .cal-item-kind.plan { background: rgba(0,151,167,0.08); color: var(--primary); }
+    .cal-item-kind.plan, .cal-item-kind.today { background: rgba(239,108,0,0.12); color: #e65100; }
     .cal-item-kind.log { background: rgba(0,151,167,0.14); color: var(--primary-dark); }
     .cal-item-body { font-size: 0.84rem; color: var(--text); line-height: 1.65; white-space: pre-wrap; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .cal-empty { text-align: center; color: var(--text-light); font-size: 0.84rem; padding: 26px 10px; }
@@ -1070,6 +1074,11 @@
       <div class="page" id="app-cal">
         <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
 
+        <div class="cal-privacy">
+          <i class="fas fa-lock"></i>
+          <div>ここに書いた内容は<strong>あなたにだけ</strong>表示されます。コーチや管理者を含め、他の方からは見えません。</div>
+        </div>
+
         <div class="cal-card">
           <div class="cal-hd">
             <button class="cal-nav-btn" id="cal-prev" onclick="calShiftMonth(-1)" aria-label="前の月"><i class="fas fa-chevron-left"></i></button>
@@ -1086,7 +1095,8 @@
             <span><span class="cal-sw sun"></span>日曜・祝日</span>
             <span><span class="cal-mk done"></span>練習に行った日</span>
             <span><span class="cal-mk plan"></span>予約あり</span>
-            <span><i class="fas fa-pen cal-mk note"></i>書き込みあり</span>
+            <span><i class="fas fa-pen cal-mk note is-plan"></i>予定</span>
+            <span><i class="fas fa-pen cal-mk note is-log"></i>記録</span>
           </div>
         </div>
 
@@ -1182,6 +1192,19 @@
     </div>
     <div class="bk-btns">
       <button class="bk-btn-ok" onclick="closeBkDuplicate()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- 書き込み削除の確認ポップアップ -->
+<div class="modal-overlay" id="cal-confirm-overlay" onclick="if(event.target===this)_calConfirmClose(false)">
+  <div class="modal" role="alertdialog" aria-modal="true">
+    <div class="modal-icon" style="color:var(--danger);"><i class="fas fa-trash"></i></div>
+    <div class="modal-title">書き込みを削除しますか？</div>
+    <div class="modal-detail" id="cal-confirm-text" style="white-space:pre-wrap;"></div>
+    <div class="modal-btns">
+      <button class="btn-do-cancel" id="cal-confirm-ok" onclick="_calConfirmClose(true)">削除する</button>
+      <button class="btn-close-modal" onclick="_calConfirmClose(false)">閉じる</button>
     </div>
   </div>
 </div>
@@ -2165,6 +2188,14 @@ function _calDayType(ds) {
   return { type: 'weekday', name: '', dow: w };
 }
 
+// その日の書き込みが「予定」か「記録」か。今日はどちらとも取れるので分けて扱う。
+function _calKind(ds) {
+  const today = _localDateStr(new Date());
+  if (ds > today)   return { key: 'plan',  label: '予定' };
+  if (ds === today) return { key: 'today', label: '今日' };
+  return { key: 'log', label: '記録' };
+}
+
 function _calFmtDate(ds) {
   const [y, m, d] = ds.split('-').map(Number);
   return `${m}月${d}日（${_CAL_DOW[new Date(y, m - 1, d).getDay()]}）`;
@@ -2280,7 +2311,9 @@ function renderCalendar() {
     const log = calLogs.get(ds);
     let marks = '';
     if (r) marks += `<span class="cal-mk ${r.done ? 'done' : 'plan'}"></span>`;
-    if (log && (log.body || '').trim()) marks += '<i class="fas fa-pen cal-mk note"></i>';
+    if (log && (log.body || '').trim()) {
+      marks += `<i class="fas fa-pen cal-mk note ${_calKind(ds).key === 'log' ? 'is-log' : 'is-plan'}"></i>`;
+    }
 
     const title = dt.name ? ` title="${escHtml(dt.name)}"` : '';
     html += `<div class="${cls.filter(Boolean).join(' ')}"${title} onclick="calSelectDate('${ds}')">` +
@@ -2319,8 +2352,11 @@ function renderCalDetail() {
   box.style.display = '';
 
   const dt = _calDayType(calSelected);
+  const kind = _calKind(calSelected);
   document.getElementById('cal-detail-date').innerHTML =
-    escHtml(_calFmtDate(calSelected)) + (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '');
+    escHtml(_calFmtDate(calSelected)) +
+    (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '') +
+    `<span class="cal-item-kind ${kind.key}" style="margin-left:8px;vertical-align:2px;">${kind.label}</span>`;
 
   const r = calRes.get(calSelected);
   const sub = document.getElementById('cal-detail-sub');
@@ -2337,8 +2373,8 @@ function renderCalDetail() {
   const cur = calLogs.get(calSelected);
   const ta = document.getElementById('cal-body');
   ta.value = cur ? (cur.body || '') : '';
-  ta.placeholder = calSelected > _localDateStr(new Date())
-    ? 'この日の予定…'
+  ta.placeholder = kind.key === 'plan' ? 'この日の予定…'
+    : kind.key === 'today' ? '今日の予定や、練習でやったこと…'
     : '練習の内容、気づいたことなど…';
   document.getElementById('cal-del').style.display = cur ? '' : 'none';
   document.getElementById('cal-saved').classList.remove('show');
@@ -2346,7 +2382,6 @@ function renderCalDetail() {
 
 function renderCalList() {
   const el = document.getElementById('cal-list');
-  const today = _localDateStr(new Date());
   const rows = Array.from(calLogs.entries())
     .filter(([, v]) => (v.body || '').trim())
     .sort((a, b) => a[0].localeCompare(b[0]));
@@ -2357,14 +2392,14 @@ function renderCalList() {
   }
   el.innerHTML = rows.map(([ds, v]) => {
     const dt = _calDayType(ds);
-    const isPlan = ds > today;
+    const kind = _calKind(ds);
     const dcls = dt.type === 'weekday' ? '' : ' ' + dt.type;
     const hol = dt.name ? `<span class="cal-item-kind" style="background:#fdeef0;color:#d32f2f;">${escHtml(dt.name)}</span>` : '';
-    return `<div class="cal-item ${isPlan ? 'is-plan' : 'is-log'}" onclick="calSelectDate('${ds}')">
+    return `<div class="cal-item ${kind.key === 'log' ? 'is-log' : 'is-plan'}" onclick="calSelectDate('${ds}')">
       <div class="cal-item-hd">
         <span class="cal-item-date${dcls}">${escHtml(_calFmtDate(ds))}</span>
         ${hol}
-        <span class="cal-item-kind ${isPlan ? 'plan' : 'log'}">${isPlan ? '予定' : '記録'}</span>
+        <span class="cal-item-kind ${kind.key}">${kind.label}</span>
       </div>
       <div class="cal-item-body">${escHtml(v.body)}</div>
     </div>`;
@@ -2433,9 +2468,38 @@ async function calSave() {
   }
 }
 
+// 書き込み削除の確認ポップアップ。
+// ブラウザ標準の confirm はダイアログ抑止の設定で出ないことがあるため画面内に表示する。
+let _calConfirmResolve = null;
+
+function calConfirm(message) {
+  const overlay = document.getElementById('cal-confirm-overlay');
+  if (!overlay) return Promise.resolve(confirm(message)); // 念のためのフォールバック
+  document.getElementById('cal-confirm-text').textContent = message;
+  overlay.classList.add('visible');
+  setTimeout(() => { const b = document.getElementById('cal-confirm-ok'); if (b) b.focus(); }, 0);
+  return new Promise(resolve => { _calConfirmResolve = resolve; });
+}
+
+function _calConfirmClose(result) {
+  const overlay = document.getElementById('cal-confirm-overlay');
+  if (overlay) overlay.classList.remove('visible');
+  const resolve = _calConfirmResolve;
+  _calConfirmResolve = null;
+  if (resolve) resolve(result);
+}
+
+document.addEventListener('keydown', e => {
+  if (!_calConfirmResolve) return;
+  if (e.key === 'Escape')     { e.preventDefault(); _calConfirmClose(false); }
+  else if (e.key === 'Enter') { e.preventDefault(); _calConfirmClose(true); }
+});
+
 async function calDelete() {
   if (calSaving || !calSelected) return;
   if (!calLogs.has(calSelected)) return;
+  const ok = await calConfirm(_calFmtDate(calSelected) + 'の書き込みを削除します。\nこの操作は取り消せません。');
+  if (!ok) return;
   _calSetSaving(true);
   try {
     if (DEMO_MODE) {
