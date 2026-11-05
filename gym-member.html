@@ -411,6 +411,85 @@
     .rv-day-tab .day-sub { font-size: 0.72rem; opacity: 0.8; }
     .rv-day-tab.active .day-sub { opacity: 0.85; }
     .rv-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin: 14px 0 18px; }
+
+    /* ===== マイカレンダー ===== */
+    .cal-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 12px; margin-bottom: 16px; }
+    .cal-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .cal-hd > div { text-align: center; flex: 1; min-width: 0; }
+    .cal-title { font-weight: 700; font-size: 1rem; }
+    .cal-stats { font-size: 0.74rem; color: var(--text-light); margin-top: 2px; }
+    .cal-nav-btn { background: #fff; border: 1px solid var(--border); border-radius: 8px; width: 36px; height: 36px; flex-shrink: 0; cursor: pointer; color: var(--text); font-size: 0.85rem; }
+    .cal-nav-btn:hover { background: var(--bg); border-color: var(--primary); color: var(--primary); }
+    .cal-nav-btn:disabled { opacity: 0.35; cursor: default; }
+    .cal-nav-btn:disabled:hover { background: #fff; border-color: var(--border); color: var(--text); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 460px; margin: 0 auto; }
+    .cal-dow { text-align: center; font-size: 0.72rem; color: var(--text-light); padding: 2px 0 6px; font-weight: 700; }
+    .cal-dow.sun { color: #d32f2f; }
+    .cal-dow.sat { color: #1565c0; }
+    .cal-cell { aspect-ratio: 1 / 1; min-height: 40px; border-radius: 8px; border: 1px solid var(--border); background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; transition: border-color 0.12s; }
+    .cal-cell:hover { border-color: var(--primary); }
+    .cal-cell.blank { border-color: transparent; background: transparent; cursor: default; }
+    .cal-cell.sat { background: #eef5fd; }
+    .cal-cell.sun, .cal-cell.holiday { background: #fdeef0; }
+    .cal-d { font-size: 0.84rem; line-height: 1; }
+    .cal-cell.sat .cal-d { color: #1565c0; }
+    .cal-cell.sun .cal-d, .cal-cell.holiday .cal-d { color: #d32f2f; }
+    .cal-cell.today { border-color: var(--primary); border-width: 2px; }
+    .cal-cell.selected { background: var(--primary); border-color: var(--primary); }
+    .cal-cell.selected .cal-d { color: #fff; font-weight: 700; }
+    .cal-cell.selected .cal-mk.done { background: #fff; }
+    .cal-cell.selected .cal-mk.plan { border-color: #fff; }
+    .cal-cell.selected .cal-mk.note { color: #fff; }
+    .cal-marks { display: flex; align-items: center; gap: 3px; height: 8px; }
+    .cal-mk { display: inline-block; width: 7px; height: 7px; border-radius: 50%; box-sizing: border-box; }
+    .cal-mk.done { background: var(--primary); }
+    .cal-mk.plan { border: 1.5px solid var(--primary); }
+    .cal-mk.note { width: auto; height: auto; border-radius: 0; color: var(--warning); font-size: 0.56rem; line-height: 1; }
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.72rem; color: var(--text-light); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); justify-content: center; }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .cal-sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; border: 1px solid var(--border); }
+    .cal-sw.wd { background: #fff; }
+    .cal-sw.sat { background: #eef5fd; }
+    .cal-sw.sun { background: #fdeef0; }
+    .cal-detail { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .cal-detail-date { font-weight: 700; font-size: 0.96rem; }
+    .cal-detail-date .cal-hol { font-size: 0.78rem; color: #d32f2f; font-weight: 700; margin-left: 8px; }
+    .cal-detail-sub { font-size: 0.8rem; color: var(--text-light); margin: 6px 0 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .cal-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 0.73rem; font-weight: 700; }
+    .cal-tag.done { background: rgba(0,151,167,0.12); color: var(--primary-dark); }
+    .cal-tag.plan { background: rgba(0,151,167,0.07); color: var(--primary); border: 1px solid rgba(0,151,167,0.3); }
+    .cal-ta { width: 100%; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; line-height: 1.7; color: var(--text); resize: vertical; min-height: 110px; }
+    .cal-ta:focus { outline: none; border-color: var(--primary); }
+    .cal-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .cal-save { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.86rem; font-weight: 700; cursor: pointer; }
+    .cal-save:hover { background: var(--primary-dark); }
+    .cal-save:disabled { opacity: 0.6; cursor: default; }
+    .cal-save:disabled:hover { background: var(--primary); }
+    .cal-del { background: #fff; color: var(--danger); border: 1.5px solid #ffcdd2; border-radius: 8px; padding: 9px 16px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.84rem; cursor: pointer; }
+    .cal-del:hover { background: #fff5f5; }
+    .cal-del:disabled { opacity: 0.6; cursor: default; }
+    .cal-saved { font-size: 0.78rem; color: var(--success); font-weight: 700; opacity: 0; transition: opacity 0.2s; }
+    .cal-saved.show { opacity: 1; }
+    .cal-item { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
+    .cal-item:hover { border-color: var(--primary); border-left-color: var(--primary); }
+    .cal-item.is-plan { border-left-color: var(--primary-light); }
+    .cal-item.is-log { border-left-color: var(--primary); }
+    .cal-item-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+    .cal-item-date { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .cal-item-date.sun, .cal-item-date.holiday { color: #d32f2f; }
+    .cal-item-date.sat { color: #1565c0; }
+    .cal-item-kind { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+    .cal-item-kind.plan { background: rgba(0,151,167,0.08); color: var(--primary); }
+    .cal-item-kind.log { background: rgba(0,151,167,0.14); color: var(--primary-dark); }
+    .cal-item-body { font-size: 0.84rem; color: var(--text); line-height: 1.65; white-space: pre-wrap; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .cal-empty { text-align: center; color: var(--text-light); font-size: 0.84rem; padding: 26px 10px; }
+    @media (max-width: 420px) {
+      .cal-card { padding: 12px 8px 10px; }
+      .cal-grid { gap: 3px; }
+      .cal-cell { min-height: 36px; }
+      .cal-d { font-size: 0.8rem; }
+      .cal-legend { gap: 5px 10px; font-size: 0.68rem; }
+    }
     .rv-stat-ico { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: rgba(251,140,0,0.12); color: #fb8c00; }
     .rv-stat-val { font-family: 'Oswald', sans-serif; font-size: 1.6rem; line-height: 1; }
     .rv-stat-lbl { font-size: 0.74rem; color: var(--text-light); margin-top: 2px; }
@@ -680,6 +759,10 @@
         <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>予約状況
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
       </div>
+      <div class="nav-item" id="nav-cal" onclick="showApp('cal')">
+        <span class="nav-icon"><i class="fas fa-calendar-day"></i></span>マイカレンダー
+        <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
+      </div>
       <div class="nav-item" id="nav-coach-reservation" onclick="location.href='gym-schedule#reservation'" data-coach-only style="display:none;">
         <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span>予約管理
         <span class="nav-arrow"><i class="fas fa-chevron-right"></i></span>
@@ -740,6 +823,11 @@
             <div class="top-card-icon"><i class="fas fa-clipboard-list"></i></div>
             <div class="top-card-label">予約管理</div>
             <div class="top-card-desc">予約の確認・管理</div>
+          </div>
+          <div class="top-card" onclick="showApp('cal')">
+            <div class="top-card-icon"><i class="fas fa-calendar-day"></i></div>
+            <div class="top-card-label">マイカレンダー</div>
+            <div class="top-card-desc">練習の記録と予定の書き込み</div>
           </div>
           <div class="top-card" onclick="showApp('info')">
             <div class="top-card-icon"><i class="fas fa-user-edit"></i></div>
@@ -976,6 +1064,47 @@
           </div>
         </div>
         <div id="rv-timeline"></div>
+      </div>
+
+      <!-- マイカレンダー（練習記録・予定） -->
+      <div class="page" id="app-cal">
+        <div class="breadcrumb" onclick="showApp('top')"><i class="fas fa-chevron-left"></i> トップページに戻る</div>
+
+        <div class="cal-card">
+          <div class="cal-hd">
+            <button class="cal-nav-btn" id="cal-prev" onclick="calShiftMonth(-1)" aria-label="前の月"><i class="fas fa-chevron-left"></i></button>
+            <div>
+              <div class="cal-title" id="cal-title">—</div>
+              <div class="cal-stats" id="cal-stats"></div>
+            </div>
+            <button class="cal-nav-btn" id="cal-next" onclick="calShiftMonth(1)" aria-label="次の月"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-legend">
+            <span><span class="cal-sw wd"></span>平日</span>
+            <span><span class="cal-sw sat"></span>土曜</span>
+            <span><span class="cal-sw sun"></span>日曜・祝日</span>
+            <span><span class="cal-mk done"></span>練習に行った日</span>
+            <span><span class="cal-mk plan"></span>予約あり</span>
+            <span><i class="fas fa-pen cal-mk note"></i>書き込みあり</span>
+          </div>
+        </div>
+
+        <div id="cal-notice" style="display:none;margin-bottom:16px;padding:12px 14px;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;font-size:0.82rem;color:#5d4037;line-height:1.7;"></div>
+
+        <div class="cal-detail" id="cal-detail" style="display:none;">
+          <div class="cal-detail-date" id="cal-detail-date"></div>
+          <div class="cal-detail-sub" id="cal-detail-sub"></div>
+          <textarea id="cal-body" class="cal-ta" maxlength="2000" placeholder="練習の内容、予定、気づいたことなど…"></textarea>
+          <div class="cal-actions">
+            <button class="cal-save" id="cal-save" onclick="calSave()"><i class="fas fa-check"></i> 保存</button>
+            <button class="cal-del" id="cal-del" onclick="calDelete()" style="display:none;"><i class="fas fa-trash"></i> 削除</button>
+            <span class="cal-saved" id="cal-saved">保存しました</span>
+          </div>
+        </div>
+
+        <div style="font-weight:700;margin:20px 0 10px;font-size:0.9rem;" id="cal-list-title">この月の書き込み</div>
+        <div id="cal-list"></div>
       </div>
 
       <!-- 最強軍団の予約状況（担当コーチが同じ会員グループ） -->
@@ -1218,6 +1347,7 @@ const APP_PAGES = {
   'res-view':  { el:'app-res-view',  nav:'nav-res-view', title:'予約状況閲覧' },
   'fights':    { el:'app-fights',    nav:'nav-fights',   title:'試合結果' },
   'squad':     { el:'app-squad',     nav:'nav-squad',    title:'最強軍団の予約状況' },
+  'cal':       { el:'app-cal',       nav:'nav-cal',      title:'マイカレンダー' },
 };
 
 function showApp(key) {
@@ -1238,6 +1368,7 @@ function showApp(key) {
   if (key === 'res-view')  loadRvData();
   if (key === 'squad')     loadSquadData();
   if (key === 'fights')    initMemberFights();
+  if (key === 'cal')       loadCalendar();
   closeSB();
   localStorage.setItem('gym_currentPage', key);
   location.hash = key;
@@ -1970,6 +2101,361 @@ if (DEMO_MODE) {
 function _localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+
+// ===== マイカレンダー（練習記録・予定）=====
+// 日本の祝日。1980〜2099年で有効な計算式を使う（外部ライブラリ不要）。
+const _CAL_HOLIDAY_CACHE = {};
+const _CAL_DOW = ['日','月','火','水','木','金','土'];
+
+function _calNthMonday(year, month, nth) {
+  const w = new Date(year, month - 1, 1).getDay();
+  return 1 + ((1 - w + 7) % 7) + (nth - 1) * 7;
+}
+
+function _calHolidays(year) {
+  if (_CAL_HOLIDAY_CACHE[year]) return _CAL_HOLIDAY_CACHE[year];
+  const map = {};
+  const put = (m, d, name) => {
+    map[`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] = name;
+  };
+  put(1, 1, '元日');
+  put(1, _calNthMonday(year, 1, 2), '成人の日');
+  put(2, 11, '建国記念の日');
+  if (year >= 2020) put(2, 23, '天皇誕生日');
+  put(3, Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4)), '春分の日');
+  put(4, 29, '昭和の日');
+  put(5, 3, '憲法記念日');
+  put(5, 4, 'みどりの日');
+  put(5, 5, 'こどもの日');
+  put(7, _calNthMonday(year, 7, 3), '海の日');
+  put(8, 11, '山の日');
+  put(9, _calNthMonday(year, 9, 3), '敬老の日');
+  put(9, Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4)), '秋分の日');
+  put(10, _calNthMonday(year, 10, 2), 'スポーツの日');
+  put(11, 3, '文化の日');
+  put(11, 23, '勤労感謝の日');
+
+  // 国民の休日（祝日に挟まれた平日）
+  for (const k of Object.keys(map)) {
+    const d = new Date(k + 'T00:00:00');
+    const mid  = new Date(d); mid.setDate(d.getDate() - 1);
+    const prev = new Date(d); prev.setDate(d.getDate() - 2);
+    const midKey = _localDateStr(mid);
+    if (map[_localDateStr(prev)] && !map[midKey] && mid.getDay() !== 0) map[midKey] = '国民の休日';
+  }
+  // 振替休日（日曜が祝日なら、その後の最初の平日）
+  for (const k of Object.keys(map).sort()) {
+    const d = new Date(k + 'T00:00:00');
+    if (d.getDay() !== 0) continue;
+    const next = new Date(d);
+    do { next.setDate(next.getDate() + 1); } while (map[_localDateStr(next)]);
+    map[_localDateStr(next)] = '振替休日';
+  }
+  _CAL_HOLIDAY_CACHE[year] = map;
+  return map;
+}
+
+// 日付の種別。'holiday' | 'sun' | 'sat' | 'weekday'
+function _calDayType(ds) {
+  const name = _calHolidays(Number(ds.slice(0, 4)))[ds];
+  const w = new Date(ds + 'T00:00:00').getDay();
+  if (name) return { type: 'holiday', name, dow: w };
+  if (w === 0) return { type: 'sun', name: '', dow: w };
+  if (w === 6) return { type: 'sat', name: '', dow: w };
+  return { type: 'weekday', name: '', dow: w };
+}
+
+function _calFmtDate(ds) {
+  const [y, m, d] = ds.split('-').map(Number);
+  return `${m}月${d}日（${_CAL_DOW[new Date(y, m - 1, d).getDay()]}）`;
+}
+
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();   // 0-11
+let calSelected = null;                 // 'YYYY-MM-DD'
+let calRes   = new Map();               // date -> { time, className, done }
+let calLogs  = new Map();               // date -> { id, body }
+let calLoadSeq = 0;
+let calSaving  = false;
+let calTableMissing = false;
+
+// 予約の日時がすでに過ぎているか（= 練習に行った日）
+function _calIsDone(date, time) {
+  const now = new Date();
+  const today = _localDateStr(now);
+  if (date < today) return true;
+  if (date > today) return false;
+  const hm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  return (time || '00:00') <= hm;
+}
+
+function _calMonthRange() {
+  return {
+    start: _localDateStr(new Date(calYear, calMonth, 1)),
+    end:   _localDateStr(new Date(calYear, calMonth + 1, 0)),
+  };
+}
+
+function _calDemoLogs() {
+  try { return JSON.parse(localStorage.getItem('demo_training_logs') || '{}'); } catch(e) { return {}; }
+}
+
+async function loadCalendar() {
+  const seq = ++calLoadSeq;
+  const { start, end } = _calMonthRange();
+  calRes  = new Map();
+  calLogs = new Map();
+
+  if (DEMO_MODE) {
+    demoReservations
+      .filter(r => r.status === 'confirmed' && r.date >= start && r.date <= end)
+      .forEach(r => calRes.set(r.date, { time: r.time, className: r.class_name, done: _calIsDone(r.date, r.time) }));
+    const store = _calDemoLogs();
+    Object.keys(store).forEach(d => {
+      if (d >= start && d <= end) calLogs.set(d, { id: 'demo', body: store[d] });
+    });
+    calTableMissing = false;
+  } else {
+    const sess = _getSession();
+    if (!sess || !sess.user) return;
+    const uid = encodeURIComponent(sess.user.id);
+    const [resR, logR] = await Promise.all([
+      _restAPI('GET', 'reservations', `user_id=eq.${uid}&status=eq.confirmed&date=gte.${start}&date=lte.${end}&select=date,time,class_name`),
+      _restAPI('GET', 'training_logs', `user_id=eq.${uid}&date=gte.${start}&date=lte.${end}&select=id,date,body`),
+    ]);
+    if (seq !== calLoadSeq) return;
+    (resR.data || []).forEach(r => {
+      calRes.set(r.date, { time: r.time, className: r.class_name, done: _calIsDone(r.date, r.time) });
+    });
+    calTableMissing = !!logR.error;
+    (logR.data || []).forEach(l => calLogs.set(l.date, { id: l.id, body: l.body || '' }));
+  }
+  if (seq !== calLoadSeq) return;
+
+  if (!calSelected || calSelected < start || calSelected > end) {
+    const today = _localDateStr(new Date());
+    calSelected = (today >= start && today <= end) ? today : start;
+  }
+  renderCalendar();
+}
+
+function calShiftMonth(delta) {
+  const d = new Date(calYear, calMonth + delta, 1);
+  calYear = d.getFullYear();
+  calMonth = d.getMonth();
+  calSelected = null;
+  loadCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('cal-title').textContent = `${calYear}年${calMonth + 1}月`;
+
+  let doneCount = 0, planCount = 0;
+  calRes.forEach(v => { if (v.done) doneCount++; else planCount++; });
+  let noteCount = 0;
+  calLogs.forEach(v => { if ((v.body || '').trim()) noteCount++; });
+  const stats = [];
+  if (doneCount) stats.push(`練習 ${doneCount}回`);
+  if (planCount) stats.push(`予約 ${planCount}件`);
+  if (noteCount) stats.push(`書き込み ${noteCount}件`);
+  document.getElementById('cal-stats').textContent = stats.length ? stats.join('　/　') : 'この月の記録はまだありません';
+
+  const today = _localDateStr(new Date());
+  const lead = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let html = _CAL_DOW.map((d, i) =>
+    `<div class="cal-dow${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}">${d}</div>`
+  ).join('');
+  for (let i = 0; i < lead; i++) html += '<div class="cal-cell blank"></div>';
+
+  for (let d = 1; d <= days; d++) {
+    const ds = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dt = _calDayType(ds);
+    const cls = ['cal-cell', dt.type === 'weekday' ? '' : dt.type];
+    if (ds === today) cls.push('today');
+    if (ds === calSelected) cls.push('selected');
+
+    const r = calRes.get(ds);
+    const log = calLogs.get(ds);
+    let marks = '';
+    if (r) marks += `<span class="cal-mk ${r.done ? 'done' : 'plan'}"></span>`;
+    if (log && (log.body || '').trim()) marks += '<i class="fas fa-pen cal-mk note"></i>';
+
+    const title = dt.name ? ` title="${escHtml(dt.name)}"` : '';
+    html += `<div class="${cls.filter(Boolean).join(' ')}"${title} onclick="calSelectDate('${ds}')">` +
+            `<span class="cal-d">${d}</span><span class="cal-marks">${marks}</span></div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+
+  // 先の予定も入れられるようにするが、2年先で止める
+  const limit = new Date(); limit.setFullYear(limit.getFullYear() + 2);
+  document.getElementById('cal-next').disabled =
+    new Date(calYear, calMonth, 1) >= new Date(limit.getFullYear(), limit.getMonth(), 1);
+
+  const notice = document.getElementById('cal-notice');
+  if (calTableMissing) {
+    notice.style.display = '';
+    notice.innerHTML = '⚠️ 書き込みの保存先（training_logs テーブル）がまだ作成されていません。<br>' +
+                       'Supabase で supabase/training_logs.sql を実行すると書き込めるようになります。';
+  } else {
+    notice.style.display = 'none';
+  }
+
+  renderCalDetail();
+  renderCalList();
+}
+
+function calSelectDate(ds) {
+  calSelected = ds;
+  renderCalendar();
+  const box = document.getElementById('cal-detail');
+  if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderCalDetail() {
+  const box = document.getElementById('cal-detail');
+  if (!calSelected) { box.style.display = 'none'; return; }
+  box.style.display = '';
+
+  const dt = _calDayType(calSelected);
+  document.getElementById('cal-detail-date').innerHTML =
+    escHtml(_calFmtDate(calSelected)) + (dt.name ? `<span class="cal-hol">${escHtml(dt.name)}</span>` : '');
+
+  const r = calRes.get(calSelected);
+  const sub = document.getElementById('cal-detail-sub');
+  if (r && r.done) {
+    sub.innerHTML = '<span class="cal-tag done"><i class="fas fa-check"></i> 練習に行った日</span>' +
+                    `<span>${escHtml(r.time || '')}　${escHtml(r.className || '')}</span>`;
+  } else if (r) {
+    sub.innerHTML = '<span class="cal-tag plan"><i class="fas fa-calendar-check"></i> 予約あり</span>' +
+                    `<span>${escHtml(r.time || '')}　${escHtml(r.className || '')}</span>`;
+  } else {
+    sub.innerHTML = '<span>ジムの予約はありません。予定や記録を自由に書けます。</span>';
+  }
+
+  const cur = calLogs.get(calSelected);
+  const ta = document.getElementById('cal-body');
+  ta.value = cur ? (cur.body || '') : '';
+  ta.placeholder = calSelected > _localDateStr(new Date())
+    ? 'この日の予定…'
+    : '練習の内容、気づいたことなど…';
+  document.getElementById('cal-del').style.display = cur ? '' : 'none';
+  document.getElementById('cal-saved').classList.remove('show');
+}
+
+function renderCalList() {
+  const el = document.getElementById('cal-list');
+  const today = _localDateStr(new Date());
+  const rows = Array.from(calLogs.entries())
+    .filter(([, v]) => (v.body || '').trim())
+    .sort((a, b) => a[0].localeCompare(b[0]));
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="cal-empty">この月の書き込みはまだありません。<br>日付をタップすると書き込めます。</div>';
+    return;
+  }
+  el.innerHTML = rows.map(([ds, v]) => {
+    const dt = _calDayType(ds);
+    const isPlan = ds > today;
+    const dcls = dt.type === 'weekday' ? '' : ' ' + dt.type;
+    const hol = dt.name ? `<span class="cal-item-kind" style="background:#fdeef0;color:#d32f2f;">${escHtml(dt.name)}</span>` : '';
+    return `<div class="cal-item ${isPlan ? 'is-plan' : 'is-log'}" onclick="calSelectDate('${ds}')">
+      <div class="cal-item-hd">
+        <span class="cal-item-date${dcls}">${escHtml(_calFmtDate(ds))}</span>
+        ${hol}
+        <span class="cal-item-kind ${isPlan ? 'plan' : 'log'}">${isPlan ? '予定' : '記録'}</span>
+      </div>
+      <div class="cal-item-body">${escHtml(v.body)}</div>
+    </div>`;
+  }).join('');
+}
+
+function _calSetSaving(on) {
+  calSaving = on;
+  const save = document.getElementById('cal-save');
+  const del  = document.getElementById('cal-del');
+  if (save) {
+    save.disabled = on;
+    save.innerHTML = on ? '<i class="fas fa-spinner fa-spin"></i> 保存中…' : '<i class="fas fa-check"></i> 保存';
+  }
+  if (del) del.disabled = on;
+}
+
+function _calFlashSaved() {
+  const el = document.getElementById('cal-saved');
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+async function calSave() {
+  if (calSaving || !calSelected) return;
+  const body = document.getElementById('cal-body').value.trim();
+  const cur = calLogs.get(calSelected);
+  if (!body) {
+    // 空のまま保存＝削除とみなす（元々書き込みが無ければ何もしない）
+    if (cur) await calDelete();
+    return;
+  }
+  _calSetSaving(true);
+  try {
+    if (DEMO_MODE) {
+      const store = _calDemoLogs();
+      store[calSelected] = body;
+      localStorage.setItem('demo_training_logs', JSON.stringify(store));
+      calLogs.set(calSelected, { id: 'demo', body });
+    } else {
+      const sess = _getSession();
+      if (!sess || !sess.user) { alert('ログインが必要です'); return; }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/training_logs?on_conflict=user_id,date`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${_getToken()}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify({ user_id: sess.user.id, date: calSelected, body }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert('保存に失敗しました: ' + (err.message || res.status));
+        return;
+      }
+      const rows = await res.json().catch(() => []);
+      calLogs.set(calSelected, { id: (rows && rows[0] && rows[0].id) || '', body });
+    }
+    renderCalendar();
+    _calFlashSaved();
+  } finally {
+    _calSetSaving(false);
+  }
+}
+
+async function calDelete() {
+  if (calSaving || !calSelected) return;
+  if (!calLogs.has(calSelected)) return;
+  _calSetSaving(true);
+  try {
+    if (DEMO_MODE) {
+      const store = _calDemoLogs();
+      delete store[calSelected];
+      localStorage.setItem('demo_training_logs', JSON.stringify(store));
+    } else {
+      const sess = _getSession();
+      if (!sess || !sess.user) { alert('ログインが必要です'); return; }
+      const { error } = await _restAPI('DELETE', 'training_logs',
+        `user_id=eq.${encodeURIComponent(sess.user.id)}&date=eq.${calSelected}`);
+      if (error) { alert('削除に失敗しました: ' + (error.message || '')); return; }
+    }
+    calLogs.delete(calSelected);
+    renderCalendar();
+  } finally {
+    _calSetSaving(false);
+  }
+}
+
 
 // ===== 利用詳細モーダル（会員向け）=====
 let _memberResRows = [];
