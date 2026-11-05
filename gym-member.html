@@ -43,6 +43,8 @@
     .auth-select { padding: 10px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.85rem; background: #fff; outline: none; cursor: pointer; }
     .auth-select:focus { border-color: var(--primary); }
     .select-row { display: flex; gap: 6px; align-items: center; }
+    /* 選択欄と単位（年・月・日）を1組にして、折り返しても離ればなれにならないようにする */
+    .date-pair { display: inline-flex; align-items: center; gap: 4px; }
     .date-unit { font-size: 0.8rem; color: var(--text-light); }
     .btn-primary { width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.15s; margin-top: 4px; }
     .btn-primary:hover { background: var(--primary-dark); }
@@ -553,7 +555,22 @@
     @keyframes bootPulse { 0%{box-shadow:0 0 0 0 rgba(0,151,167,0.40);} 70%{box-shadow:0 0 0 16px rgba(0,151,167,0);} 100%{box-shadow:0 0 0 0 rgba(0,151,167,0);} }
     @keyframes bootIconFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
     @keyframes bootSpin { to{transform:rotate(360deg);} }
-  </style>
+  
+    /* ===== iOS Safari の自動ズーム対策 =====
+       文字サイズが16px未満の入力欄にカーソルを置くと、iOS Safari は画面を
+       自動で拡大する。スマホ幅では入力欄の文字サイズを16pxに揃えて防ぐ。
+       （viewport で拡大自体を禁止すると指でのピンチ拡大もできなくなるため、
+         文字サイズを上げる方法を採っている） */
+    @media (max-width: 768px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
+      /* 文字が大きくなる分、横並びが入りきらない端末では折り返す */
+      .select-row { flex-wrap: wrap; }
+    }
+</style>
 </head>
 <body>
 
@@ -659,12 +676,9 @@
     <div class="form-group">
       <label class="auth-label">生年月日</label>
       <div class="select-row">
-        <select class="auth-select" id="reg-year" style="flex:2;"></select>
-        <span class="date-unit">年</span>
-        <select class="auth-select" id="reg-month" style="flex:1;"></select>
-        <span class="date-unit">月</span>
-        <select class="auth-select" id="reg-day" style="flex:1;"></select>
-        <span class="date-unit">日</span>
+        <span class="date-pair"><select class="auth-select" id="reg-year" style="width:94px;"></select><span class="date-unit">年</span></span>
+        <span class="date-pair"><select class="auth-select" id="reg-month" style="width:70px;"></select><span class="date-unit">月</span></span>
+        <span class="date-pair"><select class="auth-select" id="reg-day" style="width:70px;"></select><span class="date-unit">日</span></span>
       </div>
     </div>
     <div class="form-group">
@@ -1014,10 +1028,10 @@
           <div class="edit-row">
             <label class="edit-label">戦績</label>
             <div class="select-row" style="flex-wrap:wrap;gap:8px;">
-              <select class="edit-select" id="e-fights" style="width:72px;"></select><span class="date-unit">戦</span>
-              <select class="edit-select" id="e-wins"   style="width:72px;"></select><span class="date-unit">勝</span>
-              <select class="edit-select" id="e-losses" style="width:72px;"></select><span class="date-unit">敗</span>
-              <select class="edit-select" id="e-draws"  style="width:72px;"></select><span class="date-unit">分</span>
+              <span class="date-pair"><select class="edit-select" id="e-fights" style="width:72px;"></select><span class="date-unit">戦</span></span>
+              <span class="date-pair"><select class="edit-select" id="e-wins"   style="width:72px;"></select><span class="date-unit">勝</span></span>
+              <span class="date-pair"><select class="edit-select" id="e-losses" style="width:72px;"></select><span class="date-unit">敗</span></span>
+              <span class="date-pair"><select class="edit-select" id="e-draws"  style="width:72px;"></select><span class="date-unit">分</span></span>
             </div>
           </div>
           <div class="edit-row">

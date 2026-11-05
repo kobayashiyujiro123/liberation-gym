@@ -779,7 +779,20 @@
     .result-lose .fight-result-text { color: var(--danger); }
     .result-draw .fight-result-text { color: var(--warning); }
     .fight-fighter-name-wrap { display: flex; align-items: center; }
-  </style>
+  
+    /* ===== iOS Safari の自動ズーム対策 =====
+       文字サイズが16px未満の入力欄にカーソルを置くと、iOS Safari は画面を
+       自動で拡大する。スマホ幅では入力欄の文字サイズを16pxに揃えて防ぐ。
+       （viewport で拡大自体を禁止すると指でのピンチ拡大もできなくなるため、
+         文字サイズを上げる方法を採っている） */
+    @media (max-width: 768px) {
+      input:not([type="checkbox"]):not([type="radio"]),
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
+    }
+</style>
 </head>
 <body>
 
